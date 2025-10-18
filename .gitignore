@@ -1,0 +1,15 @@
+.vscode/
+.DS_Store
+.qodo
+node_modules/
+dist/
+.env
+*.log
+*.tmp
+coverage/
+.idea/
+*.iml
+*.swp
+*.bak
+*.class
+*.md

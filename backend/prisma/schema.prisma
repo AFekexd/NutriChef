@@ -1,0 +1,193 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId        String        @id @default(uuid()) @db.Uuid
+  name          String
+  email         String        @unique
+  passwordHash  String
+  preferences   Json?
+  isEmailVerified Boolean     @default(false)
+  isActive      Boolean       @default(true)
+  lastLoginAt   DateTime?
+  lastLoginIp   String?
+  failedLoginAttempts Int     @default(0)
+  lockedUntil   DateTime?
+  refreshToken  String?
+  inventoryItems InventoryItem[]
+  groceryListItems GroceryListItem[]
+  recipes       Recipe[]
+  mealPlans     MealPlan[]
+  consumptionLogs ConsumptionLog[]
+  userHealthData UserHealthData[]
+  moodLogs      MoodLog[]
+  sessions      Session[]
+  loginHistory  LoginHistory[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Session {
+  sessionId     String      @id @default(uuid()) @db.Uuid
+  user          User        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId        String      @db.Uuid
+  token         String      @unique
+  ipAddress     String
+  userAgent     String?
+  isValid       Boolean     @default(true)
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([token])
+}
+
+model LoginHistory {
+  loginHistoryId String      @id @default(uuid()) @db.Uuid
+  user          User        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId        String      @db.Uuid
+  ipAddress     String
+  userAgent     String?
+  success       Boolean
+  failureReason String?
+  location      String?
+  timestamp     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
+}
+model Ingredient {
+  ingredientId    String        @id @default(uuid()) @db.Uuid
+  name            String
+  category        String
+  nutritionalInfo Json
+  carbonFootprint Float
+  inventoryItems  InventoryItem[]
+  groceryListItems GroceryListItem[]
+  recipeIngredients RecipeIngredient[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InventoryItem {
+  inventoryItemId String        @id @default(uuid()) @db.Uuid
+  user            User          @relation(fields: [userId], references: [userId])
+  userId          String        @db.Uuid
+  ingredient      Ingredient    @relation(fields: [ingredientId], references: [ingredientId])
+  ingredientId    String        @db.Uuid
+  quantity        Float
+  unit            String
+  expiryDate      DateTime
+  consumptionRate Float?
+  consumptionLogs ConsumptionLog[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model GroceryListItem {
+  groceryListItemId String      @id @default(uuid()) @db.Uuid
+  user              User        @relation(fields: [userId], references: [userId])
+  userId            String      @db.Uuid
+  ingredient        Ingredient  @relation(fields: [ingredientId], references: [ingredientId])
+  ingredientId      String      @db.Uuid
+  plannedQuantity   Float
+  recommendedQuantity Float
+  lastPurchasedPrice Float?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Recipe {
+  recipeId         String              @id @default(uuid()) @db.Uuid
+  user             User?               @relation(fields: [userId], references: [userId])
+  userId           String?             @db.Uuid
+  title            String
+  instructions     String
+  imageURL        String?
+  calories        Float
+  macros          Json
+  recipeIngredients RecipeIngredient[]
+  mealPlanRecipes MealPlanRecipe[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model RecipeIngredient {
+  recipeIngredientId String      @id @default(uuid()) @db.Uuid
+  recipe            Recipe      @relation(fields: [recipeId], references: [recipeId])
+  recipeId          String      @db.Uuid
+  ingredient       Ingredient   @relation(fields: [ingredientId], references: [ingredientId])
+  ingredientId     String      @db.Uuid
+  quantity         Float
+  unit             String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model MealPlan {
+  mealPlanId      String              @id @default(uuid()) @db.Uuid
+  user            User                @relation(fields: [userId], references: [userId])
+  userId          String              @db.Uuid
+  date            DateTime
+  mealType        String
+  mealPlanRecipes MealPlanRecipe[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+model MealPlanRecipe {
+  mealPlanRecipeId String      @id @default(uuid()) @db.Uuid
+  mealPlan        MealPlan    @relation(fields: [mealPlanId], references: [mealPlanId])
+  mealPlanId      String      @db.Uuid
+  recipe          Recipe      @relation(fields: [recipeId], references: [recipeId])
+  recipeId        String      @db.Uuid
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model ConsumptionLog {
+  consumptionLogId String        @id @default(uuid()) @db.Uuid
+  user             User          @relation(fields: [userId], references: [userId])
+  userId           String        @db.Uuid
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [inventoryItemId])
+  inventoryItemId String        @db.Uuid
+  quantityConsumed Float
+  dateTime        DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+model UserHealthData {
+  healthDataId   String      @id @default(uuid()) @db.Uuid
+  user           User        @relation(fields: [userId], references: [userId])
+  userId         String      @db.Uuid
+  date           DateTime
+  caloriesBurned Float
+  activityType   String
+  heartRate      Int?
+  sleepHours     Float?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+model MoodLog {
+  moodLogId      String      @id @default(uuid()) @db.Uuid
+  user           User        @relation(fields: [userId], references: [userId])
+  userId         String      @db.Uuid
+  dateTime       DateTime
+  moodDescription String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
