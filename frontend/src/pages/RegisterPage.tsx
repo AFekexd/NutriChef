@@ -1,0 +1,250 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { ChefHat, Lock, Mail, User, Loader2, Check } from "lucide-react";
+
+export default function RegisterPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const passwordRequirements = [
+    { text: "At least 8 characters", met: password.length >= 8 },
+    { text: "One uppercase letter", met: /[A-Z]/.test(password) },
+    { text: "One lowercase letter", met: /[a-z]/.test(password) },
+    { text: "One number", met: /\d/.test(password) },
+  ];
+
+  const isPasswordValid = passwordRequirements.every((req) => req.met);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError("Password does not meet requirements");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await register({ name, email, password });
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error || "Registration failed. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="inline-flex items-center justify-center w-20 h-20 bg-[#FF7043] rounded-2xl mb-4 shadow-lg"
+          >
+            <ChefHat className="w-10 h-10 text-white" />
+          </motion.div>
+          <h1
+            className="text-4xl font-bold text-[#4A4A4A] mb-2"
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
+            Join NutriChef
+          </h1>
+          <p className="text-gray-600">
+            Start your smart nutrition journey today
+          </p>
+        </div>
+
+        <Card className="bg-white shadow-xl border border-gray-200">
+          <CardHeader className="space-y-1">
+            <CardTitle
+              className="text-2xl text-center text-[#4A4A4A]"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+            >
+              Create Account
+            </CardTitle>
+            <CardDescription className="text-center text-gray-600">
+              Enter your information to get started
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-[#4A4A4A]">
+                  Full Name
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10 border-gray-300 focus:border-[#FF7043] focus:ring-[#FF7043]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-[#4A4A4A]">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 border-gray-300 focus:border-[#FF7043] focus:ring-[#FF7043]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-[#4A4A4A]">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 border-gray-300 focus:border-[#FF7043] focus:ring-[#FF7043]"
+                    required
+                  />
+                </div>
+                {password && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-1 text-xs"
+                  >
+                    {passwordRequirements.map((req, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-2 ${
+                          req.met ? "text-[#4CAF50]" : "text-gray-500"
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            req.met ? "bg-[#4CAF50]" : "bg-gray-200"
+                          }`}
+                        >
+                          {req.met && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        {req.text}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-[#4A4A4A]">
+                  Confirm Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 border-gray-300 focus:border-[#FF7043] focus:ring-[#FF7043]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-[#FF7043] hover:bg-[#f4511e] text-white font-semibold"
+                disabled={isLoading || !isPasswordValid}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-center text-gray-600">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-[#29B6F6] hover:text-[#0288d1] hover:underline font-semibold"
+              >
+                Sign in
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+
+        <p className="text-center text-xs text-gray-500 mt-8">
+          By creating an account, you agree to our Terms of Service and Privacy
+          Policy
+        </p>
+      </motion.div>
+    </div>
+  );
+}

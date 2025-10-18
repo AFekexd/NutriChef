@@ -1,14 +1,25 @@
 import { Router } from "express";
+import { authenticate } from "../middlewares/auth.js";
 import {
   getInventoryItems,
+  getMyInventoryItems,
   getInventoryItemById,
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
   getExpiringItems,
+  getMyExpiringItems,
+  getInventoryAnalytics,
+  getItemsByLocation,
 } from "../controllers/inventoryController.js";
 
 const router = Router();
+
+// Authenticated user routes (use auth middleware)
+router.get("/", authenticate, getMyInventoryItems);
+router.get("/analytics", authenticate, getInventoryAnalytics);
+router.get("/expiring", authenticate, getMyExpiringItems);
+router.get("/location/:location", authenticate, getItemsByLocation);
 
 /**
  * @swagger

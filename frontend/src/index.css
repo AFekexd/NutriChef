@@ -1,0 +1,185 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap");
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* NutriChef Brand Colors */
+  --color-fresh-green: var(--fresh-green);
+  --color-bright-orange: var(--bright-orange);
+  --color-light-blue: var(--light-blue);
+  --color-warm-gray: var(--warm-gray);
+}
+
+:root {
+  /* Border radius - rounded for approachable feel */
+  --radius: 0.75rem;
+
+  /* Light Mode - NutriChef Theme */
+  --background: 0 0% 100%; /* White */
+  --foreground: 240 10% 15%; /* Dark text */
+
+  --card: 0 0% 100%; /* White cards */
+  --card-foreground: 240 10% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 15%;
+
+  /* Primary - Fresh Green #4CAF50 */
+  --primary: 122 39% 49%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary - Bright Orange #FF7043 */
+  --secondary: 14 100% 63%;
+  --secondary-foreground: 0 0% 100%;
+
+  /* Muted - Light Gray */
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 13% 50%;
+
+  /* Accent - Light Blue #29B6F6 */
+  --accent: 199 92% 56%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 122 39% 49%; /* Primary green */
+
+  /* NutriChef Brand Colors */
+  --fresh-green: 122 39% 49%; /* #4CAF50 */
+  --bright-orange: 14 100% 63%; /* #FF7043 */
+  --light-blue: 199 92% 56%; /* #29B6F6 */
+  --warm-gray: 0 0% 66%; /* #A9A9A9 */
+}
+
+.dark {
+  /* Dark Mode - #121212 base */
+  --background: 0 0% 7%; /* #121212 */
+  --foreground: 0 0% 95%; /* Light text */
+
+  --card: 0 0% 10%; /* Dark card */
+  --card-foreground: 0 0% 95%;
+
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 95%;
+
+  /* Primary - Muted Green */
+  --primary: 122 35% 45%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary - Muted Orange */
+  --secondary: 14 90% 58%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 0 0% 15%;
+  --muted-foreground: 240 5% 65%;
+
+  /* Accent - Muted Blue */
+  --accent: 199 80% 50%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 63% 50%;
+
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 122 35% 45%;
+
+  /* NutriChef Brand Colors (Muted for dark mode) */
+  --fresh-green: 122 35% 45%;
+  --bright-orange: 14 90% 58%;
+  --light-blue: 199 80% 50%;
+  --warm-gray: 0 0% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    font-weight: 600;
+  }
+
+  h1 {
+    @apply text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl font-medium;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Smooth animations */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* Card shadows */
+  .card-shadow {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+}

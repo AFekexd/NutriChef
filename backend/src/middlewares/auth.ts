@@ -35,21 +35,31 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    console.log("[authenticate] Checking authentication...");
+
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("[authenticate] No token provided or invalid format");
       res.status(401).json({ error: "No token provided" });
       return;
     }
 
     const token = authHeader.substring(7);
+    console.log(
+      "[authenticate] Token received (first 20 chars):",
+      token.substring(0, 20) + "..."
+    );
 
     // Verify token
     const payload = verifyAccessToken(token);
     if (!payload) {
+      console.log("[authenticate] Token verification failed");
       res.status(401).json({ error: "Invalid or expired token" });
       return;
     }
+
+    console.log("[authenticate] Token verified for user:", payload.userId);
 
     // Check if session is still valid
     const session = await prisma.session.findUnique({
@@ -58,18 +68,31 @@ export const authenticate = async (
     });
 
     if (!session || !session.isValid || session.expiresAt < new Date()) {
+      console.log("[authenticate] Session expired or invalid:", {
+        sessionExists: !!session,
+        isValid: session?.isValid,
+        expiresAt: session?.expiresAt,
+        now: new Date(),
+      });
       res.status(401).json({ error: "Session expired or invalid" });
       return;
     }
 
+    console.log("[authenticate] Session valid for user:", session.user.email);
+
     // Check if user is active
     if (!session.user.isActive) {
+      console.log("[authenticate] User account is deactivated");
       res.status(403).json({ error: "Account is deactivated" });
       return;
     }
 
     // Check if account is locked
     if (session.user.lockedUntil && session.user.lockedUntil > new Date()) {
+      console.log(
+        "[authenticate] Account is locked until:",
+        session.user.lockedUntil
+      );
       res.status(403).json({
         error: "Account is temporarily locked",
         lockedUntil: session.user.lockedUntil,
@@ -92,9 +115,15 @@ export const authenticate = async (
 
     // Attach user to request
     req.user = payload;
+    console.log(
+      "[authenticate] Authentication successful, proceeding to route handler"
+    );
     next();
   } catch (error) {
-    console.error("Authentication error:", error);
+    console.error("[authenticate] Authentication error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     res.status(500).json({ error: "Authentication failed" });
   }
 };

@@ -19,7 +19,8 @@ model User {
   name          String
   email         String        @unique
   passwordHash  String
-  preferences   Json?
+  preferences   Json?         // {dietaryRestrictions, allergies, cuisinePreferences, calorieGoal, macroGoals}
+  healthGoals   Json?         // {targetWeight, dailyCalories, macroRatios, activityLevel}
   isEmailVerified Boolean     @default(false)
   isActive      Boolean       @default(true)
   lastLoginAt   DateTime?
@@ -36,6 +37,7 @@ model User {
   moodLogs      MoodLog[]
   sessions      Session[]
   loginHistory  LoginHistory[]
+  aiGeneratedRecipes AIGeneratedRecipe[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -74,8 +76,10 @@ model Ingredient {
   ingredientId    String        @id @default(uuid()) @db.Uuid
   name            String
   category        String
-  nutritionalInfo Json
+  nutritionalInfo Json          // {calories, protein, carbs, fat, fiber, vitamins, minerals}
   carbonFootprint Float
+  commonUnits     Json?         // {units: ["g", "kg", "oz", "cup"], conversions: {...}}
+  averagePrice    Float?
   inventoryItems  InventoryItem[]
   groceryListItems GroceryListItem[]
   recipeIngredients RecipeIngredient[]
@@ -92,7 +96,11 @@ model InventoryItem {
   quantity        Float
   unit            String
   expiryDate      DateTime
-  consumptionRate Float?
+  consumptionRate Float?        // Units per day
+  purchaseDate    DateTime?
+  location        String?       // Fridge, Pantry, Freezer
+  imageUrl        String?       // From photo upload
+  aiDetected      Boolean       @default(false) // Was this detected by AI?
   consumptionLogs ConsumptionLog[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -105,8 +113,13 @@ model GroceryListItem {
   ingredient        Ingredient  @relation(fields: [ingredientId], references: [ingredientId])
   ingredientId      String      @db.Uuid
   plannedQuantity   Float
+  unit              String      @default("unit")
   recommendedQuantity Float
+  recommendedUnit   String?
   lastPurchasedPrice Float?
+  isPurchased       Boolean     @default(false)
+  priority          Int         @default(0) // 0=low, 1=medium, 2=high
+  source            String?     // "manual", "recipe", "ai_suggested"
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 }
@@ -117,13 +130,20 @@ model Recipe {
   userId           String?             @db.Uuid
   title            String
   instructions     String
-  imageURL        String?
-  calories        Float
-  macros          Json
+  imageURL         String?
+  calories         Float
+  macros           Json                // {protein, carbs, fat, fiber}
+  servings         Int                 @default(1)
+  prepTime         Int?                // Minutes
+  cookTime         Int?                // Minutes
+  difficulty       String?             // "easy", "medium", "hard"
+  cuisineType      String?
+  dietaryTags      Json?               // ["vegetarian", "gluten-free", etc.]
+  isAIGenerated    Boolean             @default(false)
   recipeIngredients RecipeIngredient[]
-  mealPlanRecipes MealPlanRecipe[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  mealPlanRecipes  MealPlanRecipe[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 }
 
 model RecipeIngredient {
@@ -143,7 +163,10 @@ model MealPlan {
   user            User                @relation(fields: [userId], references: [userId])
   userId          String              @db.Uuid
   date            DateTime
-  mealType        String
+  mealType        String              // "breakfast", "lunch", "dinner", "snack"
+  isAIGenerated   Boolean             @default(false)
+  targetCalories  Float?
+  targetMacros    Json?               // {protein, carbs, fat}
   mealPlanRecipes MealPlanRecipe[]
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
@@ -191,3 +214,65 @@ model MoodLog {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 }
+
+// AI-Generated Recipe Tracking
+model AIGeneratedRecipe {
+  aiRecipeId      String      @id @default(uuid()) @db.Uuid
+  user            User        @relation(fields: [userId], references: [userId])
+  userId          String      @db.Uuid
+  prompt          String      // User's request
+  generatedRecipe Json        // Full AI response
+  wasAccepted     Boolean     @default(false)
+  recipeId        String?     // If user saved it
+  aiModel         String      // "gpt-4", "gemini-pro", etc.
+  tokensUsed      Int?
+  generationTime  Float?      // Seconds
+  createdAt       DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Portion & Duration Estimation Tracking
+model PortionEstimate {
+  portionEstimateId String      @id @default(uuid()) @db.Uuid
+  inventoryItemId   String      @db.Uuid
+  estimatedDuration Int         // Days until depleted
+  recommendedPurchaseQty Float
+  confidence        Float       // 0-1 confidence score
+  algorithm         String      // "time_series", "ml_regression", etc.
+  createdAt         DateTime    @default(now())
+  
+  @@index([inventoryItemId])
+}
+
+// Image Upload Tracking for Inventory
+model InventoryImageUpload {
+  uploadId        String      @id @default(uuid()) @db.Uuid
+  userId          String      @db.Uuid
+  imageUrl        String
+  detectedItems   Json        // [{name, confidence, quantity_estimate}]
+  aiService       String      // "google_vision", "gemini", "yolo"
+  processingTime  Float?      // Seconds
+  wasAccepted     Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Nutrition Analysis Cache
+model NutritionAnalysis {
+  analysisId      String      @id @default(uuid()) @db.Uuid
+  itemName        String
+  quantity        Float
+  unit            String
+  nutritionData   Json        // Full nutrition breakdown
+  source          String      // "usda", "nutritionix", "ml_model"
+  confidence      Float?
+  createdAt       DateTime    @default(now())
+  
+  @@index([itemName])
+  @@unique([itemName, quantity, unit])
+}
+

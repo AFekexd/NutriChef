@@ -9,6 +9,7 @@ import userRoutes from "./routes/userRoutes.js";
 import recipeRoutes from "./routes/recipeRoutes.js";
 import ingredientRoutes from "./routes/ingredientRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
+import inventoryAIRoutes from "./routes/inventoryAIRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 
 const app = express();
@@ -27,6 +28,24 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
+    query: req.query,
+    body: req.method !== "GET" ? req.body : undefined,
+    headers: {
+      authorization: req.headers.authorization
+        ? "Bearer token present"
+        : "No token",
+      "content-type": req.headers["content-type"],
+    },
+  });
+  next();
+});
+
+// Serve uploaded images
+app.use("/uploads", express.static(process.env.UPLOAD_DIR || "./uploads"));
 
 // Rate limiting
 app.use("/api", apiLimiter);
@@ -57,7 +76,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/ingredients", ingredientRoutes);
-app.use("/api/inventory", inventoryRoutes);
+app.use("/api/inventory", inventoryAIRoutes); // Vision AI endpoints (MUST be first - specific routes)
+app.use("/api/inventory", inventoryRoutes); // Regular inventory (catch-all /:id route)
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
