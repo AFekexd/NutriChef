@@ -3,7 +3,7 @@ import {
   getRecommendations,
   getRecommendationsWithIngredients,
 } from "../controllers/recipeRecommendationController.js";
-import { authenticateToken } from "../middlewares/auth.js";
+import { authenticate } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -57,7 +57,7 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.post("/", authenticateToken, getRecommendations);
+router.post("/", authenticate, getRecommendations);
 
 /**
  * @swagger

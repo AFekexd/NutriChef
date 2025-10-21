@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 
 class RecipeRecommendationService extends BaseAIService {
   constructor() {
-    super(AIProvider.OPENAI);
+    // Use Gemini as the AI provider (you can change this to OPENAI if you add the API key)
+    super(AIProvider.GEMINI);
   }
 
   async generateRecommendations(

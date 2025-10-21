@@ -324,3 +324,82 @@ export const getItemsByLocation = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch items by location" });
   }
 };
+
+// Add manual inventory item (creates ingredient if not exists)
+export const addManualInventoryItem = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { ingredientName, quantity, unit, location, expiryDate, category } =
+      req.body;
+
+    // Validation
+    if (!ingredientName || !quantity || !unit) {
+      return res.status(400).json({
+        error: "ingredientName, quantity, and unit are required",
+      });
+    }
+
+    // Find or create ingredient
+    let ingredient = await prisma.ingredient.findFirst({
+      where: {
+        name: {
+          equals: ingredientName,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (!ingredient) {
+      // Create new ingredient
+      ingredient = await prisma.ingredient.create({
+        data: {
+          name: ingredientName,
+          category: category || "other",
+          // Default values for other fields
+          nutritionalInfo: {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0,
+          },
+          carbonFootprint: 0,
+        },
+      });
+    }
+
+    // Calculate expiry date if not provided
+    let parsedExpiryDate: Date;
+    if (expiryDate && expiryDate.trim() !== "") {
+      parsedExpiryDate = new Date(expiryDate);
+    } else {
+      // Default to 7 days from now
+      parsedExpiryDate = new Date();
+      parsedExpiryDate.setDate(parsedExpiryDate.getDate() + 7);
+    }
+
+    // Create inventory item
+    const item = await prisma.inventoryItem.create({
+      data: {
+        userId: req.user.userId,
+        ingredientId: ingredient.ingredientId,
+        quantity: parseFloat(quantity.toString()),
+        unit,
+        expiryDate: parsedExpiryDate,
+        aiDetected: false,
+        location: location || "pantry",
+      },
+      include: {
+        ingredient: true,
+      },
+    });
+
+    res.status(201).json(item);
+  } catch (error) {
+    console.error("Error adding manual inventory item:", error);
+    res.status(500).json({ error: "Failed to add inventory item" });
+  }
+};
