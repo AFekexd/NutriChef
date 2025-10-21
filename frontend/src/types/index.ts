@@ -73,6 +73,40 @@ export interface Recipe {
   updatedAt: string;
 }
 
+// Recipe Recommendation types
+export interface RecipeIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  optional?: boolean;
+}
+
+export interface RecipeRecommendation {
+  title: string;
+  matchPercentage: number;
+  servings: number;
+  prepTime: number;
+  cookTime: number;
+  difficulty: "easy" | "medium" | "hard";
+  calories: number;
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  availableIngredients: RecipeIngredient[];
+  missingIngredients: RecipeIngredient[];
+  instructions: string;
+  cuisineType?: string;
+}
+
+export interface RecipeRecommendationResponse {
+  recommendations: RecipeRecommendation[];
+  ingredientsUsed: number;
+  servings: number;
+  minMatchPercentage: number;
+}
+
 // Ingredient types
 export interface Ingredient {
   ingredientId: string;

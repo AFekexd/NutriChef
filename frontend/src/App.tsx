@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { RecipeRecommendationPage } from "./pages/RecipeRecommendationPage";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { TopNavigation } from "./components/TopNavigation";
 import type { ReactNode } from "react";
@@ -66,6 +67,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <InventoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes"
+        element={
+          <ProtectedRoute>
+            <RecipeRecommendationPage />
           </ProtectedRoute>
         }
       />

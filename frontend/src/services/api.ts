@@ -13,6 +13,9 @@ import type {
   DetectedItem,
   InventoryItem,
   InventoryAnalytics,
+  RecipeIngredient,
+  RecipeRecommendation,
+  RecipeRecommendationResponse,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -265,6 +268,42 @@ class ApiService {
     const response = await this.api.post(`/api/inventory/${itemId}/consume`, {
       quantityConsumed,
     });
+    return response.data;
+  }
+
+  // Recipe Recommendation endpoints
+  async getRecipeRecommendations(data: {
+    servings?: number;
+    minMatchPercentage?: number;
+    useInventory?: boolean;
+    manualIngredients?: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      category: string;
+    }>;
+  }): Promise<RecipeRecommendationResponse> {
+    const response = await this.api.post<RecipeRecommendationResponse>(
+      "/api/recipe-recommendations",
+      data
+    );
+    return response.data;
+  }
+
+  async getRecipeRecommendationsManual(data: {
+    ingredients: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      category: string;
+    }>;
+    servings?: number;
+    minMatchPercentage?: number;
+  }): Promise<RecipeRecommendationResponse> {
+    const response = await this.api.post<RecipeRecommendationResponse>(
+      "/api/recipe-recommendations/manual",
+      data
+    );
     return response.data;
   }
 }

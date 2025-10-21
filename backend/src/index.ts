@@ -10,6 +10,7 @@ import recipeRoutes from "./routes/recipeRoutes.js";
 import ingredientRoutes from "./routes/ingredientRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import inventoryAIRoutes from "./routes/inventoryAIRoutes.js";
+import recipeRecommendationRoutes from "./routes/recipeRecommendationRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 
 const app = express();
@@ -78,6 +79,7 @@ app.use("/api/recipes", recipeRoutes);
 app.use("/api/ingredients", ingredientRoutes);
 app.use("/api/inventory", inventoryAIRoutes); // Vision AI endpoints (MUST be first - specific routes)
 app.use("/api/inventory", inventoryRoutes); // Regular inventory (catch-all /:id route)
+app.use("/api/recipe-recommendations", recipeRecommendationRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

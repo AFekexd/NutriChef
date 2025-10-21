@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ShoppingCart, LogOut } from "lucide-react";
+import { Home, ShoppingCart, ChefHat, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export function BottomNavigation() {
@@ -44,6 +44,18 @@ export function BottomNavigation() {
         >
           <ShoppingCart className="w-6 h-6" />
           <span className="text-xs font-medium">Inventory</span>
+        </button>
+
+        <button
+          onClick={() => navigate("/recipes")}
+          className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+            isActive("/recipes")
+              ? "text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <ChefHat className="w-6 h-6" />
+          <span className="text-xs font-medium">Recipes</span>
         </button>
 
         <button
