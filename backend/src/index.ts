@@ -32,6 +32,16 @@ app.use(cookieParser());
 
 // Request logging middleware
 app.use((req, res, next) => {
+  if (req.path.includes("api-docs")) return next();
+  if (req.path.includes("login") || req.path.includes("signup")) {
+    console.log(
+      `[${new Date().toISOString()}] ${req.method} ${
+        req.path
+      } - Sensitive endpoint accessed`
+    );
+    return next();
+  }
+
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
     query: req.query,
     body: req.method !== "GET" ? req.body : undefined,
