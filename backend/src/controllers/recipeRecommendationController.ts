@@ -18,14 +18,22 @@ class RecipeRecommendationService extends BaseAIService {
       category: string;
     }>,
     servings: number = 2,
-    minMatchPercentage: number = 60
+    minMatchPercentage: number = 60,
+    language: string = "en"
   ) {
     const ingredientsList = availableIngredients
       .map((ing) => `${ing.name} (${ing.quantity} ${ing.unit})`)
       .join(", ");
 
+    // Language-specific instructions
+    const languageInstructions =
+      language === "hu"
+        ? "Válaszolj magyarul. Minden receptnév, hozzávaló, utasítás és leírás magyar nyelvű legyen."
+        : "Respond in English. All recipe names, ingredients, instructions, and descriptions should be in English.";
+
     const systemMessage = `You are a professional chef and nutritionist. Generate recipe recommendations based on available ingredients.
 Your recommendations should be realistic, healthy, and delicious.
+${languageInstructions}
 Provide recipes in JSON format with the following structure:
 {
   "recommendations": [
@@ -61,6 +69,12 @@ Generate 5 recipe recommendations that:
 6. Include prep time, cook time, calories, and macros
 7. Provide clear, step-by-step instructions
 
+${
+  language === "hu"
+    ? "FONTOS: Az egész válasz magyarul legyen!"
+    : "IMPORTANT: The entire response should be in English!"
+}
+
 Return ONLY valid JSON with no additional text.`;
 
     try {
@@ -87,6 +101,7 @@ export const getRecommendations = async (req: Request, res: Response) => {
       minMatchPercentage = 60,
       useInventory = true,
       manualIngredients = [],
+      language = "en",
     } = req.body;
 
     let ingredientsToUse: Array<{
@@ -133,7 +148,8 @@ export const getRecommendations = async (req: Request, res: Response) => {
     const recommendations = await recommendationService.generateRecommendations(
       ingredientsToUse,
       servings,
-      minMatchPercentage
+      minMatchPercentage,
+      language
     );
 
     res.json({
@@ -156,7 +172,12 @@ export const getRecommendationsWithIngredients = async (
   res: Response
 ) => {
   try {
-    const { ingredients, servings = 2, minMatchPercentage = 60 } = req.body;
+    const {
+      ingredients,
+      servings = 2,
+      minMatchPercentage = 60,
+      language = "en",
+    } = req.body;
 
     if (!ingredients || ingredients.length === 0) {
       return res.status(400).json({ error: "Ingredients list is required" });
@@ -166,7 +187,8 @@ export const getRecommendationsWithIngredients = async (
     const recommendations = await recommendationService.generateRecommendations(
       ingredients,
       servings,
-      minMatchPercentage
+      minMatchPercentage,
+      language
     );
 
     res.json({

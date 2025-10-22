@@ -89,9 +89,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <TopNavigation />
-          <AppRoutes />
-          <BottomNavigation />
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+            <TopNavigation />
+            <AppRoutes />
+            <BottomNavigation />
+          </div>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
