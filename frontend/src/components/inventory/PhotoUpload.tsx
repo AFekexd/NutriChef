@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback } from "react";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
 import type { DetectionResult } from "../../types";
 
 interface PhotoUploadProps {
@@ -16,8 +15,6 @@ export function PhotoUpload({
   onUpload,
   onUploadSuccess,
   onUploadError,
-  onClose,
-  onCancel,
 }: PhotoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -108,140 +105,125 @@ export function PhotoUpload({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl bg-white dark:bg-gray-800 p-6 relative">
-        {/* Close button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-4 right-4"
-          onClick={() => {
-            onClose?.();
-            onCancel?.();
-          }}
-          disabled={isUploading}
+    <div className="w-full">
+      {!previewUrl ? (
+        <div
+          className={`border-2 border-dashed rounded-lg p-12 py-16 text-center transition-colors min-h-[300px] flex flex-col items-center justify-center ${
+            isDragging
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+              : "border-gray-300 dark:border-gray-600"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
-          <X className="h-4 w-4" />
-        </Button>
+          <Upload className="h-20 w-20 mx-auto mb-6 text-gray-400" />
+          <p className="text-xl font-medium mb-3 text-gray-900 dark:text-gray-100">
+            Drag and drop your photo here
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
+            or click to browse (JPEG, PNG, WebP, max 10MB)
+          </p>
 
-        <h2 className="text-2xl font-bold mb-6">Scan Your Fridge</h2>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="lg"
+            >
+              <Upload className="h-5 w-5 mr-2" />
+              Choose File
+            </Button>
 
-        {!previewUrl ? (
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-300 dark:border-gray-600"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <Upload className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-            <p className="text-lg font-medium mb-2">
-              Drag and drop your photo here
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              or click to browse (JPEG, PNG, WebP, max 10MB)
-            </p>
+            {/* Camera input for mobile */}
+            <Button
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.capture = "environment";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) handleFileSelect(file);
+                };
+                input.click();
+              }}
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Camera className="h-5 w-5 mr-2" />
+              Take Photo
+            </Button>
+          </div>
 
-            <div className="flex gap-4 justify-center">
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Choose File
-              </Button>
-
-              {/* Camera input for mobile */}
-              <Button
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = "image/*";
-                  input.capture = "environment";
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) handleFileSelect(file);
-                  };
-                  input.click();
-                }}
-                variant="default"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Take Photo
-              </Button>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileInputChange}
-              className="hidden"
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Preview */}
+          <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full h-auto max-h-96 object-contain"
             />
           </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Preview */}
-            <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="w-full h-auto max-h-96 object-contain"
-              />
-            </div>
 
-            {/* File info */}
-            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-              <span>{selectedFile?.name}</span>
-              <span>{(selectedFile!.size / 1024 / 1024).toFixed(2)} MB</span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-4">
-              <Button
-                onClick={clearSelection}
-                variant="outline"
-                className="flex-1"
-                disabled={isUploading}
-              >
-                Choose Different Photo
-              </Button>
-              <Button
-                onClick={handleUpload}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-                disabled={isUploading}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Analyze Photo
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Tips */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-sm">
-              <p className="font-medium mb-2">Tips for best results:</p>
-              <ul className="space-y-1 text-gray-700 dark:text-gray-300">
-                <li>• Ensure good lighting</li>
-                <li>• Keep items clearly visible</li>
-                <li>• Avoid glare and shadows</li>
-                <li>• Take photo straight on</li>
-              </ul>
-            </div>
+          {/* File info */}
+          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <span>{selectedFile?.name}</span>
+            <span>{(selectedFile!.size / 1024 / 1024).toFixed(2)} MB</span>
           </div>
-        )}
-      </Card>
+
+          {/* Actions */}
+          <div className="flex gap-4">
+            <Button
+              onClick={clearSelection}
+              variant="outline"
+              className="flex-1"
+              disabled={isUploading}
+            >
+              Choose Different Photo
+            </Button>
+            <Button
+              onClick={handleUpload}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Analyze Photo
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Tips */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-sm">
+            <p className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+              Tips for best results:
+            </p>
+            <ul className="space-y-1 text-gray-700 dark:text-gray-300">
+              <li>• Ensure good lighting</li>
+              <li>• Keep items clearly visible</li>
+              <li>• Avoid glare and shadows</li>
+              <li>• Take photo straight on</li>
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

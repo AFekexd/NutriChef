@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useTranslation } from "react-i18next";
 import {
   Camera,
   AlertCircle,
@@ -47,6 +48,9 @@ export function InventoryPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const { t, i18n } = useTranslation();
 
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
@@ -150,7 +154,7 @@ export function InventoryPage() {
   const handlePhotoUpload = async (file: File) => {
     setError(null);
     try {
-      const result = await apiService.uploadInventoryImage(file);
+      const result = await apiService.uploadInventoryImage(file, i18n.language);
       setDetectionResult(result);
       setShowPhotoUpload(false);
     } catch (err: any) {
@@ -201,6 +205,60 @@ export function InventoryPage() {
     }
   };
 
+  const handleDeleteItem = async (itemId: string) => {
+    if (
+      !confirm(
+        t("inventory.confirmDelete") ||
+          "Are you sure you want to delete this item?"
+      )
+    ) {
+      return;
+    }
+
+    setError(null);
+    try {
+      await apiService.deleteInventoryItem(itemId);
+      setSuccessMessage(
+        t("inventory.itemDeleted") || "Item deleted successfully!"
+      );
+      await loadInventoryData();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to delete item");
+    }
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setEditingItem(item);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateItem = async (itemData: {
+    quantity: number;
+    unit: string;
+    location: string;
+    expiryDate?: string;
+  }) => {
+    if (!editingItem) return;
+
+    setError(null);
+    try {
+      await apiService.updateInventoryItem(
+        editingItem.inventoryItemId,
+        itemData
+      );
+      setSuccessMessage(
+        t("inventory.itemUpdated") || "Item updated successfully!"
+      );
+      setShowEditModal(false);
+      setEditingItem(null);
+      await loadInventoryData();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to update item");
+    }
+  };
+
   const getLocationIcon = (location: string | undefined) => {
     switch (location) {
       case "fridge":
@@ -244,24 +302,21 @@ export function InventoryPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-green-600 dark:text-green-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div
-          ref={headerRef}
-          className="flex items-center justify-between mb-8"
-        >
+        <div ref={headerRef} className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-              Smart Inventory
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+              {t("inventory.title")}
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
               Track your ingredients with AI-powered detection
             </p>
           </div>
@@ -269,16 +324,16 @@ export function InventoryPage() {
             <Button
               onClick={() => setShowManualForm(!showManualForm)}
               variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50"
+              className="border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
             >
-              + Add Manually
+              + {t("inventory.manualAdd")}
             </Button>
             <Button
               onClick={() => setShowPhotoUpload(true)}
-              className="bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-green-600 to-green-300 text-white hover:from-green-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Camera className="w-5 h-5 mr-2" />
-              Scan Fridge
+              {t("inventory.scanPhoto")}
             </Button>
           </div>
         </div>
@@ -316,59 +371,66 @@ export function InventoryPage() {
           {[
             {
               icon: Package,
-              title: "Total Items",
+              title: t("dashboard.totalItems"),
               value: analytics?.totalItems || 0,
-              subtitle: `${analytics?.aiDetectionPercentage || 0}% AI detected`,
-              bgColor: "bg-green-100",
-              borderColor: "border-green-100",
-              iconColor: "text-green-600",
+              subtitle: `${analytics?.aiDetectionPercentage || 0}% ${t(
+                "inventory.detectedByAI"
+              )}`,
+              bgColor: "bg-green-100 dark:bg-green-950/50",
+              borderColor: "border-green-100 dark:border-green-800",
+              iconColor: "text-green-600 dark:text-green-400",
               delay: 0,
             },
             {
               icon: Calendar,
-              title: "Expiring Soon",
+              title: t("dashboard.expiringItems"),
               value: analytics?.expiringItems || 0,
               subtitle: "Next 7 days",
-              bgColor: "bg-orange-100",
-              borderColor: "border-orange-100",
-              iconColor: "text-orange-600",
+              bgColor: "bg-orange-100 dark:bg-orange-950/50",
+              borderColor: "border-orange-100 dark:border-orange-800",
+              iconColor: "text-orange-600 dark:text-orange-400",
               delay: 0.1,
             },
             {
               icon: Refrigerator,
-              title: "In Fridge",
+              title: `In ${t("inventory.fridge")}`,
               value: analytics?.byLocation.fridge || 0,
-              subtitle: `Pantry: ${
+              subtitle: `${t("inventory.pantry")}: ${
                 analytics?.byLocation.pantry || 0
-              } | Freezer: ${analytics?.byLocation.freezer || 0}`,
-              bgColor: "bg-blue-100",
-              borderColor: "border-blue-100",
-              iconColor: "text-blue-600",
+              } | ${t("inventory.freezer")}: ${
+                analytics?.byLocation.freezer || 0
+              }`,
+              bgColor: "bg-blue-100 dark:bg-blue-950/50",
+              borderColor: "border-blue-100 dark:border-blue-800",
+              iconColor: "text-blue-600 dark:text-blue-400",
               delay: 0.2,
             },
           ].map((card, index) => (
-            <div
-              key={index}
-              className="analytics-card"
-            >
+            <div key={index} className="analytics-card">
               <Card
-                className={`p-6 bg-white ${card.borderColor} hover:shadow-lg transition-shadow duration-200`}
+                className={`p-6 bg-white dark:bg-gray-900 ${card.borderColor} hover:shadow-lg transition-shadow duration-200`}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className={`p-3 ${card.bgColor} rounded-lg`}>
                     <card.icon className={`w-6 h-6 ${card.iconColor}`} />
                   </div>
-                  <BarChart3 className="w-5 h-5 text-gray-400" />
+                  <BarChart3 className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                <p className="text-sm text-gray-600 mt-1">{card.title}</p>
-                <p className="text-xs text-gray-500 mt-2">{card.subtitle}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  {card.value}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  {card.title}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {card.subtitle}
+                </p>
               </Card>
             </div>
           ))}
 
           <div className="analytics-card">
-            <Card className="p-6 bg-gradient-to-br from-green-600 to-blue-600 text-white hover:shadow-lg transition-shadow duration-200">
+            <Card className="p-6 bg-gradient-to-br from-green-600 to-green-300 text-white hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-white/20 rounded-lg">
                   <TrendingUp className="w-6 h-6 text-white" />
@@ -383,7 +445,7 @@ export function InventoryPage() {
                 onClick={() => setShowPhotoUpload(true)}
               >
                 <Camera className="w-4 h-4 mr-2" />
-                Scan Now
+                {t("inventory.scanPhoto")}
               </Button>
             </Card>
           </div>
@@ -392,14 +454,14 @@ export function InventoryPage() {
         {/* Expiring Items Alert */}
         {expiringItems.length > 0 && (
           <div ref={expiringRef}>
-            <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+            <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30 border-orange-200 dark:border-orange-800">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-orange-100 rounded-lg">
-                  <AlertCircle className="w-6 h-6 text-orange-600" />
+                <div className="p-3 bg-orange-100 dark:bg-orange-900/50 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Items Expiring Soon
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    {t("dashboard.expiringItems")}
                   </h3>
                   <div className="space-y-2">
                     {expiringItems.slice(0, 3).map((item) => {
@@ -407,15 +469,15 @@ export function InventoryPage() {
                       return (
                         <div
                           key={item.inventoryItemId}
-                          className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-3 rounded-lg"
+                          className="flex items-center justify-between bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm p-3 rounded-lg"
                         >
                           <div className="flex items-center gap-3">
                             {getLocationIcon(item.location)}
                             <div>
-                              <p className="font-medium text-gray-900">
+                              <p className="font-medium text-gray-900 dark:text-gray-100">
                                 {item.ingredient?.name}
                               </p>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {item.quantity} {item.unit} • {item.location}
                               </p>
                             </div>
@@ -426,7 +488,7 @@ export function InventoryPage() {
                     })}
                   </div>
                   {expiringItems.length > 3 && (
-                    <p className="text-sm text-gray-600 mt-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
                       +{expiringItems.length - 3} more items expiring soon
                     </p>
                   )}
@@ -439,13 +501,13 @@ export function InventoryPage() {
         {/* Filters and View Controls */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder={t("inventory.search") + "..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
@@ -455,21 +517,21 @@ export function InventoryPage() {
               onChange={(e) =>
                 setLocationFilter(e.target.value as LocationFilter)
               }
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="all">All Locations</option>
-              <option value="fridge">🧊 Fridge</option>
-              <option value="pantry">📦 Pantry</option>
-              <option value="freezer">❄️ Freezer</option>
+              <option value="all">{t("inventory.all")}</option>
+              <option value="fridge">🧊 {t("inventory.fridge")}</option>
+              <option value="pantry">📦 {t("inventory.pantry")}</option>
+              <option value="freezer">❄️ {t("inventory.freezer")}</option>
             </select>
 
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+            <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`px-3 py-2 ${
                   viewMode === "grid"
                     ? "bg-green-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
               >
                 <Grid3x3 className="w-5 h-5" />
@@ -479,7 +541,7 @@ export function InventoryPage() {
                 className={`px-3 py-2 ${
                   viewMode === "list"
                     ? "bg-green-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -490,23 +552,23 @@ export function InventoryPage() {
 
         {/* Items Display */}
         {filteredItems.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No items found
+          <Card className="p-12 text-center bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+            <Package className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              {t("inventory.emptyState")}
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {searchQuery || locationFilter !== "all"
                 ? "Try adjusting your filters"
-                : "Start by scanning your fridge!"}
+                : t("inventory.emptyStateDesc")}
             </p>
             {!searchQuery && locationFilter === "all" && (
               <Button
                 onClick={() => setShowPhotoUpload(true)}
-                className="bg-gradient-to-r from-green-600 to-blue-600 text-white"
+                className="bg-gradient-to-r from-green-600 to-green-300 text-white"
               >
                 <Camera className="w-5 h-5 mr-2" />
-                Scan Fridge
+                {t("inventory.scanPhoto")}
               </Button>
             )}
           </Card>
@@ -518,61 +580,74 @@ export function InventoryPage() {
             {filteredItems.map((item) => {
               const expiry = getExpiryStatus(item.expiryDate);
               return (
-                <div
-                  key={item.inventoryItemId}
-                  className="item-card"
-                >
-                  <Card className="p-4 hover:shadow-lg transition-all duration-200 bg-white">
+                <div key={item.inventoryItemId} className="item-card">
+                  <Card className="p-4 hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {getLocationIcon(item.location)}
-                        <span className="text-sm text-gray-600 capitalize">
+                        <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
                           {item.location}
                         </span>
                       </div>
-                      {item.aiDetected && (
-                        <Badge className="bg-blue-100 text-blue-700 text-xs">
+                      {item.aiDetected ? (
+                        <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs">
                           AI
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs">
+                          Manual
                         </Badge>
                       )}
                     </div>
 
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       {item.ingredient?.name}
                     </h3>
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Quantity</span>
-                        <span className="font-medium text-gray-900">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {t("inventory.quantity")}
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
                           {item.quantity} {item.unit}
                         </span>
                       </div>
                       {item.expiryDate && (
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">Expires</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            Expires
+                          </span>
                           <Badge className={expiry.color}>{expiry.text}</Badge>
                         </div>
                       )}
                       {item.ingredient?.category && (
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600">Category</span>
-                          <span className="font-medium text-gray-900 capitalize">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {t("inventory.category")}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
                             {item.ingredient.category}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-gray-100">
-                      <Button variant="outline" size="sm" className="flex-1">
+                    <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-100 hover:cursor-pointer"
+                        onClick={() => handleEditItem(item)}
+                      >
                         <Edit2 className="w-4 h-4 mr-1" />
-                        Edit
+                        {t("common.edit")}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 dark:border-gray-700 dark:hover:border-red-600 hover:cursor-pointer"
+                        onClick={() => handleDeleteItem(item.inventoryItemId)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -584,46 +659,46 @@ export function InventoryPage() {
           </div>
         ) : (
           <div>
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Item
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t("inventory.itemName")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t("inventory.location")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantity
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t("inventory.quantity")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        {t("inventory.category")}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Expiry
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                     {filteredItems.map((item) => {
                       const expiry = getExpiryStatus(item.expiryDate);
                       return (
                         <tr
                           key={item.inventoryItemId}
-                          className="hover:bg-gray-50"
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">
                                 {item.ingredient?.name}
                               </span>
                               {item.aiDetected && (
-                                <Badge className="bg-blue-100 text-blue-700 text-xs">
+                                <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs">
                                   AI
                                 </Badge>
                               )}
@@ -632,15 +707,15 @@ export function InventoryPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
                               {getLocationIcon(item.location)}
-                              <span className="text-sm text-gray-900 capitalize">
+                              <span className="text-sm text-gray-900 dark:text-gray-100 capitalize">
                                 {item.location}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                             {item.quantity} {item.unit}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 capitalize">
                             {item.ingredient?.category || "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -649,18 +724,28 @@ export function InventoryPage() {
                                 {expiry.text}
                               </Badge>
                             ) : (
-                              <span className="text-sm text-gray-500">-</span>
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                -
+                              </span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex gap-2">
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="dark:hover:bg-gray-800"
+                                onClick={() => handleEditItem(item)}
+                              >
                                 <Edit2 className="w-4 h-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-red-600 hover:bg-red-50"
+                                className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+                                onClick={() =>
+                                  handleDeleteItem(item.inventoryItemId)
+                                }
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -678,7 +763,7 @@ export function InventoryPage() {
 
         {/* Results Summary */}
         {filteredItems.length > 0 && (
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
             Showing {filteredItems.length} of {allItems.length} items
           </div>
         )}
@@ -686,18 +771,16 @@ export function InventoryPage() {
 
       {/* Photo Upload Modal */}
       {showPhotoUpload && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        >
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div
             ref={modalRef}
-            className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800"
           >
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Scan Your Fridge
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {t("inventory.scanPhoto")}
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Upload a photo and let AI detect your ingredients
               </p>
             </div>
@@ -713,29 +796,72 @@ export function InventoryPage() {
 
       {/* AI Detection Review Modal */}
       {detectionResult && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        >
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div
             ref={modalRef}
-            className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white dark:bg-gray-900 rounded-xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-800 flex flex-col"
           >
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Review Detected Items
               </h2>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Found {detectionResult.detectedItems.length} items • Edit and
                 confirm to add
               </p>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1">
               <AIDetectionReview
                 detectionResult={detectionResult}
                 onConfirm={(items) =>
                   handleConfirmItems(detectionResult.uploadId, items)
                 }
                 onCancel={() => setDetectionResult(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditModal && editingItem && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {t("inventory.editItem") || "Edit Item"}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {editingItem.ingredient?.name}
+              </p>
+            </div>
+            <div className="p-6">
+              <ManualItemForm
+                initialData={{
+                  name: editingItem.ingredient?.name || "",
+                  quantity: editingItem.quantity,
+                  unit: editingItem.unit,
+                  location: editingItem.location || "fridge",
+                  expiryDate: editingItem.expiryDate
+                    ? new Date(editingItem.expiryDate)
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined,
+                  category: editingItem.ingredient?.category || "",
+                }}
+                onSubmit={(data) =>
+                  handleUpdateItem({
+                    quantity: data.quantity,
+                    unit: data.unit,
+                    location: data.location,
+                    expiryDate: data.expiryDate,
+                  })
+                }
+                onCancel={() => {
+                  setShowEditModal(false);
+                  setEditingItem(null);
+                }}
+                isEditMode={true}
               />
             </div>
           </div>

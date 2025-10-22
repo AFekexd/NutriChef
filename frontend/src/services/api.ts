@@ -13,8 +13,6 @@ import type {
   DetectedItem,
   InventoryItem,
   InventoryAnalytics,
-  RecipeIngredient,
-  RecipeRecommendation,
   RecipeRecommendationResponse,
 } from "../types";
 
@@ -188,9 +186,15 @@ class ApiService {
   }
 
   // Vision AI endpoints
-  async uploadInventoryImage(file: File): Promise<DetectionResult> {
+  async uploadInventoryImage(
+    file: File,
+    language?: string
+  ): Promise<DetectionResult> {
     const formData = new FormData();
     formData.append("image", file);
+    if (language) {
+      formData.append("language", language);
+    }
 
     const response = await this.api.post<DetectionResult>(
       "/api/inventory/upload-image",
@@ -271,11 +275,30 @@ class ApiService {
     return response.data;
   }
 
+  async deleteInventoryItem(itemId: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/inventory/${itemId}`);
+    return response.data;
+  }
+
+  async updateInventoryItem(
+    itemId: string,
+    data: {
+      quantity?: number;
+      unit?: string;
+      location?: string;
+      expiryDate?: string;
+    }
+  ): Promise<{ message: string; item: InventoryItem }> {
+    const response = await this.api.put(`/api/inventory/${itemId}`, data);
+    return response.data;
+  }
+
   // Recipe Recommendation endpoints
   async getRecipeRecommendations(data: {
     servings?: number;
     minMatchPercentage?: number;
     useInventory?: boolean;
+    language?: string;
     manualIngredients?: Array<{
       name: string;
       quantity: number;
@@ -299,6 +322,7 @@ class ApiService {
     }>;
     servings?: number;
     minMatchPercentage?: number;
+    language?: string;
   }): Promise<RecipeRecommendationResponse> {
     const response = await this.api.post<RecipeRecommendationResponse>(
       "/api/recipe-recommendations/manual",

@@ -94,7 +94,10 @@ class VisionAIService {
   }
 
   // Method 2: Gemini Vision (free, good quality)
-  async detectWithGemini(imagePath: string): Promise<DetectedItem[]> {
+  async detectWithGemini(
+    imagePath: string,
+    language: string = "en"
+  ): Promise<DetectedItem[]> {
     try {
       // Use gemini-1.5-flash for vision + text generation
       const model = gemini.getGenerativeModel({
@@ -112,7 +115,14 @@ class VisionAIService {
         ? "image/webp"
         : "image/jpeg";
 
+      // Language-specific instructions
+      const languageInstructions =
+        language === "hu"
+          ? "Válaszolj magyarul. Minden élelmiszernév és kategória magyar nyelvű legyen."
+          : "Respond in English. All food item names and categories should be in English.";
+
       const prompt = `Analyze this image of a fridge, pantry, or food storage area. 
+${languageInstructions}
 List all visible food items and ingredients you can identify.
 
 For each item, provide:
@@ -136,7 +146,12 @@ Return ONLY a valid JSON array with this structure:
   }
 ]
 
-Be specific (e.g., "Red Apple" not just "Fruit"). Only include items you can clearly see.`;
+Be specific (e.g., "Red Apple" not just "Fruit"). Only include items you can clearly see.
+${
+  language === "hu"
+    ? "FONTOS: Minden név magyarul legyen!"
+    : "IMPORTANT: All names should be in English!"
+}`;
 
       const result = await model.generateContent([
         {
@@ -192,14 +207,17 @@ Be specific (e.g., "Red Apple" not just "Fruit"). Only include items you can cle
   }
 
   // Main detection method (tries Gemini first, falls back to Vision)
-  async detectIngredients(imagePath: string): Promise<DetectionResult> {
+  async detectIngredients(
+    imagePath: string,
+    language: string = "en"
+  ): Promise<DetectionResult> {
     const startTime = Date.now();
     let items: DetectedItem[] = [];
     let aiService: "google_vision" | "gemini" = "gemini";
 
     try {
       // Try Gemini first (free and good)
-      items = await this.detectWithGemini(imagePath);
+      items = await this.detectWithGemini(imagePath, language);
       aiService = "gemini";
     } catch (geminiError) {
       console.log("Gemini failed, trying Google Vision...");

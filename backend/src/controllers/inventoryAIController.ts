@@ -53,6 +53,7 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
     console.log("[uploadInventoryImage] Request received:", {
       userId: req.user?.userId,
       hasFile: !!(req as MulterRequest).file,
+      language: req.body.language,
     });
 
     const userId = req.user?.userId;
@@ -63,6 +64,7 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
     }
 
     const file = (req as MulterRequest).file;
+    const language = req.body.language || "en";
 
     if (!file) {
       console.log("[uploadInventoryImage] No file uploaded");
@@ -73,6 +75,7 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
       filename: file.filename,
       size: file.size,
       mimetype: file.mimetype,
+      language,
     });
 
     const imagePath = file.path;
@@ -82,9 +85,12 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
     console.log("[uploadInventoryImage] Optimizing image...");
     await visionAI.optimizeImage(imagePath, optimizedPath);
 
-    // Detect ingredients using AI
+    // Detect ingredients using AI with language support
     console.log("[uploadInventoryImage] Detecting ingredients...");
-    const detectionResult = await visionAI.detectIngredients(optimizedPath);
+    const detectionResult = await visionAI.detectIngredients(
+      optimizedPath,
+      language
+    );
     console.log("[uploadInventoryImage] Detection complete:", {
       itemsDetected: detectionResult.totalItemsDetected,
       aiService: detectionResult.aiService,
