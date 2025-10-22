@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { gsap } from "gsap";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -27,6 +27,17 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (formRef.current) {
+      gsap.fromTo(
+        formRef.current,
+        { opacity: 0, scale: 0.95 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }
+      );
+    }
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -63,13 +74,8 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="p-6 bg-white border-blue-100">
+    <div ref={formRef}>
+      <Card className="p-6 bg-white border-green-100">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">
             Add Item Manually
@@ -100,7 +106,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g., Tomato, Milk, Cheese"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
               disabled={isLoading}
             />
           </div>
@@ -118,7 +124,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
                 onChange={handleChange}
                 min="0.1"
                 step="0.1"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 disabled={isLoading}
               />
             </div>
@@ -130,7 +136,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
                 name="unit"
                 value={formData.unit}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                 disabled={isLoading}
               >
                 <option value="kg">kg</option>
@@ -155,7 +161,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
               disabled={isLoading}
             >
               <option value="fridge">🧊 Fridge</option>
@@ -175,7 +181,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
               value={formData.category}
               onChange={handleChange}
               placeholder="e.g., Vegetables, Dairy, Frozen"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
               disabled={isLoading}
             />
           </div>
@@ -190,7 +196,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
               name="expiryDate"
               value={formData.expiryDate}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
               disabled={isLoading}
             />
           </div>
@@ -200,7 +206,7 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700 disabled:opacity-50"
             >
               {isLoading ? "Adding..." : "Add Item"}
             </Button>
@@ -216,6 +222,6 @@ export function ManualItemForm({ onSubmit, onCancel }: ManualItemFormProps) {
           </div>
         </form>
       </Card>
-    </motion.div>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { gsap } from "gsap";
 import {
   Camera,
   AlertCircle,
@@ -48,9 +48,83 @@ export function InventoryPage() {
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // GSAP refs
+  const headerRef = useRef<HTMLDivElement>(null);
+  const analyticsRef = useRef<HTMLDivElement>(null);
+  const expiringRef = useRef<HTMLDivElement>(null);
+  const itemsGridRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     loadInventoryData();
   }, []);
+
+  // GSAP animations on mount
+  useEffect(() => {
+    if (!isLoading && headerRef.current) {
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (!isLoading && analyticsRef.current) {
+      const cards = analyticsRef.current.querySelectorAll(".analytics-card");
+      gsap.fromTo(
+        cards,
+        { opacity: 0, scale: 0.9 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.4,
+          stagger: 0.1,
+          ease: "back.out(1.2)",
+        }
+      );
+    }
+  }, [isLoading, analytics]);
+
+  useEffect(() => {
+    if (expiringItems.length > 0 && expiringRef.current) {
+      gsap.fromTo(
+        expiringRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.2, ease: "power2.out" }
+      );
+    }
+  }, [expiringItems]);
+
+  useEffect(() => {
+    if (!isLoading && itemsGridRef.current) {
+      const items = itemsGridRef.current.querySelectorAll(".item-card");
+      if (items.length > 0) {
+        gsap.fromTo(
+          items,
+          { opacity: 0, scale: 0.9 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.3,
+            stagger: 0.05,
+            ease: "power2.out",
+          }
+        );
+      }
+    }
+  }, [allItems, locationFilter, searchQuery, viewMode, isLoading]);
+
+  useEffect(() => {
+    if (showPhotoUpload && modalRef.current) {
+      gsap.fromTo(
+        modalRef.current,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }
+      );
+    }
+  }, [showPhotoUpload, detectionResult]);
 
   const loadInventoryData = async () => {
     setIsLoading(true);
@@ -170,23 +244,21 @@ export function InventoryPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 pb-20 md:pb-0 md:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+          ref={headerRef}
           className="flex items-center justify-between mb-8"
         >
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
               Smart Inventory
             </h1>
             <p className="text-gray-600 mt-2">
@@ -197,19 +269,19 @@ export function InventoryPage() {
             <Button
               onClick={() => setShowManualForm(!showManualForm)}
               variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              className="border-green-600 text-green-600 hover:bg-green-50"
             >
               + Add Manually
             </Button>
             <Button
               onClick={() => setShowPhotoUpload(true)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Camera className="w-5 h-5 mr-2" />
               Scan Fridge
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* Messages */}
         {error && (
@@ -228,25 +300,17 @@ export function InventoryPage() {
 
         {/* Manual Item Form */}
         {showManualForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="mb-8"
-          >
+          <div className="mb-8">
             <ManualItemForm
               onSubmit={handleAddManualItem}
               onCancel={() => setShowManualForm(false)}
             />
-          </motion.div>
+          </div>
         )}
 
         {/* Analytics Cards */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+        <div
+          ref={analyticsRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
           {[
@@ -255,9 +319,9 @@ export function InventoryPage() {
               title: "Total Items",
               value: analytics?.totalItems || 0,
               subtitle: `${analytics?.aiDetectionPercentage || 0}% AI detected`,
-              bgColor: "bg-blue-100",
-              borderColor: "border-blue-100",
-              iconColor: "text-blue-600",
+              bgColor: "bg-green-100",
+              borderColor: "border-green-100",
+              iconColor: "text-green-600",
               delay: 0,
             },
             {
@@ -277,17 +341,15 @@ export function InventoryPage() {
               subtitle: `Pantry: ${
                 analytics?.byLocation.pantry || 0
               } | Freezer: ${analytics?.byLocation.freezer || 0}`,
-              bgColor: "bg-green-100",
-              borderColor: "border-green-100",
-              iconColor: "text-green-600",
+              bgColor: "bg-blue-100",
+              borderColor: "border-blue-100",
+              iconColor: "text-blue-600",
               delay: 0.2,
             },
           ].map((card, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.15 + card.delay }}
+              className="analytics-card"
             >
               <Card
                 className={`p-6 bg-white ${card.borderColor} hover:shadow-lg transition-shadow duration-200`}
@@ -302,15 +364,11 @@ export function InventoryPage() {
                 <p className="text-sm text-gray-600 mt-1">{card.title}</p>
                 <p className="text-xs text-gray-500 mt-2">{card.subtitle}</p>
               </Card>
-            </motion.div>
+            </div>
           ))}
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.45 }}
-          >
-            <Card className="p-6 bg-gradient-to-br from-blue-600 to-purple-600 text-white hover:shadow-lg transition-shadow duration-200">
+          <div className="analytics-card">
+            <Card className="p-6 bg-gradient-to-br from-green-600 to-blue-600 text-white hover:shadow-lg transition-shadow duration-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-white/20 rounded-lg">
                   <TrendingUp className="w-6 h-6 text-white" />
@@ -328,16 +386,12 @@ export function InventoryPage() {
                 Scan Now
               </Button>
             </Card>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* Expiring Items Alert */}
         {expiringItems.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div ref={expiringRef}>
             <Card className="p-6 mb-8 bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-orange-100 rounded-lg">
@@ -348,17 +402,11 @@ export function InventoryPage() {
                     Items Expiring Soon
                   </h3>
                   <div className="space-y-2">
-                    {expiringItems.slice(0, 3).map((item, index) => {
+                    {expiringItems.slice(0, 3).map((item) => {
                       const expiry = getExpiryStatus(item.expiryDate);
                       return (
-                        <motion.div
+                        <div
                           key={item.inventoryItemId}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            duration: 0.3,
-                            delay: 0.25 + index * 0.1,
-                          }}
                           className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-3 rounded-lg"
                         >
                           <div className="flex items-center gap-3">
@@ -373,7 +421,7 @@ export function InventoryPage() {
                             </div>
                           </div>
                           <Badge className={expiry.color}>{expiry.text}</Badge>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </div>
@@ -385,7 +433,7 @@ export function InventoryPage() {
                 </div>
               </div>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Filters and View Controls */}
@@ -397,7 +445,7 @@ export function InventoryPage() {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
@@ -407,7 +455,7 @@ export function InventoryPage() {
               onChange={(e) =>
                 setLocationFilter(e.target.value as LocationFilter)
               }
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               <option value="all">All Locations</option>
               <option value="fridge">🧊 Fridge</option>
@@ -420,7 +468,7 @@ export function InventoryPage() {
                 onClick={() => setViewMode("grid")}
                 className={`px-3 py-2 ${
                   viewMode === "grid"
-                    ? "bg-blue-600 text-white"
+                    ? "bg-green-600 text-white"
                     : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
@@ -430,7 +478,7 @@ export function InventoryPage() {
                 onClick={() => setViewMode("list")}
                 className={`px-3 py-2 ${
                   viewMode === "list"
-                    ? "bg-blue-600 text-white"
+                    ? "bg-green-600 text-white"
                     : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
@@ -455,7 +503,7 @@ export function InventoryPage() {
             {!searchQuery && locationFilter === "all" && (
               <Button
                 onClick={() => setShowPhotoUpload(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                className="bg-gradient-to-r from-green-600 to-blue-600 text-white"
               >
                 <Camera className="w-5 h-5 mr-2" />
                 Scan Fridge
@@ -463,21 +511,16 @@ export function InventoryPage() {
             )}
           </Card>
         ) : viewMode === "grid" ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+          <div
+            ref={itemsGridRef}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
           >
-            {filteredItems.map((item, index) => {
+            {filteredItems.map((item) => {
               const expiry = getExpiryStatus(item.expiryDate);
               return (
-                <motion.div
+                <div
                   key={item.inventoryItemId}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.05 + index * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -4 }}
+                  className="item-card"
                 >
                   <Card className="p-4 hover:shadow-lg transition-all duration-200 bg-white">
                     <div className="flex items-start justify-between mb-3">
@@ -488,7 +531,7 @@ export function InventoryPage() {
                         </span>
                       </div>
                       {item.aiDetected && (
-                        <Badge className="bg-purple-100 text-purple-700 text-xs">
+                        <Badge className="bg-blue-100 text-blue-700 text-xs">
                           AI
                         </Badge>
                       )}
@@ -535,16 +578,12 @@ export function InventoryPage() {
                       </Button>
                     </div>
                   </Card>
-                </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
+          <div>
             <Card className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -584,7 +623,7 @@ export function InventoryPage() {
                                 {item.ingredient?.name}
                               </span>
                               {item.aiDetected && (
-                                <Badge className="bg-purple-100 text-purple-700 text-xs">
+                                <Badge className="bg-blue-100 text-blue-700 text-xs">
                                   AI
                                 </Badge>
                               )}
@@ -634,7 +673,7 @@ export function InventoryPage() {
                 </table>
               </div>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Results Summary */}
@@ -647,18 +686,11 @@ export function InventoryPage() {
 
       {/* Photo Upload Modal */}
       {showPhotoUpload && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+          <div
+            ref={modalRef}
             className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             <div className="p-6 border-b border-gray-200">
@@ -675,24 +707,17 @@ export function InventoryPage() {
                 onCancel={() => setShowPhotoUpload(false)}
               />
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
 
       {/* AI Detection Review Modal */}
       {detectionResult && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+          <div
+            ref={modalRef}
             className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
           >
             <div className="p-6 border-b border-gray-200">
@@ -713,8 +738,8 @@ export function InventoryPage() {
                 onCancel={() => setDetectionResult(null)}
               />
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
     </div>
   );
