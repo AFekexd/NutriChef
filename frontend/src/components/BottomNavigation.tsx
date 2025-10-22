@@ -26,7 +26,7 @@ export function BottomNavigation() {
           onClick={() => navigate("/dashboard")}
           className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
             isActive("/dashboard")
-              ? "text-blue-600"
+              ? "text-green-600"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -38,7 +38,7 @@ export function BottomNavigation() {
           onClick={() => navigate("/inventory")}
           className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
             isActive("/inventory")
-              ? "text-blue-600"
+              ? "text-green-600"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -50,7 +50,7 @@ export function BottomNavigation() {
           onClick={() => navigate("/recipes")}
           className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
             isActive("/recipes")
-              ? "text-blue-600"
+              ? "text-green-600"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >

@@ -26,10 +26,10 @@ export function TopNavigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg flex items-center justify-center shadow-md">
               <ChefHat className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
               NutriChef
             </h1>
           </div>
@@ -40,7 +40,7 @@ export function TopNavigation() {
               onClick={() => navigate("/dashboard")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                 isActive("/dashboard")
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-green-100 text-green-700"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -52,7 +52,7 @@ export function TopNavigation() {
               onClick={() => navigate("/inventory")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                 isActive("/inventory")
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-green-100 text-green-700"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -64,7 +64,7 @@ export function TopNavigation() {
               onClick={() => navigate("/recipes")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                 isActive("/recipes")
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-green-100 text-green-700"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
