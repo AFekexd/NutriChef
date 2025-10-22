@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { gsap } from "gsap";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -24,6 +24,34 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (logoRef.current) {
+      gsap.fromTo(
+        logoRef.current,
+        { scale: 0, rotate: -180 },
+        {
+          scale: 1,
+          rotate: 0,
+          duration: 0.8,
+          ease: "back.out(1.5)",
+        }
+      );
+    }
+  }, []);
 
   const passwordRequirements = [
     { text: "At least 8 characters", met: password.length >= 8 },
@@ -64,21 +92,17 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <div
+        ref={containerRef}
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          <div
+            ref={logoRef}
             className="inline-flex items-center justify-center w-20 h-20 bg-[#FF7043] rounded-2xl mb-4 shadow-lg"
           >
             <ChefHat className="w-10 h-10 text-white" />
-          </motion.div>
+          </div>
           <h1
             className="text-4xl font-bold text-[#4A4A4A] mb-2"
             style={{ fontFamily: "Poppins, sans-serif" }}
@@ -105,13 +129,11 @@ export default function RegisterPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
+                <div
                   className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
                 >
                   {error}
-                </motion.div>
+                </div>
               )}
 
               <div className="space-y-2">
@@ -167,9 +189,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 {password && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
+                  <div
                     className="space-y-1 text-xs"
                   >
                     {passwordRequirements.map((req, index) => (
@@ -189,7 +209,7 @@ export default function RegisterPage() {
                         {req.text}
                       </div>
                     ))}
-                  </motion.div>
+                  </div>
                 )}
               </div>
 
@@ -244,7 +264,7 @@ export default function RegisterPage() {
           By creating an account, you agree to our Terms of Service and Privacy
           Policy
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

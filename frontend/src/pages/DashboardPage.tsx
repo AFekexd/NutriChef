@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
+import { gsap } from "gsap";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
 import {
@@ -22,6 +23,47 @@ import { useNavigate } from "react-router-dom";
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const welcomeRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (welcomeRef.current) {
+      gsap.fromTo(
+        welcomeRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (featuresRef.current) {
+      const cards = featuresRef.current.querySelectorAll(".feature-card");
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: "power2.out",
+        }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (statsRef.current) {
+      gsap.fromTo(
+        statsRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.6, ease: "power2.out" }
+      );
+    }
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -112,10 +154,8 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+          ref={welcomeRef}
           className="text-center mb-12"
         >
           <h2
@@ -130,18 +170,16 @@ export default function DashboardPage() {
             Your AI-powered nutrition assistant is ready to help you plan meals,
             manage inventory, and achieve your health goals.
           </p>
-        </motion.div>
+        </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div ref={featuresRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="feature-card"
               >
                 <Card
                   className="bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group h-full"
@@ -171,17 +209,13 @@ export default function DashboardPage() {
                     </CardDescription>
                   </CardHeader>
                 </Card>
-              </motion.div>
+              </div>
             );
           })}
         </div>
 
         {/* Quick Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
+        <div ref={statsRef}>
           <Card className="bg-white border border-gray-200 shadow-xl">
             <CardHeader>
               <CardTitle
@@ -249,7 +283,7 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </main>
     </div>
   );

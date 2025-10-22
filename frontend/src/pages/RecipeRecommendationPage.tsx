@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { gsap } from "gsap";
 import {
   ChefHat,
   AlertCircle,
@@ -50,6 +50,65 @@ export function RecipeRecommendationPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeRecommendation | null>(null);
+
+  // GSAP refs
+  const headerRef = useRef<HTMLDivElement>(null);
+  const configRef = useRef<HTMLDivElement>(null);
+  const recommendationsRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (configRef.current) {
+      gsap.fromTo(
+        configRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, delay: 0.1, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (recommendations.length > 0 && recommendationsRef.current) {
+      gsap.fromTo(
+        recommendationsRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, delay: 0.2, ease: "power2.out" }
+      );
+
+      const cards = recommendationsRef.current.querySelectorAll(".recipe-card");
+      gsap.fromTo(
+        cards,
+        { opacity: 0, scale: 0.9 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.3,
+          stagger: 0.05,
+          ease: "back.out(1.1)",
+        }
+      );
+    }
+  }, [recommendations]);
+
+  useEffect(() => {
+    if (selectedRecipe && modalRef.current) {
+      gsap.fromTo(
+        modalRef.current,
+        { opacity: 0, scale: 0.9 },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }
+      );
+    }
+  }, [selectedRecipe]);
 
   const handleAddIngredient = () => {
     if (newIngredient.name.trim()) {
@@ -108,18 +167,16 @@ export function RecipeRecommendationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 pb-20 md:pb-0 md:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        <div
+          ref={headerRef}
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <ChefHat className="w-10 h-10 text-purple-600" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <ChefHat className="w-10 h-10 text-orange-600" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
               Recipe Recommendations
             </h1>
           </div>
@@ -127,29 +184,23 @@ export function RecipeRecommendationPage() {
             Get personalized recipe suggestions based on your available
             ingredients
           </p>
-        </motion.div>
+        </div>
 
         {/* Error Message */}
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
             className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
           >
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <p className="text-red-700">{error}</p>
-          </motion.div>
+          </div>
         )}
 
         {/* Configuration Panel */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
+        <div ref={configRef}>
           <Card className="p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Filter className="w-5 h-5 text-purple-600" />
+              <Filter className="w-5 h-5 text-orange-600" />
               Configure Your Search
             </h2>
 
@@ -166,7 +217,7 @@ export function RecipeRecommendationPage() {
                   max="12"
                   value={servings}
                   onChange={(e) => setServings(parseInt(e.target.value) || 2)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
@@ -184,7 +235,7 @@ export function RecipeRecommendationPage() {
                   onChange={(e) =>
                     setMinMatchPercentage(parseInt(e.target.value) || 60)
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
@@ -197,7 +248,7 @@ export function RecipeRecommendationPage() {
                   onClick={() => setUseInventory(!useInventory)}
                   className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
                     useInventory
-                      ? "bg-purple-600 text-white"
+                      ? "bg-orange-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -208,12 +259,7 @@ export function RecipeRecommendationPage() {
 
             {/* Manual Ingredients Section */}
             {!useInventory && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="border-t border-gray-200 pt-6"
-              >
+              <div className="border-t border-gray-200 pt-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Add Ingredients Manually
                 </h3>
@@ -229,7 +275,7 @@ export function RecipeRecommendationPage() {
                         name: e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <input
                     type="number"
@@ -243,7 +289,7 @@ export function RecipeRecommendationPage() {
                         quantity: parseFloat(e.target.value) || 1,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                   <select
                     value={newIngredient.unit}
@@ -253,7 +299,7 @@ export function RecipeRecommendationPage() {
                         unit: e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="unit">unit</option>
                     <option value="g">g</option>
@@ -266,7 +312,7 @@ export function RecipeRecommendationPage() {
                   </select>
                   <Button
                     onClick={handleAddIngredient}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add
@@ -278,7 +324,7 @@ export function RecipeRecommendationPage() {
                     {manualIngredients.map((ing, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between bg-purple-50 p-3 rounded-lg"
+                        className="flex items-center justify-between bg-orange-50 p-3 rounded-lg"
                       >
                         <span className="text-gray-900">
                           {ing.name} - {ing.quantity} {ing.unit}
@@ -293,7 +339,7 @@ export function RecipeRecommendationPage() {
                     ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )}
 
             {/* Get Recommendations Button */}
@@ -301,7 +347,7 @@ export function RecipeRecommendationPage() {
               <Button
                 onClick={handleGetRecommendations}
                 disabled={isLoading || (!useInventory && manualIngredients.length === 0)}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 px-8"
+                className="bg-gradient-to-r from-orange-600 to-green-600 text-white hover:from-orange-700 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-200 px-8"
               >
                 {isLoading ? (
                   <>
@@ -317,28 +363,21 @@ export function RecipeRecommendationPage() {
               </Button>
             </div>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Recommendations Grid */}
         {recommendations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div ref={recommendationsRef}>
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-purple-600" />
+              <TrendingUp className="w-6 h-6 text-orange-600" />
               Recommended Recipes ({recommendations.length})
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendations.map((recipe, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -4 }}
+                  className="recipe-card"
                 >
                   <Card className="p-6 hover:shadow-lg transition-all duration-200 h-full flex flex-col">
                     {/* Header */}
@@ -447,31 +486,26 @@ export function RecipeRecommendationPage() {
                     <Button
                       onClick={() => setSelectedRecipe(recipe)}
                       variant="outline"
-                      className="w-full border-purple-600 text-purple-600 hover:bg-purple-50"
+                      className="w-full border-orange-600 text-orange-600 hover:bg-orange-50"
                     >
                       <Utensils className="w-4 h-4 mr-2" />
                       View Recipe
                     </Button>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Recipe Detail Modal */}
         {selectedRecipe && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={() => setSelectedRecipe(null)}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+            <div
+              ref={modalRef}
               className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
@@ -514,8 +548,8 @@ export function RecipeRecommendationPage() {
                       {selectedRecipe.servings}
                     </p>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <Clock className="w-5 h-5 mx-auto mb-1 text-purple-600" />
+                  <div className="bg-orange-50 p-4 rounded-lg text-center">
+                    <Clock className="w-5 h-5 mx-auto mb-1 text-orange-600" />
                     <p className="text-sm text-gray-600">Total Time</p>
                     <p className="text-lg font-bold text-gray-900">
                       {selectedRecipe.prepTime + selectedRecipe.cookTime} min
@@ -622,8 +656,8 @@ export function RecipeRecommendationPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </div>
     </div>

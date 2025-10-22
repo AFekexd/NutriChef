@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { gsap } from "gsap";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/button";
@@ -23,6 +23,34 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (logoRef.current) {
+      gsap.fromTo(
+        logoRef.current,
+        { scale: 0, rotate: -180 },
+        {
+          scale: 1,
+          rotate: 0,
+          duration: 0.8,
+          ease: "back.out(1.5)",
+        }
+      );
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -40,21 +68,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <div
+        ref={containerRef}
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          <div
+            ref={logoRef}
             className="inline-flex items-center justify-center w-20 h-20 bg-[#4CAF50] rounded-2xl mb-4 shadow-lg"
           >
             <ChefHat className="w-10 h-10 text-white" />
-          </motion.div>
+          </div>
           <h1
             className="text-4xl font-bold text-[#4A4A4A] mb-2"
             style={{ fontFamily: "Poppins, sans-serif" }}
@@ -79,13 +103,11 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
+                <div
                   className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
                 >
                   {error}
-                </motion.div>
+                </div>
               )}
 
               <div className="space-y-2">
@@ -156,7 +178,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-gray-500 mt-8">
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }
