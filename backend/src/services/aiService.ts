@@ -23,7 +23,9 @@ export class BaseAIService {
 
   constructor(provider: AIProvider = AIProvider.OPENAI) {
     this.provider = provider;
-    this.model = provider === AIProvider.OPENAI ? "gpt-4" : "gemini-pro";
+    // Use the same model as visionAI.ts for consistency
+    this.model =
+      provider === AIProvider.OPENAI ? "gpt-4" : "gemini-flash-latest";
   }
 
   protected async callOpenAI(
@@ -135,7 +137,7 @@ export class AIUsageTracker {
   private static readonly COSTS = {
     "gpt-4": { input: 0.03, output: 0.06 },
     "gpt-3.5-turbo": { input: 0.0015, output: 0.002 },
-    "gemini-pro": { input: 0, output: 0 }, // Free tier
+    "gemini-flash-latest": { input: 0, output: 0 }, // Free tier
   };
 
   static calculateCost(model: string, tokensUsed: number): number {

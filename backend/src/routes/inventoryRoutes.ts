@@ -11,6 +11,7 @@ import {
   getMyExpiringItems,
   getInventoryAnalytics,
   getItemsByLocation,
+  addManualInventoryItem,
 } from "../controllers/inventoryController.js";
 
 const router = Router();
@@ -20,6 +21,7 @@ router.get("/", authenticate, getMyInventoryItems);
 router.get("/analytics", authenticate, getInventoryAnalytics);
 router.get("/expiring", authenticate, getMyExpiringItems);
 router.get("/location/:location", authenticate, getItemsByLocation);
+router.post("/manual", authenticate, addManualInventoryItem);
 
 /**
  * @swagger
