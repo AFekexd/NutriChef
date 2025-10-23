@@ -52,6 +52,10 @@ export function RecipeRecommendationPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] =
     useState<RecipeRecommendation | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [showCacheNotice, setShowCacheNotice] = useState(false);
 
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
@@ -128,6 +132,79 @@ export function RecipeRecommendationPage() {
     setManualIngredients(manualIngredients.filter((_, i) => i !== index));
   };
 
+  // Cache helper functions
+  const generateCacheKey = (params: {
+    servings: number;
+    minMatchPercentage: number;
+    useInventory: boolean;
+    manualIngredients?: ManualIngredient[];
+  }): string => {
+    const key = {
+      servings: params.servings,
+      minMatchPercentage: params.minMatchPercentage,
+      useInventory: params.useInventory,
+      ingredients: params.useInventory
+        ? "inventory"
+        : params.manualIngredients
+            ?.map((ing) => `${ing.name}-${ing.quantity}-${ing.unit}`)
+            .sort()
+            .join(",") || "none",
+    };
+    return JSON.stringify(key);
+  };
+
+  const getCachedRecommendations = (
+    key: string
+  ): RecipeRecommendation[] | null => {
+    try {
+      const cached = localStorage.getItem(`recipe_cache_${key}`);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      // Cache expires after 24 hours
+      const MAX_CACHE_AGE = 24 * 60 * 60 * 1000;
+      if (Date.now() - timestamp > MAX_CACHE_AGE) {
+        localStorage.removeItem(`recipe_cache_${key}`);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error reading cache:", error);
+      return null;
+    }
+  };
+
+  const setCachedRecommendations = (
+    key: string,
+    data: RecipeRecommendation[]
+  ) => {
+    try {
+      const cacheData = {
+        data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(`recipe_cache_${key}`, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error("Error setting cache:", error);
+    }
+  };
+
+  const clearCache = () => {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach((key) => {
+        if (key.startsWith("recipe_cache_")) {
+          localStorage.removeItem(key);
+        }
+      });
+      setShowCacheNotice(false);
+      alert("Recipe cache cleared successfully!");
+    } catch (error) {
+      console.error("Error clearing cache:", error);
+    }
+  };
+
   const handleGetRecommendations = async () => {
     setIsLoading(true);
     setError(null);
@@ -140,6 +217,7 @@ export function RecipeRecommendationPage() {
           manualIngredients.length > 0 ? manualIngredients : undefined,
         language: i18n.language, // Pass current language to backend
       });
+
       setRecommendations(response.recommendations);
     } catch (err: any) {
       setError(err.response?.data?.error || t("common.error"));
@@ -735,6 +813,41 @@ export function RecipeRecommendationPage() {
                   <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300 whitespace-pre-line">
                     {selectedRecipe.instructions}
                   </div>
+                </div>
+
+                {/* Action Footer */}
+                <div className="border-t border-gray-200 dark:border-gray-800 pt-6 flex gap-3">
+                  <Button
+                    onClick={() => handleSaveRecipe(selectedRecipe)}
+                    disabled={
+                      isSaving || savedRecipes.has(selectedRecipe.title)
+                    }
+                    className="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white"
+                  >
+                    {savedRecipes.has(selectedRecipe.title) ? (
+                      <>
+                        <Check className="w-5 h-5 mr-2" />
+                        Recipe Saved
+                      </>
+                    ) : isSaving ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Save to My Recipes
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => setSelectedRecipe(null)}
+                    variant="outline"
+                    className="px-6 dark:border-gray-700"
+                  >
+                    Close
+                  </Button>
                 </div>
               </div>
             </div>

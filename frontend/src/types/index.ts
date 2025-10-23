@@ -189,3 +189,44 @@ export interface PaginatedResponse<T> {
     offset: number;
   };
 }
+
+// Meal Planning types
+export interface MealPlan {
+  mealPlanId: string;
+  userId: string;
+  date: string;
+  mealType: "breakfast" | "lunch" | "dinner" | "snack";
+  targetCalories?: number;
+  targetMacros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  isAIGenerated: boolean;
+  mealPlanRecipes: MealPlanRecipe[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MealPlanRecipe {
+  mealPlanRecipeId: string;
+  mealPlanId: string;
+  recipeId: string;
+  recipe: Recipe;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeeklySummary {
+  weekStart: string;
+  weekEnd: string;
+  mealPlans: MealPlan[];
+  summary: {
+    totalMeals: number;
+    totalCalories: number;
+    totalProtein: number;
+    totalCarbs: number;
+    totalFat: number;
+    averageCaloriesPerDay: number;
+  };
+}

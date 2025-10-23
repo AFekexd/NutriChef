@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ShoppingCart, ChefHat, User } from "lucide-react";
+import { Home, ShoppingCart, ChefHat, User, Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function BottomNavigation() {
@@ -51,6 +51,18 @@ export function BottomNavigation() {
         >
           <ChefHat className="w-6 h-6" />
           <span className="text-xs font-medium">{t("nav.recipes")}</span>
+        </button>
+
+        <button
+          onClick={() => navigate("/profile")}
+          className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+            isActive("/profile")
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+          }`}
+        >
+          <Calendar className="w-6 h-6" />
+          <span className="text-xs font-medium">Meals</span>
         </button>
 
         <button
