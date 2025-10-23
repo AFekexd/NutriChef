@@ -10,6 +10,8 @@ import {
   getSessions,
   revokeSession,
   getLoginHistory,
+  updateProfile,
+  changePassword,
 } from "../controllers/authController.js";
 import { authenticate } from "../middlewares/auth.js";
 
@@ -354,5 +356,78 @@ router.delete("/sessions/:sessionId", authenticate, revokeSession);
  *         description: Server error
  */
 router.get("/login-history", authenticate, getLoginHistory);
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   put:
+ *     summary: Update user profile
+ *     tags: [Authentication]
+ *     description: Update authenticated user's name and/or email
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Not authenticated
+ *       409:
+ *         description: Email already in use
+ *       500:
+ *         description: Server error
+ */
+router.put("/profile", authenticate, updateProfile);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Change password
+ *     tags: [Authentication]
+ *     description: Change the authenticated user's password
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Current password is incorrect or not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.post("/change-password", authenticate, changePassword);
 
 export default router;

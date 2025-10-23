@@ -1,23 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ShoppingCart, ChefHat, LogOut } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
+import { Home, ShoppingCart, ChefHat, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export function BottomNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
   const { t } = useTranslation();
 
   // Hide bottom nav on login/register pages
   if (location.pathname === "/login" || location.pathname === "/register") {
     return null;
   }
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -61,11 +54,17 @@ export function BottomNavigation() {
         </button>
 
         <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center w-full h-full gap-1 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+          onClick={() => navigate("/profile")}
+          className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+            isActive("/profile")
+              ? "text-green-600 dark:text-green-400"
+              : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+          }`}
         >
-          <LogOut className="w-6 h-6" />
-          <span className="text-xs font-medium">{t("common.logout")}</span>
+          <User className="w-6 h-6" />
+          <span className="text-xs font-medium">
+            {t("nav.profile") || "Profile"}
+          </span>
         </button>
       </div>
     </nav>

@@ -11,13 +11,18 @@ import ingredientRoutes from "./routes/ingredientRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import inventoryAIRoutes from "./routes/inventoryAIRoutes.js";
 import recipeRecommendationRoutes from "./routes/recipeRecommendationRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Security middleware
-app.use(helmet()); // Set security headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+); // Set security headers
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -55,8 +60,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve uploaded images
-app.use("/uploads", express.static(process.env.UPLOAD_DIR || "./uploads"));
+// Serve uploaded images with CORS headers
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+  },
+  express.static(process.env.UPLOAD_DIR || "./uploads")
+);
 
 // Rate limiting
 app.use("/api", apiLimiter);
@@ -90,6 +107,7 @@ app.use("/api/ingredients", ingredientRoutes);
 app.use("/api/inventory", inventoryAIRoutes); // Vision AI endpoints (MUST be first - specific routes)
 app.use("/api/inventory", inventoryRoutes); // Regular inventory (catch-all /:id route)
 app.use("/api/recipe-recommendations", recipeRecommendationRoutes);
+app.use("/api/admin", adminRoutes); // Admin routes
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

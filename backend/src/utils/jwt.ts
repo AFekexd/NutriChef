@@ -12,6 +12,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   sessionId: string;
+  role?: string;
 }
 
 export interface TokenPair {

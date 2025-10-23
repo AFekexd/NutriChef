@@ -6,6 +6,8 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { RecipeRecommendationPage } from "./pages/RecipeRecommendationPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { AdminPage } from "./pages/AdminPage";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { TopNavigation } from "./components/TopNavigation";
 import type { ReactNode } from "react";
@@ -21,13 +23,25 @@ const queryClient = new QueryClient({
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  adminOnly?: boolean;
 }
 
-function ProtectedRoute({ children }: ProtectedRouteProps) {
+function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useAuth();
+
+  console.log(
+    "ProtectedRoute - isAuthenticated:",
+    isAuthenticated,
+    "user:",
+    user
+  );
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (adminOnly && user.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -75,6 +89,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecipeRecommendationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute adminOnly>
+            <AdminPage />
           </ProtectedRoute>
         }
       />
