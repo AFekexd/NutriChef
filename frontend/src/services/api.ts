@@ -15,12 +15,15 @@ import type {
   InventoryAnalytics,
   RecipeRecommendationResponse,
 } from "../types";
+import type { AppStore } from "../store";
+import { updateTokens, logout } from "../store/slices/authSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 class ApiService {
   private api: AxiosInstance;
   private refreshTokenPromise: Promise<AuthTokens> | null = null;
+  private store: AppStore | null = null;
 
   constructor() {
     this.api = axios.create({
@@ -79,24 +82,47 @@ class ApiService {
     );
   }
 
+  // Store management
+  setStore(store: AppStore): void {
+    this.store = store;
+  }
+
   // Token management
   private getAccessToken(): string | null {
+    if (this.store) {
+      return this.store.getState().auth.tokens?.accessToken || null;
+    }
+    // Fallback to localStorage for backward compatibility during migration
     return localStorage.getItem("accessToken");
   }
 
   private getRefreshTokenValue(): string | null {
+    if (this.store) {
+      return this.store.getState().auth.tokens?.refreshToken || null;
+    }
+    // Fallback to localStorage for backward compatibility during migration
     return localStorage.getItem("refreshToken");
   }
 
   private setTokens(tokens: AuthTokens): void {
-    localStorage.setItem("accessToken", tokens.accessToken);
-    localStorage.setItem("refreshToken", tokens.refreshToken);
+    if (this.store) {
+      this.store.dispatch(updateTokens(tokens));
+    } else {
+      // Fallback to localStorage if store not set
+      localStorage.setItem("accessToken", tokens.accessToken);
+      localStorage.setItem("refreshToken", tokens.refreshToken);
+    }
   }
 
   private clearTokens(): void {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    if (this.store) {
+      this.store.dispatch(logout());
+    } else {
+      // Fallback to localStorage if store not set
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+    }
   }
 
   // Auth endpoints
@@ -110,8 +136,8 @@ class ApiService {
       "/api/auth/login",
       credentials
     );
+    // Tokens and user are now managed by Redux through AuthContext
     this.setTokens(response.data.tokens);
-    localStorage.setItem("user", JSON.stringify(response.data.user));
     return response.data;
   }
 
@@ -141,7 +167,7 @@ class ApiService {
 
   async getProfile(): Promise<{ user: User }> {
     const response = await this.api.get<{ user: User }>("/api/auth/profile");
-    localStorage.setItem("user", JSON.stringify(response.data.user));
+    // User is now managed by Redux through AuthContext
     return response.data;
   }
 
@@ -169,8 +195,29 @@ class ApiService {
     return response.data;
   }
 
-  // Helper to get current user from localStorage
+  async updateProfile(data: {
+    name?: string;
+    email?: string;
+  }): Promise<{ message: string; user: User }> {
+    const response = await this.api.put("/api/auth/profile", data);
+    // User is now managed by Redux through AuthContext
+    return response.data;
+  }
+
+  async changePassword(data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ message: string }> {
+    const response = await this.api.post("/api/auth/change-password", data);
+    return response.data;
+  }
+
+  // Helper to get current user from Redux store
   getCurrentUser(): User | null {
+    if (this.store) {
+      return this.store.getState().auth.user;
+    }
+    // Fallback to localStorage for backward compatibility during migration
     const userStr = localStorage.getItem("user");
     if (!userStr) return null;
     try {
@@ -328,6 +375,136 @@ class ApiService {
       "/api/recipe-recommendations/manual",
       data
     );
+    return response.data;
+  }
+
+  // Admin endpoints
+  async getAdminStats(): Promise<{
+    stats: {
+      totalUsers: number;
+      activeUsers: number;
+      totalInventoryItems: number;
+      totalRecipes: number;
+      totalUploads: number;
+    };
+    recentUsers: Array<{
+      userId: string;
+      name: string;
+      email: string;
+      createdAt: string;
+    }>;
+  }> {
+    const response = await this.api.get("/api/admin/stats");
+    return response.data;
+  }
+
+  async getAllUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<{
+    users: Array<any>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/users", { params });
+    return response.data;
+  }
+
+  async getUserDetails(userId: string): Promise<{ user: any }> {
+    const response = await this.api.get(`/api/admin/users/${userId}`);
+    return response.data;
+  }
+
+  async updateUserStatus(
+    userId: string,
+    isActive: boolean
+  ): Promise<{ user: any; message: string }> {
+    const response = await this.api.put(`/api/admin/users/${userId}/status`, {
+      isActive,
+    });
+    return response.data;
+  }
+
+  async updateUserRole(
+    userId: string,
+    role: string
+  ): Promise<{ user: any; message: string }> {
+    const response = await this.api.put(`/api/admin/users/${userId}/role`, {
+      role,
+    });
+    return response.data;
+  }
+
+  async deleteUser(userId: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/admin/users/${userId}`);
+    return response.data;
+  }
+
+  async getAllAdminInventoryItems(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    search?: string;
+  }): Promise<{
+    items: Array<any>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/inventory", { params });
+    return response.data;
+  }
+
+  async deleteAdminInventoryItem(itemId: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/admin/inventory/${itemId}`);
+    return response.data;
+  }
+
+  async getAllAdminRecipes(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    search?: string;
+  }): Promise<{
+    recipes: Array<any>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/recipes", { params });
+    return response.data;
+  }
+
+  async deleteAdminRecipe(recipeId: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/admin/recipes/${recipeId}`);
+    return response.data;
+  }
+
+  async getAllUploads(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+  }): Promise<{
+    uploads: Array<any>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/uploads", { params });
     return response.data;
   }
 }

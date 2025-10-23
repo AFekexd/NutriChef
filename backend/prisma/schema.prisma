@@ -19,6 +19,7 @@ model User {
   name          String
   email         String        @unique
   passwordHash  String
+  role          String        @default("user") // "user", "admin"
   preferences   Json?         // {dietaryRestrictions, allergies, cuisinePreferences, calorieGoal, macroGoals}
   healthGoals   Json?         // {targetWeight, dailyCalories, macroRatios, activityLevel}
   isEmailVerified Boolean     @default(false)

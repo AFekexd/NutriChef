@@ -81,6 +81,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         userId: true,
         name: true,
         email: true,
+        role: true,
         preferences: true,
         isEmailVerified: true,
         createdAt: true,
@@ -224,6 +225,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       userId: user.userId,
       email: user.email,
       sessionId: session.sessionId,
+      role: user.role,
     });
 
     // Update session with refresh token
@@ -260,6 +262,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         userId: user.userId,
         name: user.name,
         email: user.email,
+        role: user.role,
         preferences: user.preferences,
       },
       tokens,
@@ -323,6 +326,7 @@ export const refreshToken = async (
       userId: session.user.userId,
       email: session.user.email,
       sessionId: session.sessionId,
+      role: session.user.role,
     });
 
     // Update session with new refresh token
@@ -394,6 +398,7 @@ export const getProfile = async (
         userId: true,
         name: true,
         email: true,
+        role: true,
         preferences: true,
         isEmailVerified: true,
         lastLoginAt: true,
@@ -549,5 +554,126 @@ export const getLoginHistory = async (
   } catch (error) {
     console.error("Get login history error:", error);
     res.status(500).json({ error: "Failed to get login history" });
+  }
+};
+
+/**
+ * Update user profile
+ */
+export const updateProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const { name, email } = req.body;
+
+    // Check if email is being changed and if it's already taken
+    if (email && email !== req.user.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser) {
+        res.status(409).json({ error: "Email already in use" });
+        return;
+      }
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { userId: req.user.userId },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+      },
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        role: true,
+        preferences: true,
+        isEmailVerified: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
+/**
+ * Change password
+ */
+export const changePassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: "Current and new password are required" });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res
+        .status(400)
+        .json({ error: "New password must be at least 8 characters long" });
+      return;
+    }
+
+    // Get user with password hash
+    const user = await prisma.user.findUnique({
+      where: { userId: req.user.userId },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash
+    );
+
+    if (!isPasswordValid) {
+      res.status(401).json({ error: "Current password is incorrect" });
+      return;
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await prisma.user.update({
+      where: { userId: req.user.userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Failed to change password" });
   }
 };

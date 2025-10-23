@@ -197,7 +197,7 @@ export function RecipeRecommendationPage() {
 
         {/* Configuration Panel */}
         <div ref={configRef}>
-          <Card className="p-6 mb-8 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+          <Card className="p-6 mb-8 bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-900/5 border-gray-200 dark:border-gray-800 shadow-lg">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
               <Filter className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               {t("recipes.configTitle")}
@@ -344,13 +344,13 @@ export function RecipeRecommendationPage() {
             )}
 
             {/* Get Recommendations Button */}
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-center md:justify-end">
               <Button
                 onClick={handleGetRecommendations}
                 disabled={
                   isLoading || (!useInventory && manualIngredients.length === 0)
                 }
-                className="bg-gradient-to-r from-orange-600 to-orange-500 dark:from-orange-500 dark:to-orange-600 text-white hover:from-orange-700 hover:to-green-700 dark:hover:from-orange-600 dark:hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200 px-8"
+                className="bg-gradient-to-r from-orange-600 to-green-600 dark:from-orange-500 dark:to-green-500 text-white hover:from-orange-700 hover:to-green-700 dark:hover:from-orange-600 dark:hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-6 text-lg font-semibold"
               >
                 {isLoading ? (
                   <>
@@ -368,6 +368,42 @@ export function RecipeRecommendationPage() {
           </Card>
         </div>
 
+        {/* Empty State */}
+        {!isLoading && recommendations.length === 0 && (
+          <div className="text-center py-16">
+            <div className="bg-gradient-to-br from-orange-50 to-green-50 dark:from-orange-900/10 dark:to-green-900/10 rounded-2xl p-12 border-2 border-dashed border-orange-200 dark:border-orange-800">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <ChefHat className="w-24 h-24 text-orange-300 dark:text-orange-700" />
+                  <Sparkles className="w-8 h-8 text-green-500 dark:text-green-400 absolute -top-2 -right-2 animate-pulse" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                {t("recipes.emptyStateTitle") ||
+                  "Ready to Cook Something Amazing?"}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                {t("recipes.emptyStateDescription") ||
+                  "Configure your preferences above and click 'Get Recommendations' to discover delicious recipes tailored to your ingredients!"}
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span>AI-Powered Suggestions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span>Personalized Match %</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span>Nutritional Info</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Recommendations Grid */}
         {recommendations.length > 0 && (
           <div ref={recommendationsRef}>
@@ -379,7 +415,7 @@ export function RecipeRecommendationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendations.map((recipe, index) => (
                 <div key={index} className="recipe-card">
-                  <Card className="p-6 hover:shadow-lg transition-all duration-200 h-full flex flex-col bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <Card className="p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-200 h-full flex flex-col bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-900 dark:to-orange-900/10 border-gray-200 dark:border-gray-800">
                     {/* Header */}
                     <div className="mb-4">
                       <div className="flex items-start justify-between mb-2">

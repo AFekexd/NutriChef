@@ -1,12 +1,21 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { apiService } from "../services/api";
+import { useAppDispatch, useAppSelector, store } from "../store";
+import {
+  setCredentials,
+  logout as logoutAction,
+  updateUser,
+} from "../store/slices/authSlice";
 import type {
   User,
   LoginCredentials,
   RegisterData,
   LoginResponse,
 } from "../types";
+
+// Initialize apiService with the store
+apiService.setStore(store);
 
 interface AuthContextType {
   user: User | null;
@@ -33,34 +42,36 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const dispatch = useAppDispatch();
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in on mount
     const initAuth = async () => {
       try {
-        if (apiService.isAuthenticated()) {
+        if (isAuthenticated && apiService.isAuthenticated()) {
           const { user } = await apiService.getProfile();
-          setUser(user);
+          dispatch(updateUser(user));
         }
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
         // Clear invalid tokens
-        apiService.logout();
+        await apiService.logout();
+        dispatch(logoutAction());
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [dispatch, isAuthenticated]);
 
   const login = async (
     credentials: LoginCredentials
   ): Promise<LoginResponse> => {
     const response = await apiService.login(credentials);
-    setUser(response.user);
+    dispatch(setCredentials({ user: response.user, tokens: response.tokens }));
     return response;
   };
 
@@ -72,13 +83,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     await apiService.logout();
-    setUser(null);
+    dispatch(logoutAction());
   };
 
   const refreshUser = async (): Promise<void> => {
     try {
       const { user } = await apiService.getProfile();
-      setUser(user);
+      dispatch(updateUser(user));
     } catch (error) {
       console.error("Failed to refresh user:", error);
     }
@@ -86,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading,
     login,
     register,

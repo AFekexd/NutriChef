@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../store";
+import {
+  setTheme as setThemeAction,
+  toggleTheme as toggleThemeAction,
+} from "../store/slices/themeSlice";
 
 type Theme = "light" | "dark";
 
@@ -13,24 +18,21 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem("theme") as Theme;
-    return saved || "light";
-  });
+  const dispatch = useAppDispatch();
+  const theme = useAppSelector((state) => state.theme.theme);
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(theme);
-    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === "light" ? "dark" : "light"));
+    dispatch(toggleThemeAction());
   };
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+    dispatch(setThemeAction(newTheme));
   };
 
   return (

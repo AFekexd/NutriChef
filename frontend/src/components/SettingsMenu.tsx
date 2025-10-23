@@ -1,14 +1,18 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../context/ThemeContext";
+import { useAppDispatch } from "../store";
+import { setLanguage } from "../store/slices/languageSlice";
 import { Sun, Moon, Languages } from "lucide-react";
 
 const SettingsMenu: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { theme, toggleTheme } = useTheme();
+  const dispatch = useAppDispatch();
 
   const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+    dispatch(setLanguage(lng));
+    // i18n will be updated automatically via store subscription in config.ts
   };
 
   return (
