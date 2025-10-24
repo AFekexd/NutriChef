@@ -21,13 +21,16 @@ import { apiService } from "../services/api";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
 export function ProfilePage() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [user, setUser] = useState<UserType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Suppress unused variable warning - user is set but not directly read in JSX
+  void user;
 
   // Profile form
   const [profileData, setProfileData] = useState({

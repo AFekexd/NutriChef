@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { useTranslation } from "react-i18next";
 import {
   Users,
   ShoppingBag,
@@ -30,7 +29,6 @@ interface AdminStats {
 }
 
 export function AdminPage() {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "users" | "inventory" | "recipes" | "uploads"
   >("dashboard");
