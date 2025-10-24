@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { RecipeRecommendationPage } from "./pages/RecipeRecommendationPage";
+import { MealPlanningPage } from "./pages/MealPlanningPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
 import { BottomNavigation } from "./components/BottomNavigation";
@@ -89,6 +90,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecipeRecommendationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/meal-planning"
+        element={
+          <ProtectedRoute>
+            <MealPlanningPage />
           </ProtectedRoute>
         }
       />

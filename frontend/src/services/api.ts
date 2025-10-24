@@ -341,6 +341,36 @@ class ApiService {
   }
 
   // Recipe Recommendation endpoints
+  async getRecipes(): Promise<{ recipes: import("../types").Recipe[] }> {
+    const response = await this.api.get("/api/recipes");
+    return response.data;
+  }
+
+  async createRecipe(data: {
+    title: string;
+    instructions: string;
+    calories: number;
+    macros: {
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+    servings?: number;
+    prepTime?: number;
+    cookTime?: number;
+    difficulty?: string;
+    cuisineType?: string;
+    imageURL?: string;
+    ingredients?: Array<{
+      ingredientId: string;
+      quantity: number;
+      unit: string;
+    }>;
+  }): Promise<import("../types").Recipe> {
+    const response = await this.api.post("/api/recipes", data);
+    return response.data;
+  }
+
   async getRecipeRecommendations(data: {
     servings?: number;
     minMatchPercentage?: number;
@@ -377,7 +407,6 @@ class ApiService {
     );
     return response.data;
   }
-
   // Admin endpoints
   async getAdminStats(): Promise<{
     stats: {
@@ -505,6 +534,119 @@ class ApiService {
     };
   }> {
     const response = await this.api.get("/api/admin/uploads", { params });
+    return response.data;
+  }
+
+  // Meal Planning endpoints
+  async getMealPlans(
+    startDate?: string,
+    endDate?: string
+  ): Promise<{
+    mealPlans: import("../types").MealPlan[];
+  }> {
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    const response = await this.api.get("/api/meal-plans", { params });
+    return response.data;
+  }
+
+  async getMealPlanById(
+    id: string
+  ): Promise<{ mealPlan: import("../types").MealPlan }> {
+    const response = await this.api.get(`/api/meal-plans/${id}`);
+    return response.data;
+  }
+
+  async createMealPlan(data: {
+    date: string;
+    mealType: "breakfast" | "lunch" | "dinner" | "snack";
+    recipeIds?: string[];
+    inventoryItemIds?: string[];
+    targetCalories?: number;
+    targetMacros?: { protein: number; carbs: number; fat: number };
+    isAIGenerated?: boolean;
+  }): Promise<{
+    message: string;
+    mealPlan: import("../types").MealPlan;
+  }> {
+    const response = await this.api.post("/api/meal-plans", data);
+    return response.data;
+  }
+
+  async updateMealPlan(
+    id: string,
+    data: {
+      date?: string;
+      mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+      recipeIds?: string[];
+      targetCalories?: number;
+      targetMacros?: { protein: number; carbs: number; fat: number };
+    }
+  ): Promise<{
+    message: string;
+    mealPlan: import("../types").MealPlan;
+  }> {
+    const response = await this.api.put(`/api/meal-plans/${id}`, data);
+    return response.data;
+  }
+
+  async deleteMealPlan(id: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/meal-plans/${id}`);
+    return response.data;
+  }
+
+  async addRecipeToMealPlan(
+    mealPlanId: string,
+    recipeId: string
+  ): Promise<{ message: string; mealPlanRecipe: any }> {
+    const response = await this.api.post(
+      `/api/meal-plans/${mealPlanId}/recipes`,
+      { recipeId }
+    );
+    return response.data;
+  }
+
+  async removeRecipeFromMealPlan(
+    mealPlanId: string,
+    recipeId: string
+  ): Promise<{ message: string }> {
+    const response = await this.api.delete(
+      `/api/meal-plans/${mealPlanId}/recipes/${recipeId}`
+    );
+    return response.data;
+  }
+
+  async addInventoryItemToMealPlan(
+    mealPlanId: string,
+    inventoryItemId: string,
+    quantityUsed?: number
+  ): Promise<{ message: string; mealPlanInventoryItem: any }> {
+    const response = await this.api.post(
+      `/api/meal-plans/${mealPlanId}/inventory-items`,
+      { inventoryItemId, quantityUsed }
+    );
+    return response.data;
+  }
+
+  async removeInventoryItemFromMealPlan(
+    mealPlanId: string,
+    inventoryItemId: string
+  ): Promise<{ message: string }> {
+    const response = await this.api.delete(
+      `/api/meal-plans/${mealPlanId}/inventory-items/${inventoryItemId}`
+    );
+    return response.data;
+  }
+
+  async getWeeklySummary(
+    weekStart?: string
+  ): Promise<import("../types").WeeklySummary> {
+    const params: any = {};
+    if (weekStart) params.weekStart = weekStart;
+    const response = await this.api.get("/api/meal-plans/weekly-summary", {
+      params,
+    });
     return response.data;
   }
 }

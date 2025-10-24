@@ -22,7 +22,7 @@ export const getRecipes = async (req: Request, res: Response) => {
         },
       },
     });
-    res.json(recipes);
+    res.json({ recipes });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch recipes" });
   }
@@ -70,6 +70,11 @@ export const createRecipe = async (req: Request, res: Response) => {
       imageURL,
       calories,
       macros,
+      servings,
+      prepTime,
+      cookTime,
+      difficulty,
+      cuisineType,
       ingredients,
     } = req.body;
 
@@ -81,6 +86,11 @@ export const createRecipe = async (req: Request, res: Response) => {
         imageURL,
         calories,
         macros,
+        servings: servings || 1,
+        prepTime,
+        cookTime,
+        difficulty,
+        cuisineType,
         recipeIngredients: {
           create:
             ingredients?.map((ing: any) => ({

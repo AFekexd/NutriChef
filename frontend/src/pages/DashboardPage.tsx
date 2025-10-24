@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
+
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "../components/ui/button";
@@ -189,6 +190,10 @@ export default function DashboardPage() {
                   onClick={() => {
                     if (feature.title === "Smart Inventory") {
                       navigate("/inventory");
+                    } else if (feature.title === "AI Recipe Generator") {
+                      navigate("/recipes");
+                    } else if (feature.title === "Meal Planning") {
+                      navigate("/meal-planning");
                     }
                   }}
                 >

@@ -17,7 +17,9 @@
     "dashboard": "Vezérlőpult",
     "inventory": "Készlet",
     "recipes": "Receptek",
-    "home": "Kezdőlap"
+    "home": "Kezdőlap",
+    "mealPlanning": "Étkezés tervezés",
+    "profile": "Profil"
   },
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",
