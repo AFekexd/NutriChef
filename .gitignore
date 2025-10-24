@@ -12,5 +12,8 @@ coverage/
 *.swp
 *.bak
 *.class
-*.md
 inventory*.jpg
+
+# Allow documentation files
+!README.md
+!*.md
