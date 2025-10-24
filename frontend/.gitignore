@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor
+android/.gradle
+android/.idea
+android/build
+android/app/build
+android/local.properties
+android/gradle.properties.bak
+android/*.iml
+android/app/release/
+android/app/debug/
+ios/App/Podfile.lock
+ios/App/Pods
