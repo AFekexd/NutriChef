@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { RecipeRecommendationPage } from "./pages/RecipeRecommendationPage";
+import { MyRecipesPage } from "./pages/MyRecipesPage";
 import { MealPlanningPage } from "./pages/MealPlanningPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
@@ -90,6 +91,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecipeRecommendationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-recipes"
+        element={
+          <ProtectedRoute>
+            <MyRecipesPage />
           </ProtectedRoute>
         }
       />

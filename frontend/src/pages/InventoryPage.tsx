@@ -17,6 +17,7 @@ import {
   BarChart3,
   Trash2,
   Edit2,
+  X,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -783,6 +784,13 @@ export function InventoryPage() {
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Upload a photo and let AI detect your ingredients
               </p>
+
+              <button
+                onClick={() => setShowPhotoUpload(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-6 h-6" />
+              </button>
             </div>
             <div className="p-6">
               <PhotoUpload

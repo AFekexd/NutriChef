@@ -130,6 +130,7 @@ export function PhotoUpload({
               onClick={() => fileInputRef.current?.click()}
               variant="outline"
               size="lg"
+              className="dark:text-white"
             >
               <Upload className="h-5 w-5 mr-2" />
               Choose File

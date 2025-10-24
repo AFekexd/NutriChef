@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import {
   ChefHat,
@@ -17,6 +18,8 @@ import {
   Sparkles,
   Utensils,
   TrendingUp,
+  BookOpen,
+  Save,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -31,8 +34,24 @@ interface ManualIngredient {
   category: string;
 }
 
+interface CreateRecipeForm {
+  title: string;
+  instructions: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  servings: number;
+  prepTime: number;
+  cookTime: number;
+  difficulty: "easy" | "medium" | "hard";
+  cuisineType: string;
+  imageURL: string;
+}
+
 export function RecipeRecommendationPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [servings, setServings] = useState(2);
   const [minMatchPercentage, setMinMatchPercentage] = useState(60);
   const [useInventory, setUseInventory] = useState(true);
@@ -56,6 +75,22 @@ export function RecipeRecommendationPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecipes, setSavedRecipes] = useState<Set<string>>(new Set());
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateRecipeForm>({
+    title: "",
+    instructions: "",
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    servings: 2,
+    prepTime: 15,
+    cookTime: 30,
+    difficulty: "medium",
+    cuisineType: "",
+    imageURL: "",
+  });
 
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
@@ -252,6 +287,81 @@ export function RecipeRecommendationPage() {
     }
   };
 
+  const handleCreateRecipe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    setError(null);
+    setSaveSuccess(null);
+
+    try {
+      const recipeData = {
+        title: createForm.title,
+        instructions: createForm.instructions,
+        calories: createForm.calories,
+        macros: {
+          protein: createForm.protein,
+          carbs: createForm.carbs,
+          fat: createForm.fat,
+        },
+        servings: createForm.servings,
+        prepTime: createForm.prepTime,
+        cookTime: createForm.cookTime,
+        difficulty: createForm.difficulty,
+        cuisineType: createForm.cuisineType,
+        imageURL: createForm.imageURL || undefined,
+      };
+
+      await apiService.createRecipe(recipeData);
+      setSaveSuccess(`"${createForm.title}" created successfully!`);
+
+      // Reset form and close modal
+      setCreateForm({
+        title: "",
+        instructions: "",
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+        servings: 2,
+        prepTime: 15,
+        cookTime: 30,
+        difficulty: "medium",
+        cuisineType: "",
+        imageURL: "",
+      });
+      setShowCreateModal(false);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSaveSuccess(null), 3000);
+    } catch (err: any) {
+      console.error("Error creating recipe:", err);
+      setError(
+        err.response?.data?.error ||
+          "Failed to create recipe. Please try again."
+      );
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const resetCreateForm = () => {
+    setCreateForm({
+      title: "",
+      instructions: "",
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      servings: 2,
+      prepTime: 15,
+      cookTime: 30,
+      difficulty: "medium",
+      cuisineType: "",
+      imageURL: "",
+    });
+    setError(null);
+  };
+
   const handleGetRecommendations = async () => {
     setIsLoading(true);
     setError(null);
@@ -326,11 +436,33 @@ export function RecipeRecommendationPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div ref={headerRef} className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <ChefHat className="w-10 h-10 text-green-600 dark:text-green-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-500 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
-              {t("recipes.title")}
-            </h1>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <ChefHat className="w-10 h-10 text-green-600 dark:text-green-400" />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-500 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+                {t("recipes.title")}
+              </h1>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => navigate("/my-recipes")}
+                variant="outline"
+                className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              >
+                <BookOpen className="w-5 h-5 mr-2" />
+                My Recipes
+              </Button>
+              <Button
+                onClick={() => {
+                  resetCreateForm();
+                  setShowCreateModal(true);
+                }}
+                className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Create Recipe
+              </Button>
+            </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             {t("recipes.subtitle")}
@@ -983,6 +1115,363 @@ export function RecipeRecommendationPage() {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Recipe Modal */}
+        {showCreateModal && (
+          <div
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setShowCreateModal(false);
+              resetCreateForm();
+            }}
+          >
+            <div
+              className="bg-white dark:bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
+                      <ChefHat className="w-8 h-8 text-green-600 dark:text-green-400" />
+                      Create Your Own Recipe
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Share your culinary masterpiece with nutritional details
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      resetCreateForm();
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Form */}
+              <form onSubmit={handleCreateRecipe} className="p-6 space-y-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    Basic Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Recipe Title */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Recipe Title <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={createForm.title}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., Mediterranean Grilled Chicken"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Cuisine Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Cuisine Type
+                      </label>
+                      <input
+                        type="text"
+                        value={createForm.cuisineType}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            cuisineType: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., Italian, Asian, Mediterranean"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Difficulty */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Difficulty <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        required
+                        value={createForm.difficulty}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            difficulty: e.target.value as
+                              | "easy"
+                              | "medium"
+                              | "hard",
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      >
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                      </select>
+                    </div>
+
+                    {/* Servings */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Servings <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        max="20"
+                        value={createForm.servings}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            servings: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Prep Time */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Prep Time (minutes){" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={createForm.prepTime}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            prepTime: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Cook Time */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Cook Time (minutes){" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={createForm.cookTime}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            cookTime: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Image URL */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Image URL (optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={createForm.imageURL}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            imageURL: e.target.value,
+                          })
+                        }
+                        placeholder="https://example.com/recipe-image.jpg"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nutritional Information */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    Nutritional Information (per serving)
+                  </h3>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Calories */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Calories <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        value={createForm.calories}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            calories: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Protein */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Protein (g) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.1"
+                        value={createForm.protein}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            protein: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Carbs */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Carbs (g) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.1"
+                        value={createForm.carbs}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            carbs: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Fat */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Fat (g) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="0.1"
+                        value={createForm.fat}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            fat: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Utensils className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    Cooking Instructions
+                  </h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Instructions <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={8}
+                      value={createForm.instructions}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          instructions: e.target.value,
+                        })
+                      }
+                      placeholder="Step 1: Prepare ingredients...&#10;Step 2: Heat oil in a pan...&#10;Step 3: Cook until done..."
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Provide detailed step-by-step instructions for the recipe
+                    </p>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="border-t border-gray-200 dark:border-gray-800 pt-6 flex gap-3">
+                  <Button
+                    type="submit"
+                    disabled={isCreating}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 py-3 text-lg font-semibold"
+                  >
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Creating Recipe...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5 mr-2" />
+                        Create Recipe
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      resetCreateForm();
+                    }}
+                    variant="outline"
+                    className="px-8 dark:border-gray-700"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         )}
