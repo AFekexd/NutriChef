@@ -9,11 +9,13 @@ import {
   Flame,
   ChevronLeft,
   ChevronRight,
+  Apple,
+  X,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { apiService } from "../services/api";
-import type { MealPlan, Recipe } from "../types";
+import type { MealPlan, Recipe, InventoryItem } from "../types";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -21,6 +23,7 @@ const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export function MealPlanningPage() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const today = new Date();
     const day = today.getDay();
@@ -29,9 +32,13 @@ export function MealPlanningPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showAddMeal, setShowAddMeal] = useState(false);
+  const [addMode, setAddMode] = useState<"recipe" | "ingredient">("recipe");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedMealType, setSelectedMealType] = useState<string>("");
   const [selectedRecipe, setSelectedRecipe] = useState<string>("");
+  const [selectedInventoryItems, setSelectedInventoryItems] = useState<
+    string[]
+  >([]);
   const [weeklyStats, setWeeklyStats] = useState({
     totalCalories: 0,
     avgCalories: 0,
@@ -39,6 +46,14 @@ export function MealPlanningPage() {
     totalCarbs: 0,
     totalFat: 0,
   });
+  const [dailyStats, setDailyStats] = useState<{
+    [key: string]: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+  }>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLTableSectionElement>(null);
@@ -61,6 +76,7 @@ export function MealPlanningPage() {
   useEffect(() => {
     fetchMealPlans();
     fetchRecipes();
+    fetchInventoryItems();
   }, [currentWeekStart]);
 
   const fetchMealPlans = async () => {
@@ -96,18 +112,85 @@ export function MealPlanningPage() {
     }
   };
 
+  const fetchInventoryItems = async () => {
+    try {
+      const items = await apiService.getAllInventoryItems();
+      setInventoryItems(Array.isArray(items) ? items : []);
+    } catch (error) {
+      console.error("Error fetching inventory items:", error);
+      setInventoryItems([]);
+    }
+  };
+
   const calculateWeeklyStats = (plans: MealPlan[]) => {
     let totalCalories = 0;
     let totalProtein = 0;
     let totalCarbs = 0;
     let totalFat = 0;
 
+    // Initialize daily stats for the week
+    const daily: {
+      [key: string]: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+    } = {};
+
+    weekDates.forEach((date) => {
+      const dateKey = date.toISOString().split("T")[0];
+      daily[dateKey] = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    });
+
     plans.forEach((plan) => {
+      const dateKey = plan.date.split("T")[0];
+
+      // Calculate from recipes
       plan.mealPlanRecipes.forEach((mpr) => {
-        totalCalories += mpr.recipe.calories;
-        totalProtein += mpr.recipe.macros.protein;
-        totalCarbs += mpr.recipe.macros.carbs;
-        totalFat += mpr.recipe.macros.fat;
+        const calories = mpr.recipe.calories;
+        const protein = mpr.recipe.macros.protein;
+        const carbs = mpr.recipe.macros.carbs;
+        const fat = mpr.recipe.macros.fat;
+
+        totalCalories += calories;
+        totalProtein += protein;
+        totalCarbs += carbs;
+        totalFat += fat;
+
+        if (daily[dateKey]) {
+          daily[dateKey].calories += calories;
+          daily[dateKey].protein += protein;
+          daily[dateKey].carbs += carbs;
+          daily[dateKey].fat += fat;
+        }
+      });
+
+      // Calculate from inventory items
+      plan.mealPlanInventoryItems?.forEach((mpi) => {
+        const ingredient = mpi.inventoryItem.ingredient;
+        const nutritionalInfo = ingredient.nutritionalInfo;
+
+        // Calculate nutritional values based on quantity used
+        // Assuming nutritionalInfo is per 100g or per unit
+        const multiplier = mpi.quantityUsed;
+
+        const calories = (nutritionalInfo.calories || 0) * multiplier;
+        const protein = (nutritionalInfo.protein || 0) * multiplier;
+        const carbs = (nutritionalInfo.carbs || 0) * multiplier;
+        const fat = (nutritionalInfo.fat || 0) * multiplier;
+
+        totalCalories += calories;
+        totalProtein += protein;
+        totalCarbs += carbs;
+        totalFat += fat;
+
+        if (daily[dateKey]) {
+          daily[dateKey].calories += calories;
+          daily[dateKey].protein += protein;
+          daily[dateKey].carbs += carbs;
+          daily[dateKey].fat += fat;
+        }
       });
     });
 
@@ -118,6 +201,8 @@ export function MealPlanningPage() {
       totalCarbs,
       totalFat,
     });
+
+    setDailyStats(daily);
   };
 
   // Get meals for a specific date and meal type
@@ -155,23 +240,61 @@ export function MealPlanningPage() {
     setSelectedDate(date);
     setSelectedMealType(mealType);
     setSelectedRecipe("");
+    setSelectedInventoryItems([]);
+    setAddMode("recipe");
     setShowAddMeal(true);
   };
 
   const handleSaveMeal = async () => {
-    if (!selectedDate || !selectedMealType || !selectedRecipe) return;
+    if (!selectedDate || !selectedMealType) return;
+
+    if (addMode === "recipe" && !selectedRecipe) return;
+    if (addMode === "ingredient" && selectedInventoryItems.length === 0) return;
 
     try {
-      await apiService.createMealPlan({
-        date: selectedDate.toISOString(),
-        mealType: selectedMealType as any,
-        recipeIds: [selectedRecipe],
-      });
+      // Check if a meal plan already exists for this date and meal type
+      const existingMeal = getMealsForSlot(selectedDate, selectedMealType);
+
+      if (existingMeal) {
+        // Append to existing meal plan
+        if (addMode === "recipe") {
+          await apiService.addRecipeToMealPlan(
+            existingMeal.mealPlanId,
+            selectedRecipe
+          );
+        } else {
+          // Add all selected inventory items
+          for (const itemId of selectedInventoryItems) {
+            await apiService.addInventoryItemToMealPlan(
+              existingMeal.mealPlanId,
+              itemId
+            );
+          }
+        }
+      } else {
+        // Create new meal plan
+        if (addMode === "recipe") {
+          await apiService.createMealPlan({
+            date: selectedDate.toISOString(),
+            mealType: selectedMealType as any,
+            recipeIds: [selectedRecipe],
+          });
+        } else {
+          await apiService.createMealPlan({
+            date: selectedDate.toISOString(),
+            mealType: selectedMealType as any,
+            inventoryItemIds: selectedInventoryItems,
+          });
+        }
+      }
 
       await fetchMealPlans();
       setShowAddMeal(false);
+      setSelectedRecipe("");
+      setSelectedInventoryItems([]);
     } catch (error) {
       console.error("Error creating meal plan:", error);
+      alert("Failed to add meal to plan. Please try again.");
     }
   };
 
@@ -244,12 +367,12 @@ export function MealPlanningPage() {
           </div>
 
           {/* Week Navigation */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 dark:text-gray-300 ">
             <Button
               variant="outline"
               size="sm"
               onClick={previousWeek}
-              className="dark:border-gray-700"
+              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -257,7 +380,7 @@ export function MealPlanningPage() {
               variant="outline"
               size="sm"
               onClick={currentWeek}
-              className="dark:border-gray-700"
+              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
             >
               This Week
             </Button>
@@ -265,7 +388,7 @@ export function MealPlanningPage() {
               variant="outline"
               size="sm"
               onClick={nextWeek}
-              className="dark:border-gray-700"
+              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -336,25 +459,58 @@ export function MealPlanningPage() {
 
         {/* Calendar Grid */}
         <Card className="overflow-hidden dark:bg-gray-900 dark:border-gray-800">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full min-w-[900px]">
               <thead>
                 <tr className="border-b dark:border-gray-800">
                   <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 w-32">
                     Meal
                   </th>
-                  {weekDates.map((date, index) => (
-                    <th
-                      key={index}
-                      className="p-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100"
-                    >
-                      <div>{DAYS_OF_WEEK[date.getDay()]}</div>
-                      <div className="text-lg font-bold">{date.getDate()}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {date.toLocaleDateString("en-US", { month: "short" })}
-                      </div>
-                    </th>
-                  ))}
+                  {weekDates.map((date, index) => {
+                    const dateKey = date.toISOString().split("T")[0];
+                    const stats = dailyStats[dateKey] || {
+                      calories: 0,
+                      protein: 0,
+                      carbs: 0,
+                      fat: 0,
+                    };
+                    return (
+                      <th
+                        key={index}
+                        className="p-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100"
+                      >
+                        <div>{DAYS_OF_WEEK[date.getDay()]}</div>
+                        <div className="text-lg font-bold">
+                          {date.getDate()}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {date.toLocaleDateString("en-US", { month: "short" })}
+                        </div>
+                        {/* Daily Macros Summary */}
+                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="text-xs font-normal space-y-1">
+                            <div className="flex items-center justify-center gap-1">
+                              <Flame className="w-3 h-3 text-orange-500" />
+                              <span className="text-gray-600 dark:text-gray-400">
+                                {stats.calories.toFixed(0)} cal
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2 text-[10px]">
+                              <span className="text-red-600 dark:text-red-400">
+                                P: {stats.protein.toFixed(0)}g
+                              </span>
+                              <span className="text-yellow-600 dark:text-yellow-400">
+                                C: {stats.carbs.toFixed(0)}g
+                              </span>
+                              <span className="text-purple-600 dark:text-purple-400">
+                                F: {stats.fat.toFixed(0)}g
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody ref={calendarRef}>
@@ -370,42 +526,87 @@ export function MealPlanningPage() {
                       const meal = getMealsForSlot(date, mealType);
                       return (
                         <td key={dateIndex} className="p-2 align-top">
-                          {meal ? (
-                            <div className="space-y-2">
-                              {meal.mealPlanRecipes.map((mpr) => (
-                                <div
-                                  key={mpr.mealPlanRecipeId}
-                                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 group relative"
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {mpr.recipe.title}
-                                      </p>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                        {mpr.recipe.calories} cal
-                                      </p>
+                          <div className="space-y-2">
+                            {meal && (
+                              <>
+                                {meal.mealPlanRecipes.map((mpr) => (
+                                  <div
+                                    key={mpr.mealPlanRecipeId}
+                                    className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 group relative"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1">
+                                          <ChefHat className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                          <p
+                                            className="text-sm font-medium text-gray-900 dark:text-gray-100 max-w-[150px] "
+                                            aria-label={mpr.recipe.title}
+                                            title={mpr.recipe.title}
+                                          >
+                                            {mpr.recipe.title}
+                                          </p>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                          {mpr.recipe.calories} cal
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteMeal(meal.mealPlanId)
+                                        }
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
+                                      </button>
                                     </div>
-                                    <button
-                                      onClick={() =>
-                                        handleDeleteMeal(meal.mealPlanId)
-                                      }
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
-                                    >
-                                      <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
-                                    </button>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
+                                ))}
+                                {meal.mealPlanInventoryItems?.map((mpi) => (
+                                  <div
+                                    key={mpi.mealPlanInventoryItemId}
+                                    className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 group relative"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1">
+                                          <Apple className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                            {mpi.inventoryItem.ingredient.name}
+                                          </p>
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                          {mpi.quantityUsed}{" "}
+                                          {mpi.inventoryItem.unit}
+                                        </p>
+                                      </div>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteMeal(meal.mealPlanId)
+                                        }
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
+                                      >
+                                        <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
                             <button
                               onClick={() => handleAddMeal(date, mealType)}
-                              className="w-full h-16 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors group"
+                              className={`w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors group ${
+                                meal ? "h-10" : "h-16"
+                              }`}
+                              title="Add meal"
                             >
-                              <Plus className="w-5 h-5 text-gray-400 dark:text-gray-600 group-hover:text-green-600 dark:group-hover:text-green-500" />
+                              <Plus className="w-4 h-4 text-gray-400 dark:text-gray-600 group-hover:text-green-600 dark:group-hover:text-green-500" />
+                              {meal && (
+                                <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500">
+                                  Add more
+                                </span>
+                              )}
                             </button>
-                          )}
+                          </div>
                         </td>
                       );
                     })}
@@ -420,52 +621,168 @@ export function MealPlanningPage() {
         {showAddMeal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md p-6 dark:bg-gray-900 dark:border-gray-800">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Add Meal
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  Add to Meal Plan
+                </h3>
+                <button
+                  onClick={() => setShowAddMeal(false)}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 {selectedDate?.toLocaleDateString()} - {selectedMealType}
               </p>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Recipe
-                </label>
-                {recipes.length === 0 ? (
-                  <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
-                    No recipes available. Please add some recipes first.
-                  </div>
-                ) : (
-                  <select
-                    value={selectedRecipe}
-                    onChange={(e) => setSelectedRecipe(e.target.value)}
-                    className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-gray-100"
-                  >
-                    <option value="">Choose a recipe...</option>
-                    {recipes.map((recipe) => (
-                      <option key={recipe.recipeId} value={recipe.recipeId}>
-                        {recipe.title} ({recipe.calories} cal)
-                      </option>
-                    ))}
-                  </select>
-                )}
+              {/* Mode Toggle */}
+              <div className="mb-4 flex gap-2">
+                <Button
+                  onClick={() => setAddMode("recipe")}
+                  variant={addMode === "recipe" ? "default" : "outline"}
+                  className={`flex-1 ${
+                    addMode === "recipe"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : "dark:border-gray-700"
+                  }`}
+                >
+                  <ChefHat className="w-4 h-4 mr-2" />
+                  Recipe
+                </Button>
+                <Button
+                  onClick={() => setAddMode("ingredient")}
+                  variant={addMode === "ingredient" ? "default" : "outline"}
+                  className={`flex-1 ${
+                    addMode === "ingredient"
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : "dark:border-gray-700"
+                  }`}
+                >
+                  <Apple className="w-4 h-4 mr-2" />
+                  Ingredients
+                </Button>
               </div>
+
+              {/* Recipe Mode */}
+              {addMode === "recipe" && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Recipe
+                  </label>
+                  {recipes.length === 0 ? (
+                    <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
+                      No recipes available. Please add some recipes first.
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedRecipe}
+                      onChange={(e) => setSelectedRecipe(e.target.value)}
+                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-gray-100"
+                    >
+                      <option value="">Choose a recipe...</option>
+                      {recipes.map((recipe) => (
+                        <option key={recipe.recipeId} value={recipe.recipeId}>
+                          {recipe.title} ({recipe.calories} cal)
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Ingredient Mode */}
+              {addMode === "ingredient" && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Ingredients from Inventory
+                  </label>
+                  {inventoryItems.length === 0 ? (
+                    <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
+                      No inventory items available. Please add items to your
+                      inventory first.
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg">
+                      {inventoryItems.map((item) => (
+                        <label
+                          key={item.inventoryItemId}
+                          className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-0"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedInventoryItems.includes(
+                              item.inventoryItemId
+                            )}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedInventoryItems([
+                                  ...selectedInventoryItems,
+                                  item.inventoryItemId,
+                                ]);
+                              } else {
+                                setSelectedInventoryItems(
+                                  selectedInventoryItems.filter(
+                                    (id) => id !== item.inventoryItemId
+                                  )
+                                );
+                              }
+                            }}
+                            className="mr-3"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {item.ingredient.name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {item.quantity} {item.unit} •{" "}
+                              {item.location || "N/A"}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {selectedInventoryItems.length > 0 && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                      {selectedInventoryItems.length} item(s) selected
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowAddMeal(false)}
+                  onClick={() => {
+                    setShowAddMeal(false);
+                    setSelectedRecipe("");
+                    setSelectedInventoryItems([]);
+                  }}
                   className="flex-1 dark:border-gray-700"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleSaveMeal}
-                  disabled={!selectedRecipe}
+                  disabled={
+                    addMode === "recipe"
+                      ? !selectedRecipe
+                      : selectedInventoryItems.length === 0
+                  }
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 >
-                  <ChefHat className="w-4 h-4 mr-2" />
-                  Add Meal
+                  {addMode === "recipe" ? (
+                    <>
+                      <ChefHat className="w-4 h-4 mr-2" />
+                      Add Recipe
+                    </>
+                  ) : (
+                    <>
+                      <Apple className="w-4 h-4 mr-2" />
+                      Add Ingredients
+                    </>
+                  )}
                 </Button>
               </div>
             </Card>

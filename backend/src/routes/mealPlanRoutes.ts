@@ -8,6 +8,8 @@ import {
   addRecipeToMealPlan,
   removeRecipeFromMealPlan,
   getWeeklySummary,
+  addInventoryItemToMealPlan,
+  removeInventoryItemFromMealPlan,
 } from "../controllers/mealPlanController.js";
 import { authenticate } from "../middlewares/auth.js";
 
@@ -40,5 +42,14 @@ router.post("/:id/recipes", addRecipeToMealPlan);
 
 // Remove recipe from meal plan
 router.delete("/:id/recipes/:recipeId", removeRecipeFromMealPlan);
+
+// Add inventory item to meal plan
+router.post("/:id/inventory-items", addInventoryItemToMealPlan);
+
+// Remove inventory item from meal plan
+router.delete(
+  "/:id/inventory-items/:inventoryItemId",
+  removeInventoryItemFromMealPlan
+);
 
 export default router;

@@ -562,6 +562,7 @@ class ApiService {
     date: string;
     mealType: "breakfast" | "lunch" | "dinner" | "snack";
     recipeIds?: string[];
+    inventoryItemIds?: string[];
     targetCalories?: number;
     targetMacros?: { protein: number; carbs: number; fat: number };
     isAIGenerated?: boolean;
@@ -612,6 +613,28 @@ class ApiService {
   ): Promise<{ message: string }> {
     const response = await this.api.delete(
       `/api/meal-plans/${mealPlanId}/recipes/${recipeId}`
+    );
+    return response.data;
+  }
+
+  async addInventoryItemToMealPlan(
+    mealPlanId: string,
+    inventoryItemId: string,
+    quantityUsed?: number
+  ): Promise<{ message: string; mealPlanInventoryItem: any }> {
+    const response = await this.api.post(
+      `/api/meal-plans/${mealPlanId}/inventory-items`,
+      { inventoryItemId, quantityUsed }
+    );
+    return response.data;
+  }
+
+  async removeInventoryItemFromMealPlan(
+    mealPlanId: string,
+    inventoryItemId: string
+  ): Promise<{ message: string }> {
+    const response = await this.api.delete(
+      `/api/meal-plans/${mealPlanId}/inventory-items/${inventoryItemId}`
     );
     return response.data;
   }

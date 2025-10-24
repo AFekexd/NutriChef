@@ -89,22 +89,23 @@ model Ingredient {
 }
 
 model InventoryItem {
-  inventoryItemId String        @id @default(uuid()) @db.Uuid
-  user            User          @relation(fields: [userId], references: [userId])
-  userId          String        @db.Uuid
-  ingredient      Ingredient    @relation(fields: [ingredientId], references: [ingredientId])
-  ingredientId    String        @db.Uuid
-  quantity        Float
-  unit            String
-  expiryDate      DateTime
-  consumptionRate Float?        // Units per day
-  purchaseDate    DateTime?
-  location        String?       // Fridge, Pantry, Freezer
-  imageUrl        String?       // From photo upload
-  aiDetected      Boolean       @default(false) // Was this detected by AI?
-  consumptionLogs ConsumptionLog[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  inventoryItemId        String                  @id @default(uuid()) @db.Uuid
+  user                   User                    @relation(fields: [userId], references: [userId])
+  userId                 String                  @db.Uuid
+  ingredient             Ingredient              @relation(fields: [ingredientId], references: [ingredientId])
+  ingredientId           String                  @db.Uuid
+  quantity               Float
+  unit                   String
+  expiryDate             DateTime
+  consumptionRate        Float?                  // Units per day
+  purchaseDate           DateTime?
+  location               String?                 // Fridge, Pantry, Freezer
+  imageUrl               String?                 // From photo upload
+  aiDetected             Boolean                 @default(false) // Was this detected by AI?
+  consumptionLogs        ConsumptionLog[]
+  mealPlanInventoryItems MealPlanInventoryItem[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 }
 
 model GroceryListItem {
@@ -160,27 +161,39 @@ model RecipeIngredient {
 }
 
 model MealPlan {
-  mealPlanId      String              @id @default(uuid()) @db.Uuid
-  user            User                @relation(fields: [userId], references: [userId])
-  userId          String              @db.Uuid
-  date            DateTime
-  mealType        String              // "breakfast", "lunch", "dinner", "snack"
-  isAIGenerated   Boolean             @default(false)
-  targetCalories  Float?
-  targetMacros    Json?               // {protein, carbs, fat}
-  mealPlanRecipes MealPlanRecipe[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  mealPlanId           String                  @id @default(uuid()) @db.Uuid
+  user                 User                    @relation(fields: [userId], references: [userId])
+  userId               String                  @db.Uuid
+  date                 DateTime
+  mealType             String                  // "breakfast", "lunch", "dinner", "snack"
+  isAIGenerated        Boolean                 @default(false)
+  targetCalories       Float?
+  targetMacros         Json?                   // {protein, carbs, fat}
+  mealPlanRecipes      MealPlanRecipe[]
+  mealPlanInventoryItems MealPlanInventoryItem[]
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
 }
 
 model MealPlanRecipe {
   mealPlanRecipeId String      @id @default(uuid()) @db.Uuid
-  mealPlan        MealPlan    @relation(fields: [mealPlanId], references: [mealPlanId])
+  mealPlan        MealPlan    @relation(fields: [mealPlanId], references: [mealPlanId], onDelete: Cascade)
   mealPlanId      String      @db.Uuid
   recipe          Recipe      @relation(fields: [recipeId], references: [recipeId])
   recipeId        String      @db.Uuid
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+}
+
+model MealPlanInventoryItem {
+  mealPlanInventoryItemId String        @id @default(uuid()) @db.Uuid
+  mealPlan                MealPlan      @relation(fields: [mealPlanId], references: [mealPlanId], onDelete: Cascade)
+  mealPlanId              String        @db.Uuid
+  inventoryItem           InventoryItem @relation(fields: [inventoryItemId], references: [inventoryItemId])
+  inventoryItemId         String        @db.Uuid
+  quantityUsed            Float         @default(1)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 }
 
 model ConsumptionLog {

@@ -204,6 +204,7 @@ export interface MealPlan {
   };
   isAIGenerated: boolean;
   mealPlanRecipes: MealPlanRecipe[];
+  mealPlanInventoryItems?: MealPlanInventoryItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -213,6 +214,16 @@ export interface MealPlanRecipe {
   mealPlanId: string;
   recipeId: string;
   recipe: Recipe;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MealPlanInventoryItem {
+  mealPlanInventoryItemId: string;
+  mealPlanId: string;
+  inventoryItemId: string;
+  inventoryItem: InventoryItem;
+  quantityUsed: number;
   createdAt: string;
   updatedAt: string;
 }

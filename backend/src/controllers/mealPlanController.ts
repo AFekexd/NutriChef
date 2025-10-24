@@ -41,6 +41,15 @@ export const getMealPlans = async (req: Request, res: Response) => {
             },
           },
         },
+        mealPlanInventoryItems: {
+          include: {
+            inventoryItem: {
+              include: {
+                ingredient: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         date: "asc",
@@ -87,6 +96,15 @@ export const getMealPlanById = async (req: Request, res: Response) => {
             },
           },
         },
+        mealPlanInventoryItems: {
+          include: {
+            inventoryItem: {
+              include: {
+                ingredient: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -109,6 +127,7 @@ export const createMealPlan = async (req: Request, res: Response) => {
       date,
       mealType,
       recipeIds,
+      inventoryItemIds,
       targetCalories,
       targetMacros,
       isAIGenerated,
@@ -132,7 +151,7 @@ export const createMealPlan = async (req: Request, res: Response) => {
       });
     }
 
-    // Create meal plan with recipes
+    // Create meal plan with recipes and inventory items
     const mealPlan = await prisma.mealPlan.create({
       data: {
         userId,
@@ -147,6 +166,13 @@ export const createMealPlan = async (req: Request, res: Response) => {
               recipeId,
             })) || [],
         },
+        mealPlanInventoryItems: {
+          create:
+            inventoryItemIds?.map((inventoryItemId: string) => ({
+              inventoryItemId,
+              quantityUsed: 1, // Default quantity, can be customized
+            })) || [],
+        },
       },
       include: {
         mealPlanRecipes: {
@@ -158,6 +184,15 @@ export const createMealPlan = async (req: Request, res: Response) => {
                     ingredient: true,
                   },
                 },
+              },
+            },
+          },
+        },
+        mealPlanInventoryItems: {
+          include: {
+            inventoryItem: {
+              include: {
+                ingredient: true,
               },
             },
           },
@@ -478,5 +513,135 @@ export const getWeeklySummary = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching weekly summary:", error);
     res.status(500).json({ error: "Failed to fetch weekly summary" });
+  }
+};
+
+// Add inventory item to meal plan
+export const addInventoryItemToMealPlan = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params; // meal plan ID
+    const { inventoryItemId, quantityUsed } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!id) {
+      return res.status(400).json({ error: "Meal plan ID is required" });
+    }
+
+    if (!inventoryItemId) {
+      return res.status(400).json({ error: "Inventory item ID is required" });
+    }
+
+    // Verify meal plan belongs to user
+    const mealPlan = await prisma.mealPlan.findFirst({
+      where: {
+        mealPlanId: id,
+        userId,
+      },
+    });
+
+    if (!mealPlan) {
+      return res.status(404).json({ error: "Meal plan not found" });
+    }
+
+    // Verify inventory item belongs to user
+    const inventoryItem = await prisma.inventoryItem.findFirst({
+      where: {
+        inventoryItemId,
+        userId,
+      },
+    });
+
+    if (!inventoryItem) {
+      return res.status(404).json({ error: "Inventory item not found" });
+    }
+
+    // Add inventory item to meal plan
+    const mealPlanInventoryItem = await prisma.mealPlanInventoryItem.create({
+      data: {
+        mealPlanId: id,
+        inventoryItemId,
+        quantityUsed: quantityUsed || 1,
+      },
+      include: {
+        inventoryItem: {
+          include: {
+            ingredient: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Inventory item added to meal plan",
+      mealPlanInventoryItem,
+    });
+  } catch (error) {
+    console.error("Error adding inventory item to meal plan:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to add inventory item to meal plan" });
+  }
+};
+
+// Remove inventory item from meal plan
+export const removeInventoryItemFromMealPlan = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id, inventoryItemId } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!id) {
+      return res.status(400).json({ error: "Meal plan ID is required" });
+    }
+
+    if (!inventoryItemId) {
+      return res.status(400).json({ error: "Inventory item ID is required" });
+    }
+
+    // Verify meal plan belongs to user
+    const mealPlan = await prisma.mealPlan.findFirst({
+      where: {
+        mealPlanId: id,
+        userId,
+      },
+    });
+
+    if (!mealPlan) {
+      return res.status(404).json({ error: "Meal plan not found" });
+    }
+
+    // Find and delete the meal plan inventory item
+    const deleted = await prisma.mealPlanInventoryItem.deleteMany({
+      where: {
+        mealPlanId: id,
+        inventoryItemId,
+      },
+    });
+
+    if (deleted.count === 0) {
+      return res
+        .status(404)
+        .json({ error: "Inventory item not found in meal plan" });
+    }
+
+    res.json({ message: "Inventory item removed from meal plan" });
+  } catch (error) {
+    console.error("Error removing inventory item from meal plan:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to remove inventory item from meal plan" });
   }
 };

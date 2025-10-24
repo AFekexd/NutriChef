@@ -17,7 +17,9 @@
     "dashboard": "Dashboard",
     "inventory": "Inventory",
     "recipes": "Recipes",
-    "home": "Home"
+    "home": "Home",
+    "mealPlanning": "Meal Planning",
+    "profile": "Profile"
   },
   "auth": {
     "loginTitle": "Login to NutriChef",
