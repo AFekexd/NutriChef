@@ -1,12 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
-  ShoppingCart,
   LogOut,
   ChefHat,
   User,
   Shield,
   Calendar,
+  Package,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -32,11 +33,11 @@ export function TopNavigation() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="hidden md:block fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-50 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="hidden md:block w-full fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-50 transition-colors">
+      <div className="max-w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-2">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mr-2">
             <div className="w-10 h-10 bg-gradient-to-r from-green-400 dark:from-green-200 to-blue-500 dark:to-blue-300 rounded-lg flex items-center justify-center shadow-md">
               {/* <ChefHat className="w-6 h-6 text-white" /> */}
               <img src="/nutrichef-512.png" alt="Logo" className="rounded-lg" />
@@ -46,8 +47,7 @@ export function TopNavigation() {
             </h1>
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-1 justify-center">
             <button
               onClick={() => navigate("/dashboard")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
@@ -68,8 +68,20 @@ export function TopNavigation() {
                   : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
-              <ShoppingCart className="w-5 h-5" />
+              <Package className="w-5 h-5" />
               <span className="font-medium">{t("nav.inventory")}</span>
+            </button>
+
+            <button
+              onClick={() => navigate("/shopping-list")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                isActive("/shopping-list")
+                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="font-medium">{t("nav.shoppingList")}</span>
             </button>
 
             <button
@@ -111,8 +123,8 @@ export function TopNavigation() {
             )}
           </div>
 
-          {/* User Info, Settings, and Logout */}
-          <div className="flex items-center gap-4">
+          {/* User Info, Settings, and Logout - Right Side */}
+          <div className="flex items-center gap-4 ml-auto">
             <SettingsMenu />
             <div className="text-right flex items-center gap-3">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">

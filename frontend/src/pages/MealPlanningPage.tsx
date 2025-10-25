@@ -11,10 +11,12 @@ import {
   ChevronRight,
   Apple,
   X,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { apiService } from "../services/api";
+import { shoppingListService } from "../services/shoppingListService";
 import type { MealPlan, Recipe, InventoryItem } from "../types";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
@@ -310,6 +312,49 @@ export function MealPlanningPage() {
     }
   };
 
+  // Add week's meals to shopping list
+  const handleAddWeekToShoppingList = () => {
+    const itemsToAdd: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      category: string;
+      priority: "high" | "medium" | "low";
+    }> = [];
+
+    mealPlans.forEach((meal) => {
+      // Add ingredients from inventory items
+      meal.mealPlanInventoryItems?.forEach((mpi) => {
+        itemsToAdd.push({
+          name: mpi.inventoryItem.ingredient.name,
+          quantity: mpi.quantityUsed,
+          unit: mpi.inventoryItem.unit,
+          category: mpi.inventoryItem.ingredient.category,
+          priority: "medium",
+        });
+      });
+
+      // For recipes, we don't have ingredient details in the meal plan
+      // so we'll add a note that this is from a recipe
+      meal.mealPlanRecipes.forEach((mpr) => {
+        itemsToAdd.push({
+          name: `${mpr.recipe.title} (Recipe)`,
+          quantity: 1,
+          unit: "recipe",
+          category: "other",
+          priority: "medium",
+        });
+      });
+    });
+
+    const addedCount = shoppingListService.addMultipleItems(itemsToAdd);
+    alert(
+      `Added ${addedCount} new items to shopping list! (${
+        itemsToAdd.length - addedCount
+      } items were already in the list and quantities were updated)`
+    );
+  };
+
   // Animations
   useEffect(() => {
     if (containerRef.current) {
@@ -366,32 +411,44 @@ export function MealPlanningPage() {
             </div>
           </div>
 
-          {/* Week Navigation */}
-          <div className="flex items-center gap-2 dark:text-gray-300 ">
+          <div className="flex items-center gap-2">
+            {/* Add to Shopping List Button */}
             <Button
-              variant="outline"
-              size="sm"
-              onClick={previousWeek}
-              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
+              onClick={handleAddWeekToShoppingList}
+              disabled={mealPlans.length === 0}
+              className="bg-gradient-to-r from-blue-600 to-green-600 dark:from-blue-500 dark:to-green-500 text-white hover:from-blue-700 hover:to-green-700"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Add to Shopping List
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={currentWeek}
-              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
-            >
-              This Week
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={nextWeek}
-              className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+
+            {/* Week Navigation */}
+            <div className="flex items-center gap-2 dark:text-gray-300">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={previousWeek}
+                className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={currentWeek}
+                className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
+              >
+                This Week
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={nextWeek}
+                className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

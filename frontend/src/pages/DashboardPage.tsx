@@ -119,7 +119,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen pb-20 md:pb-0 md:pt-10">
       {/* Header - Mobile only */}
       <header className="md:hidden border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -192,6 +192,8 @@ export default function DashboardPage() {
                       navigate("/inventory");
                     } else if (feature.title === "AI Recipe Generator") {
                       navigate("/recipes");
+                    } else if (feature.title === "Grocery Planning") {
+                      navigate("/shopping-list");
                     } else if (feature.title === "Meal Planning") {
                       navigate("/meal-planning");
                     }

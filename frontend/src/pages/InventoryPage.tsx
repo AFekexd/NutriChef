@@ -22,6 +22,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { PhotoUpload } from "../components/inventory/PhotoUpload";
 import { AIDetectionReview } from "../components/inventory/AIDetectionReview";
 import { ManualItemForm } from "../components/inventory/ManualItemForm";
@@ -341,17 +342,19 @@ export function InventoryPage() {
 
         {/* Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 animate-in slide-in-from-top">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <p className="text-red-700">{error}</p>
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="w-5 h-5" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 animate-in slide-in-from-top">
-            <TrendingUp className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <p className="text-green-700">{successMessage}</p>
-          </div>
+          <Alert className="mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-700 dark:text-green-300">
+              {successMessage}
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Manual Item Form */}

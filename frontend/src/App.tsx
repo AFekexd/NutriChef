@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Toaster } from "./components/ui/sonner";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { RecipeRecommendationPage } from "./pages/RecipeRecommendationPage";
 import { MyRecipesPage } from "./pages/MyRecipesPage";
+import { ShoppingListPage } from "./pages/ShoppingListPage";
 import { MealPlanningPage } from "./pages/MealPlanningPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
@@ -103,6 +105,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/shopping-list"
+        element={
+          <ProtectedRoute>
+            <ShoppingListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/meal-planning"
         element={
           <ProtectedRoute>
@@ -141,6 +151,7 @@ function App() {
             <TopNavigation />
             <AppRoutes />
             <BottomNavigation />
+            <Toaster position="top-right" />
           </div>
         </AuthProvider>
       </BrowserRouter>

@@ -70,6 +70,16 @@ export interface Recipe {
     carbs: number;
     fat: number;
   };
+  recipeIngredients?: {
+    recipeIngredientId: string;
+    quantity: number;
+    unit: string;
+    ingredient: {
+      ingredientId: string;
+      name: string;
+      category: string;
+    };
+  }[];
   createdAt: string;
   updatedAt: string;
 }

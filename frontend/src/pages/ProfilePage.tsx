@@ -17,6 +17,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { apiService } from "../services/api";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
@@ -277,17 +278,19 @@ export function ProfilePage() {
 
         {/* Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3 animate-in slide-in-from-top">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <p className="text-red-700 dark:text-red-400">{error}</p>
-          </div>
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="w-5 h-5" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-3 animate-in slide-in-from-top">
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-            <p className="text-green-700 dark:text-green-400">{success}</p>
-          </div>
+          <Alert className="mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <AlertDescription className="text-green-700 dark:text-green-300">
+              {success}
+            </AlertDescription>
+          </Alert>
         )}
 
         <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">

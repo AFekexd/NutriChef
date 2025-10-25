@@ -19,7 +19,8 @@
     "recipes": "Recipes",
     "home": "Home",
     "mealPlanning": "Meal Planning",
-    "profile": "Profile"
+    "profile": "Profile",
+    "shoppingList": "Shopping List"
   },
   "auth": {
     "loginTitle": "Login to NutriChef",

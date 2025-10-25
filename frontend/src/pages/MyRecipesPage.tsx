@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   ChefHat,
-  AlertCircle,
   Loader2,
   Flame,
   Trash2,
   BookOpen,
   Utensils,
   Plus,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { apiService } from "../services/api";
+import { shoppingListService } from "../services/shoppingListService";
 import type { Recipe } from "../types";
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +30,13 @@ export function MyRecipesPage() {
   useEffect(() => {
     loadRecipes();
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError(null);
+    }
+  }, [error]);
 
   const loadRecipes = async () => {
     setIsLoading(true);
@@ -67,6 +76,35 @@ export function MyRecipesPage() {
     }
   };
 
+  const handleAddRecipeToShoppingList = (recipe: Recipe) => {
+    if (!recipe.recipeIngredients || recipe.recipeIngredients.length === 0) {
+      // Fallback: If no ingredients, add recipe as a reminder
+      shoppingListService.addItem({
+        name: `Recipe: ${recipe.title}`,
+        quantity: 1,
+        unit: "recipe",
+        category: "other",
+        priority: "medium",
+      });
+      toast.success(`"${recipe.title}" added to shopping list as a reminder!`);
+      return;
+    }
+
+    // Add all recipe ingredients to shopping list
+    const ingredientsToAdd = recipe.recipeIngredients.map((ri) => ({
+      name: ri.ingredient.name,
+      quantity: ri.quantity,
+      unit: ri.unit,
+      category: ri.ingredient.category,
+      priority: "medium" as const,
+    }));
+
+    shoppingListService.addMultipleItems(ingredientsToAdd);
+    toast.success(
+      `Added ${ingredientsToAdd.length} ingredients from "${recipe.title}" to shopping list!`
+    );
+  };
+
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,14 +129,6 @@ export function MyRecipesPage() {
             View and manage your saved recipes
           </p>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
 
         {/* Loading State */}
         {isLoading && (
@@ -208,6 +238,14 @@ export function MyRecipesPage() {
                     View Recipe
                   </Button>
                   <Button
+                    onClick={() => handleAddRecipeToShoppingList(recipe)}
+                    variant="outline"
+                    className="w-full border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Shopping List
+                  </Button>
+                  <Button
                     onClick={() => handleDeleteRecipe(recipe.recipeId)}
                     disabled={isDeleting}
                     variant="outline"
@@ -300,6 +338,31 @@ export function MyRecipesPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Ingredients */}
+                {selectedRecipe.recipeIngredients &&
+                  selectedRecipe.recipeIngredients.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                        Ingredients
+                      </h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                        {selectedRecipe.recipeIngredients.map((ri) => (
+                          <div
+                            key={ri.recipeIngredientId}
+                            className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0"
+                          >
+                            <span className="text-gray-900 dark:text-gray-100 font-medium">
+                              {ri.ingredient.name}
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {ri.quantity} {ri.unit}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                 {/* Instructions */}
                 <div>

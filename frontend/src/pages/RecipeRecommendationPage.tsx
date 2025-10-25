@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
+import { toast } from "sonner";
 import {
   ChefHat,
-  AlertCircle,
   Loader2,
   Plus,
   X,
@@ -25,6 +25,7 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { apiService } from "../services/api";
+import { shoppingListService } from "../services/shoppingListService";
 import type { RecipeRecommendation } from "../types";
 
 interface ManualIngredient {
@@ -97,6 +98,36 @@ export function RecipeRecommendationPage() {
   const configRef = useRef<HTMLDivElement>(null);
   const recommendationsRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Show toasts for messages
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+      setError(null);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (saveSuccess) {
+      toast.success(saveSuccess);
+      setSaveSuccess(null);
+    }
+  }, [saveSuccess]);
+
+  useEffect(() => {
+    if (showCacheNotice) {
+      toast.info(
+        "Loaded from cache (saved tokens!) - Results from a previous search.",
+        {
+          duration: 5000,
+          action: {
+            label: "Clear Cache",
+            onClick: clearCache,
+          },
+        }
+      );
+    }
+  }, [showCacheNotice]);
 
   useEffect(() => {
     if (headerRef.current) {
@@ -234,9 +265,10 @@ export function RecipeRecommendationPage() {
         }
       });
       setShowCacheNotice(false);
-      alert("Recipe cache cleared successfully!");
+      toast.success("Recipe cache cleared successfully!");
     } catch (error) {
       console.error("Error clearing cache:", error);
+      toast.error("Failed to clear cache");
     }
   };
 
@@ -274,9 +306,6 @@ export function RecipeRecommendationPage() {
       // Mark as saved
       setSavedRecipes(new Set([...savedRecipes, recipe.title]));
       setSaveSuccess(`"${recipe.title}" saved successfully!`);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
       console.error("Error saving recipe:", err);
       setError(
@@ -330,9 +359,6 @@ export function RecipeRecommendationPage() {
         imageURL: "",
       });
       setShowCreateModal(false);
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSaveSuccess(null), 3000);
     } catch (err: any) {
       console.error("Error creating recipe:", err);
       setError(
@@ -360,6 +386,23 @@ export function RecipeRecommendationPage() {
       imageURL: "",
     });
     setError(null);
+  };
+
+  const handleAddToShoppingList = (recipe: RecipeRecommendation) => {
+    const itemsToAdd = recipe.missingIngredients.map((ing) => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      category: "other" as const,
+      priority: "medium" as const,
+    }));
+
+    const addedCount = shoppingListService.addMultipleItems(itemsToAdd);
+    setSaveSuccess(
+      `Added ${addedCount} missing ingredients to shopping list! (${
+        itemsToAdd.length - addedCount
+      } items were already in the list)`
+    );
   };
 
   const handleGetRecommendations = async () => {
@@ -468,43 +511,6 @@ export function RecipeRecommendationPage() {
             {t("recipes.subtitle")}
           </p>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-            <p className="text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
-
-        {/* Cache Notice */}
-        {showCacheNotice && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <p className="text-blue-700 dark:text-blue-300">
-                Loaded from cache (saved tokens!) - Results are from a previous
-                search with the same parameters.
-              </p>
-            </div>
-            <Button
-              onClick={clearCache}
-              variant="outline"
-              size="sm"
-              className="border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-            >
-              Clear Cache
-            </Button>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {saveSuccess && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-3">
-            <Check className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-            <p className="text-green-700 dark:text-green-300">{saveSuccess}</p>
-          </div>
-        )}
 
         {/* Configuration Panel */}
         <div ref={configRef}>
@@ -880,6 +886,16 @@ export function RecipeRecommendationPage() {
                           </>
                         )}
                       </Button>
+                      {recipe.missingIngredients.length > 0 && (
+                        <Button
+                          onClick={() => handleAddToShoppingList(recipe)}
+                          variant="outline"
+                          className="w-full border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Add Missing to List
+                        </Button>
+                      )}
                       <Button
                         onClick={() => setSelectedRecipe(recipe)}
                         variant="outline"

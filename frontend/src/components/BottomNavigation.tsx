@@ -2,12 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Home,
-  ShoppingCart,
   ChefHat,
-  User,
   Calendar,
   ScanLine,
   X,
+  Package,
+  ShoppingBag,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
@@ -200,22 +200,20 @@ export function BottomNavigation() {
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <ShoppingCart className="w-6 h-6" />
+            <Package className="w-6 h-6" />
             <span className="text-xs font-medium">{t("nav.inventory")}</span>
           </button>
 
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/shopping-list")}
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-              isActive("/profile")
+              isActive("/shopping-list")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <User className="w-6 h-6" />
-            <span className="text-xs font-medium">
-              {t("nav.profile") || "Profile"}
-            </span>
+            <ShoppingBag className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("nav.shoppingList")}</span>
           </button>
         </div>
       </nav>

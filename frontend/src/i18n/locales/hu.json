@@ -19,7 +19,8 @@
     "recipes": "Receptek",
     "home": "Kezdőlap",
     "mealPlanning": "Étkezés tervezés",
-    "profile": "Profil"
+    "profile": "Profil",
+    "shoppingList": "Bevásárlólista"
   },
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",
