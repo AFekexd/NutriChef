@@ -5,7 +5,9 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getRecentActivities,
 } from "../controllers/userController.js";
+import { authenticate } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -170,5 +172,51 @@ router.put("/:id", updateUser);
  *         description: Server error
  */
 router.delete("/:id", deleteUser);
+
+/**
+ * @swagger
+ * /api/users/recent-activities:
+ *   get:
+ *     summary: Get recent user activities
+ *     tags: [Users]
+ *     description: Retrieve recent activities for the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of activities to return
+ *     responses:
+ *       200:
+ *         description: List of recent activities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 activities:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                         enum: [inventory, recipe, mealplan]
+ *                       title:
+ *                         type: string
+ *                       timestamp:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/recent-activities", authenticate, getRecentActivities);
 
 export default router;

@@ -219,6 +219,21 @@ class ApiService {
     return response.data;
   }
 
+  // User endpoints
+  async getRecentActivities(limit: number = 10): Promise<{
+    activities: Array<{
+      id: string;
+      type: 'inventory' | 'recipe' | 'mealplan';
+      title: string;
+      timestamp: string;
+    }>;
+  }> {
+    const response = await this.api.get("/api/users/recent-activities", {
+      params: { limit },
+    });
+    return response.data;
+  }
+
   // Helper to get current user from Redux store
   getCurrentUser(): User | null {
     if (this.store) {

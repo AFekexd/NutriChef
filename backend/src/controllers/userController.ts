@@ -123,3 +123,84 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to delete user" });
   }
 };
+
+// Get recent activities for a user
+export const getRecentActivities = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Fetch recent activities from different sources
+    const [recentInventory, recentRecipes, recentMealPlans] = await Promise.all([
+      // Recent inventory additions
+      prisma.inventoryItem.findMany({
+        where: { userId },
+        select: {
+          inventoryItemId: true,
+          ingredient: {
+            select: { name: true }
+          },
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      // Recent recipes
+      prisma.recipe.findMany({
+        where: { userId },
+        select: {
+          recipeId: true,
+          title: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      // Recent meal plans
+      prisma.mealPlan.findMany({
+        where: { userId },
+        select: {
+          mealPlanId: true,
+          date: true,
+          mealType: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+    ]);
+
+    // Combine and sort all activities
+    const activities = [
+      ...recentInventory.map(item => ({
+        id: item.inventoryItemId,
+        type: 'inventory' as const,
+        title: `Added ${item.ingredient.name} to inventory`,
+        timestamp: item.createdAt,
+      })),
+      ...recentRecipes.map(recipe => ({
+        id: recipe.recipeId,
+        type: 'recipe' as const,
+        title: `Saved recipe: ${recipe.title}`,
+        timestamp: recipe.createdAt,
+      })),
+      ...recentMealPlans.map(plan => ({
+        id: plan.mealPlanId,
+        type: 'mealplan' as const,
+        title: `Planned ${plan.mealType} for ${new Date(plan.date).toLocaleDateString()}`,
+        timestamp: plan.createdAt,
+      })),
+    ]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+
+    res.json({ activities });
+  } catch (error) {
+    console.error("Error fetching recent activities:", error);
+    res.status(500).json({ error: "Failed to fetch recent activities" });
+  }
+};

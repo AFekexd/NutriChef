@@ -42,6 +42,15 @@ export default function DashboardPage() {
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
+  // Recent activities state
+  const [recentActivities, setRecentActivities] = useState<Array<{
+    id: string;
+    type: 'inventory' | 'recipe' | 'mealplan';
+    title: string;
+    timestamp: string;
+  }>>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+
   // Generate trend indicators (mock data for demo)
   const getTrendData = () => {
     return {
@@ -124,7 +133,21 @@ export default function DashboardPage() {
       }
     };
 
+    const fetchRecentActivities = async () => {
+      try {
+        setIsLoadingActivities(true);
+        const data = await apiService.getRecentActivities(5);
+        setRecentActivities(data.activities);
+      } catch (error) {
+        console.error("Error fetching recent activities:", error);
+        // Silently fail for recent activities
+      } finally {
+        setIsLoadingActivities(false);
+      }
+    };
+
     fetchStats();
+    fetchRecentActivities();
   }, []);
 
   useEffect(() => {
@@ -484,6 +507,80 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Section */}
+          <Card className="mt-6 bg-white dark:bg-gray-900 shadow-lg border border-gray-200 dark:border-gray-800">
+            <CardHeader>
+              <CardTitle
+                className="text-2xl text-[#4A4A4A] dark:text-gray-100"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                Recent Activity
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
+                Your latest actions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingActivities ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#FF7043] dark:text-orange-400" />
+                </div>
+              ) : recentActivities.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No recent activity. Start by adding ingredients or recipes!
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivities.map((activity) => {
+                    const getIcon = () => {
+                      switch (activity.type) {
+                        case 'inventory':
+                          return <Apple className="h-5 w-5 text-green-500" />;
+                        case 'recipe':
+                          return <ChefHat className="h-5 w-5 text-orange-500" />;
+                        case 'mealplan':
+                          return <Calendar className="h-5 w-5 text-blue-500" />;
+                        default:
+                          return <Heart className="h-5 w-5 text-gray-500" />;
+                      }
+                    };
+
+                    const getTimeAgo = (timestamp: string) => {
+                      const date = new Date(timestamp);
+                      const now = new Date();
+                      const diff = now.getTime() - date.getTime();
+                      const minutes = Math.floor(diff / 60000);
+                      const hours = Math.floor(diff / 3600000);
+                      const days = Math.floor(diff / 86400000);
+
+                      if (days > 0) return `${days}d ago`;
+                      if (hours > 0) return `${hours}h ago`;
+                      if (minutes > 0) return `${minutes}m ago`;
+                      return 'Just now';
+                    };
+
+                    return (
+                      <div
+                        key={activity.id}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
+                      >
+                        <div className="flex-shrink-0">{getIcon()}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                            {activity.title}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {getTimeAgo(activity.timestamp)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
