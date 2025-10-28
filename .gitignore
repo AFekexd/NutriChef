@@ -12,5 +12,5 @@ coverage/
 *.swp
 *.bak
 *.class
-*.md
+
 inventory*.jpg
