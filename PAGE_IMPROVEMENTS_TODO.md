@@ -102,8 +102,7 @@
 - ✅ **Export**: Add CSV export functionality
 - ✅ **Search**: Add keyboard shortcut hint (Ctrl+F)
 - [ ] **Sorting**: Add multi-column sorting
-- [ ] **Batch Actions**: Add select-all and batch delete
-- [ ] **Export**: Add CSV export functionality
+- ✅ **Batch Actions**: Add select-all and batch delete
 - [ ] **AI Detection**: Add confidence score display
 - [ ] **AI Detection**: Add edit detected items before adding
 - [ ] **Search**: Add fuzzy search with typo tolerance
@@ -255,11 +254,11 @@
 
 ## 📊 Progress Summary
 
-**Completed**: 47 / 150+
-**Progress**: 31.3% → Target: 50% (75 items)
-**Remaining to Goal**: 28 improvements needed
+**Completed**: 48 / 150+
+**Progress**: 32.0% → Target: 50% (75 items)
+**Remaining to Goal**: 27 improvements needed
 
-**Current Status**: 31.3% Complete! Added dashboard recent activity with backend integration.
+**Current Status**: 32.0% Complete! Added inventory batch actions (select-all and batch delete).
 
 **Last Updated**: Current Session (Final Update - Sprint 3)
 

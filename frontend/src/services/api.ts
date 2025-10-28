@@ -349,6 +349,17 @@ class ApiService {
     return response.data;
   }
 
+  async batchDeleteInventoryItems(itemIds: string[]): Promise<{
+    message: string;
+    deletedCount: number;
+    requestedCount: number;
+  }> {
+    const response = await this.api.post("/api/inventory/batch-delete", {
+      itemIds,
+    });
+    return response.data;
+  }
+
   async updateInventoryItem(
     itemId: string,
     data: {

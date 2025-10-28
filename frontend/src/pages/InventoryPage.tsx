@@ -20,6 +20,7 @@ import {
   Edit2,
   X,
   Download,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -60,6 +61,8 @@ export function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const { t, i18n } = useTranslation();
 
   // GSAP refs
@@ -351,6 +354,60 @@ export function InventoryPage() {
     }
   };
 
+  const handleBatchDelete = async () => {
+    if (selectedItems.size === 0) {
+      toast.error("No items selected");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedItems.size} item(s)?`
+      )
+    ) {
+      return;
+    }
+
+    setError(null);
+    try {
+      const result = await apiService.batchDeleteInventoryItems(
+        Array.from(selectedItems)
+      );
+      toast.success(result.message);
+      setSelectedItems(new Set());
+      setIsSelectionMode(false);
+      await loadInventoryData();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to delete items");
+      toast.error("Failed to delete items");
+    }
+  };
+
+  const toggleItemSelection = (itemId: string) => {
+    const newSelection = new Set(selectedItems);
+    if (newSelection.has(itemId)) {
+      newSelection.delete(itemId);
+    } else {
+      newSelection.add(itemId);
+    }
+    setSelectedItems(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === filteredItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(
+        new Set(filteredItems.map((item) => item.inventoryItemId))
+      );
+    }
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedItems(new Set());
+  };
+
   const handleEditItem = (item: InventoryItem) => {
     setEditingItem(item);
     setShowEditModal(true);
@@ -488,6 +545,46 @@ export function InventoryPage() {
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
+            {!isSelectionMode ? (
+              <Button
+                onClick={() => setIsSelectionMode(true)}
+                variant="outline"
+                disabled={allItems.length === 0}
+                className="border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950"
+              >
+                <CheckSquare className="w-4 h-4 mr-2" />
+                Select
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={toggleSelectAll}
+                  variant="outline"
+                  className="border-gray-600 dark:border-gray-500 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-950"
+                >
+                  {selectedItems.size === filteredItems.length
+                    ? "Deselect All"
+                    : "Select All"}
+                </Button>
+                <Button
+                  onClick={handleBatchDelete}
+                  variant="outline"
+                  disabled={selectedItems.size === 0}
+                  className="border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete ({selectedItems.size})
+                </Button>
+                <Button
+                  onClick={exitSelectionMode}
+                  variant="outline"
+                  className="border-gray-600 dark:border-gray-500 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-950"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+              </>
+            )}
             <Button
               onClick={() => setShowPhotoUpload(true)}
               className="bg-gradient-to-r from-green-600 to-green-300 text-white hover:from-green-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
@@ -754,11 +851,28 @@ export function InventoryPage() {
           >
             {filteredItems.map((item) => {
               const expiry = getExpiryStatus(item.expiryDate);
+              const isSelected = selectedItems.has(item.inventoryItemId);
               return (
                 <div key={item.inventoryItemId} className="item-card">
-                  <Card className="p-4 hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+                  <Card
+                    className={`p-4 hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 ${
+                      isSelectionMode && isSelected
+                        ? "ring-2 ring-purple-500 border-purple-500"
+                        : ""
+                    }`}
+                    onClick={() => isSelectionMode && toggleItemSelection(item.inventoryItemId)}
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
+                        {isSelectionMode && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleItemSelection(item.inventoryItemId)}
+                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        )}
                         {getLocationIcon(item.location)}
                         <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
                           {item.location}
@@ -808,25 +922,27 @@ export function InventoryPage() {
                       )}
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-100 hover:cursor-pointer"
-                        onClick={() => handleEditItem(item)}
-                      >
-                        <Edit2 className="w-4 h-4 mr-1" />
-                        {t("common.edit")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 dark:border-gray-700 dark:hover:border-red-600 hover:cursor-pointer"
-                        onClick={() => handleDeleteItem(item.inventoryItemId)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {!isSelectionMode && (
+                      <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-100 hover:cursor-pointer"
+                          onClick={() => handleEditItem(item)}
+                        >
+                          <Edit2 className="w-4 h-4 mr-1" />
+                          {t("common.edit")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 dark:border-gray-700 dark:hover:border-red-600 hover:cursor-pointer"
+                          onClick={() => handleDeleteItem(item.inventoryItemId)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </Card>
                 </div>
               );

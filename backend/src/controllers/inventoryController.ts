@@ -403,3 +403,50 @@ export const addManualInventoryItem = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to add inventory item" });
   }
 };
+
+// Batch delete inventory items
+export const batchDeleteInventoryItems = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const { itemIds } = req.body;
+
+    if (!Array.isArray(itemIds) || itemIds.length === 0) {
+      return res.status(400).json({ error: "itemIds must be a non-empty array" });
+    }
+
+    // Verify all items belong to the user before deleting
+    const itemsToDelete = await prisma.inventoryItem.findMany({
+      where: {
+        inventoryItemId: { in: itemIds },
+        userId: req.user.userId,
+      },
+      select: { inventoryItemId: true },
+    });
+
+    const validItemIds = itemsToDelete.map(item => item.inventoryItemId);
+
+    if (validItemIds.length === 0) {
+      return res.status(404).json({ error: "No valid items found to delete" });
+    }
+
+    // Delete the items
+    const result = await prisma.inventoryItem.deleteMany({
+      where: {
+        inventoryItemId: { in: validItemIds },
+        userId: req.user.userId,
+      },
+    });
+
+    res.json({
+      message: `Successfully deleted ${result.count} item(s)`,
+      deletedCount: result.count,
+      requestedCount: itemIds.length,
+    });
+  } catch (error) {
+    console.error("Error batch deleting inventory items:", error);
+    res.status(500).json({ error: "Failed to batch delete inventory items" });
+  }
+};
