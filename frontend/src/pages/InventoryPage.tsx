@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import {
   Camera,
   AlertCircle,
@@ -18,6 +19,7 @@ import {
   Trash2,
   Edit2,
   X,
+  Download,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -25,7 +27,11 @@ import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { PhotoUpload } from "../components/inventory/PhotoUpload";
 import { AIDetectionReview } from "../components/inventory/AIDetectionReview";
-import { ManualItemForm } from "../components/inventory/ManualItemForm";
+import { EnhancedManualItemForm } from "../components/inventory/EnhancedManualItemForm";
+import { ScrollToTop } from "../components/ScrollToTop";
+import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
+import { Breadcrumbs } from "../components/Breadcrumbs";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import type {
   DetectionResult,
@@ -35,6 +41,7 @@ import type {
 
 type ViewMode = "grid" | "list";
 type LocationFilter = "all" | "fridge" | "pantry" | "freezer";
+type StockFilter = "all" | "low" | "normal" | "expiring";
 
 export function InventoryPage() {
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
@@ -49,6 +56,7 @@ export function InventoryPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>("all");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -61,9 +69,65 @@ export function InventoryPage() {
   const itemsGridRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Pull to refresh
+  const { isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      await loadInventoryData();
+      toast.success("Inventory refreshed!");
+    },
+    threshold: 80,
+  });
+
   useEffect(() => {
     loadInventoryData();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "f":
+            e.preventDefault();
+            document.getElementById("search-inventory")?.focus();
+            break;
+          case "n":
+            e.preventDefault();
+            setShowManualForm(true);
+            toast.info("Opening manual form...");
+            break;
+          case "g":
+            e.preventDefault();
+            setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
+            toast.info(
+              `Switched to ${viewMode === "grid" ? "list" : "grid"} view`
+            );
+            break;
+        }
+      } else if (e.key === "Escape") {
+        if (showPhotoUpload) setShowPhotoUpload(false);
+        if (showManualForm) setShowManualForm(false);
+        if (showEditModal) setShowEditModal(false);
+        if (detectionResult) setDetectionResult(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [
+    viewMode,
+    showPhotoUpload,
+    showManualForm,
+    showEditModal,
+    detectionResult,
+  ]);
 
   // GSAP animations on mount
   useEffect(() => {
@@ -180,31 +244,88 @@ export function InventoryPage() {
     }
   };
 
-  const handleAddManualItem = async (itemData: {
-    name: string;
-    quantity: number;
-    unit: string;
-    location: string;
-    expiryDate?: string;
-    category?: string;
-  }) => {
+  const handleAddManualItem = async (
+    items: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      location: string;
+      expiryDate?: string;
+      category?: string;
+      tags?: string[];
+      image?: string;
+    }>
+  ) => {
     setError(null);
     try {
-      await apiService.addManualInventoryItem({
-        ingredientName: itemData.name,
-        quantity: itemData.quantity,
-        unit: itemData.unit,
-        location: itemData.location,
-        expiryDate: itemData.expiryDate,
-        category: itemData.category,
-      });
-      setSuccessMessage("Item added successfully!");
+      // Add all items
+      for (const itemData of items) {
+        await apiService.addManualInventoryItem({
+          ingredientName: itemData.name,
+          quantity: itemData.quantity,
+          unit: itemData.unit,
+          location: itemData.location,
+          expiryDate: itemData.expiryDate,
+          category: itemData.category,
+        });
+      }
+      setSuccessMessage(
+        `Successfully added ${items.length} ${
+          items.length === 1 ? "item" : "items"
+        }!`
+      );
       setShowManualForm(false);
       await loadInventoryData();
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
       throw err;
     }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredItems.length === 0) {
+      toast.error("No items to export");
+      return;
+    }
+
+    // Create CSV content
+    const headers = [
+      "Name",
+      "Quantity",
+      "Unit",
+      "Location",
+      "Expiry Date",
+      "Added Date",
+    ];
+    const rows = filteredItems.map((item) => [
+      item.ingredient?.name || "Unknown",
+      item.quantity.toString(),
+      item.unit,
+      item.location,
+      item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : "N/A",
+      item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `inventory_${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success(`Exported ${filteredItems.length} items to CSV`);
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -298,7 +419,25 @@ export function InventoryPage() {
     const matchesSearch = (item.ingredient?.name || "")
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return matchesLocation && matchesSearch;
+
+    let matchesStock = true;
+    if (stockFilter === "low") {
+      matchesStock = item.quantity < 3; // Low stock threshold
+    } else if (stockFilter === "expiring") {
+      if (item.expiryDate) {
+        const expiryDate = new Date(item.expiryDate);
+        const daysUntilExpiry = Math.ceil(
+          (expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        );
+        matchesStock = daysUntilExpiry <= 7;
+      } else {
+        matchesStock = false;
+      }
+    } else if (stockFilter === "normal") {
+      matchesStock = item.quantity >= 3;
+    }
+
+    return matchesLocation && matchesSearch && matchesStock;
   });
 
   if (isLoading) {
@@ -311,7 +450,17 @@ export function InventoryPage() {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        threshold={80}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs />
+
         {/* Header */}
         <div ref={headerRef} className="flex items-center justify-between mb-8">
           <div>
@@ -329,6 +478,15 @@ export function InventoryPage() {
               className="border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
             >
               + {t("inventory.manualAdd")}
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              variant="outline"
+              disabled={allItems.length === 0}
+              className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
             </Button>
             <Button
               onClick={() => setShowPhotoUpload(true)}
@@ -360,9 +518,10 @@ export function InventoryPage() {
         {/* Manual Item Form */}
         {showManualForm && (
           <div className="mb-8">
-            <ManualItemForm
+            <EnhancedManualItemForm
               onSubmit={handleAddManualItem}
               onCancel={() => setShowManualForm(false)}
+              enableBatchMode={true}
             />
           </div>
         )}
@@ -507,8 +666,9 @@ export function InventoryPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
+              id="search-inventory"
               type="text"
-              placeholder={t("inventory.search") + "..."}
+              placeholder={t("inventory.search") + "... (Ctrl+F)"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -527,6 +687,17 @@ export function InventoryPage() {
               <option value="fridge">🧊 {t("inventory.fridge")}</option>
               <option value="pantry">📦 {t("inventory.pantry")}</option>
               <option value="freezer">❄️ {t("inventory.freezer")}</option>
+            </select>
+
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="all">🔍 All Stock</option>
+              <option value="low">⚠️ Low Stock</option>
+              <option value="normal">✅ Normal Stock</option>
+              <option value="expiring">⏰ Expiring Soon</option>
             </select>
 
             <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -847,7 +1018,7 @@ export function InventoryPage() {
               </p>
             </div>
             <div className="p-6">
-              <ManualItemForm
+              <EnhancedManualItemForm
                 initialData={{
                   name: editingItem.ingredient?.name || "",
                   quantity: editingItem.quantity,
@@ -859,25 +1030,31 @@ export function InventoryPage() {
                         .split("T")[0]
                     : undefined,
                   category: editingItem.ingredient?.category || "",
+                  tags: [],
                 }}
-                onSubmit={(data) =>
-                  handleUpdateItem({
+                onSubmit={(items) => {
+                  const data = items[0]; // Edit mode always sends single item
+                  return handleUpdateItem({
                     quantity: data.quantity,
                     unit: data.unit,
                     location: data.location,
                     expiryDate: data.expiryDate,
-                  })
-                }
+                  });
+                }}
                 onCancel={() => {
                   setShowEditModal(false);
                   setEditingItem(null);
                 }}
                 isEditMode={true}
+                enableBatchMode={false}
               />
             </div>
           </div>
         </div>
       )}
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

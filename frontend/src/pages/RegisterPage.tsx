@@ -15,7 +15,17 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { ChefHat, Lock, Mail, User, Loader2, Check } from "lucide-react";
+import {
+  ChefHat,
+  Lock,
+  Mail,
+  User,
+  Loader2,
+  Check,
+  X,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu";
 
 export default function RegisterPage() {
@@ -25,12 +35,48 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
+
+  // Email validation
+  const isEmailValid = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const emailValid = email.length > 0 && isEmailValid(email);
+  const emailInvalid = emailTouched && email.length > 0 && !isEmailValid(email);
+
+  // Password strength calculation
+  const calculatePasswordStrength = (pwd: string) => {
+    let strength = 0;
+    if (pwd.length >= 8) strength += 25;
+    if (pwd.length >= 12) strength += 15;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength += 20;
+    if (/\d/.test(pwd)) strength += 20;
+    if (/[^a-zA-Z0-9]/.test(pwd)) strength += 20;
+    return Math.min(strength, 100);
+  };
+
+  const passwordStrength =
+    password.length > 0 ? calculatePasswordStrength(password) : 0;
+  const getStrengthColor = () => {
+    if (passwordStrength < 40) return "bg-red-500";
+    if (passwordStrength < 70) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+  const getStrengthLabel = () => {
+    if (passwordStrength < 40) return "Weak";
+    if (passwordStrength < 70) return "Medium";
+    return "Strong";
+  };
 
   useEffect(() => {
     if (containerRef.current) {
@@ -94,6 +140,13 @@ export default function RegisterPage() {
     }
   };
 
+  // Handle Enter key submission
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleSubmit(e as any);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="absolute top-4 right-4">
@@ -153,6 +206,7 @@ export default function RegisterPage() {
                     placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
                     required
                   />
@@ -174,10 +228,27 @@ export default function RegisterPage() {
                     placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
+                    onBlur={() => setEmailTouched(true)}
+                    onKeyPress={handleKeyPress}
+                    className={`pl-10 pr-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100 ${
+                      emailInvalid ? "border-red-500 dark:border-red-500" : ""
+                    } ${
+                      emailValid ? "border-green-500 dark:border-green-500" : ""
+                    }`}
                     required
                   />
+                  {emailValid && (
+                    <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
+                  )}
+                  {emailInvalid && (
+                    <X className="absolute right-3 top-3 h-4 w-4 text-red-500" />
+                  )}
                 </div>
+                {emailInvalid && (
+                  <p className="text-xs text-red-500 dark:text-red-400">
+                    Please enter a valid email address
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -191,37 +262,79 @@ export default function RegisterPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
+                    onKeyPress={handleKeyPress}
+                    className="pl-10 pr-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
                 {password && (
-                  <div className="space-y-1 text-xs">
-                    {passwordRequirements.map((req, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center gap-2 ${
-                          req.met
-                            ? "text-[#4CAF50] dark:text-green-400"
-                            : "text-gray-500 dark:text-gray-400"
-                        }`}
-                      >
-                        <div
-                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
-                            req.met
-                              ? "bg-[#4CAF50] dark:bg-green-600"
-                              : "bg-gray-200 dark:bg-gray-700"
+                  <div className="space-y-2">
+                    {/* Password Strength Bar */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Password Strength:
+                        </span>
+                        <span
+                          className={`font-medium ${
+                            passwordStrength < 40
+                              ? "text-red-500"
+                              : passwordStrength < 70
+                              ? "text-yellow-500"
+                              : "text-green-500"
                           }`}
                         >
-                          {req.met && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                        {req.text}
+                          {getStrengthLabel()}
+                        </span>
                       </div>
-                    ))}
+                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+                          style={{ width: `${passwordStrength}%` }}
+                        />
+                      </div>
+                    </div>
+                    {/* Password Requirements */}
+                    <div className="space-y-1 text-xs">
+                      {passwordRequirements.map((req, index) => (
+                        <div
+                          key={index}
+                          className={`flex items-center gap-2 ${
+                            req.met
+                              ? "text-[#4CAF50] dark:text-green-400"
+                              : "text-gray-500 dark:text-gray-400"
+                          }`}
+                        >
+                          <div
+                            className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                              req.met
+                                ? "bg-[#4CAF50] dark:bg-green-600"
+                                : "bg-gray-200 dark:bg-gray-700"
+                            }`}
+                          >
+                            {req.met && (
+                              <Check className="w-3 h-3 text-white" />
+                            )}
+                          </div>
+                          {req.text}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -237,13 +350,25 @@ export default function RegisterPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
                   <Input
                     id="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
+                    onKeyPress={handleKeyPress}
+                    className="pl-10 pr-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 

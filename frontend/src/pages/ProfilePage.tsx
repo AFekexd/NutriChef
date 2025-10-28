@@ -18,6 +18,7 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
@@ -265,6 +266,7 @@ export function ProfilePage() {
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16 bg-gray-50 dark:bg-gray-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs />
         {/* Header */}
         <div ref={headerRef} className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">

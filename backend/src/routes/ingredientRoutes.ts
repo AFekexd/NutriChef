@@ -5,9 +5,46 @@ import {
   createIngredient,
   updateIngredient,
   deleteIngredient,
+  searchIngredients,
 } from "../controllers/ingredientController.js";
 
 const router = Router();
+
+/**
+ * @swagger
+ * /api/ingredients/search:
+ *   get:
+ *     summary: Search ingredients by name
+ *     tags: [Ingredients]
+ *     description: Search ingredients for autocomplete functionality
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Search query (minimum 2 characters)
+ *         example: tom
+ *     responses:
+ *       200:
+ *         description: List of matching ingredients
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   ingredientId:
+ *                     type: number
+ *                   name:
+ *                     type: string
+ *                   category:
+ *                     type: string
+ *       500:
+ *         description: Server error
+ */
+router.get("/search", searchIngredients);
 
 /**
  * @swagger

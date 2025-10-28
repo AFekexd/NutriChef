@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
+import { Breadcrumbs } from "../components/Breadcrumbs";
+import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import type { Recipe } from "../types";
@@ -26,10 +29,49 @@ export function MyRecipesPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [filterMode, setFilterMode] = useState<"all" | "favorites" | "recent">(
+    "all"
+  );
+  const [sortBy, setSortBy] = useState<"name" | "calories">("name");
+
+  // Pull to refresh
+  const { isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      await loadRecipes();
+      toast.success("Recipes refreshed!");
+    },
+    threshold: 80,
+  });
 
   useEffect(() => {
     loadRecipes();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "n":
+            e.preventDefault();
+            navigate("/recipe-recommendation");
+            toast.info("Opening Recipe Recommendations...");
+            break;
+        }
+      } else if (e.key === "Escape") {
+        if (selectedRecipe) setSelectedRecipe(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [navigate, selectedRecipe]);
 
   useEffect(() => {
     if (error) {
@@ -105,9 +147,31 @@ export function MyRecipesPage() {
     );
   };
 
+  // Filter and sort recipes
+  const processedRecipes = recipes
+    .filter(() => {
+      // For now return all, can be enhanced with localStorage for favorites/recent
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === "calories") {
+        return a.calories - b.calories;
+      }
+      return 0;
+    });
+
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+      <PullToRefreshIndicator
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <Breadcrumbs />
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -129,6 +193,58 @@ export function MyRecipesPage() {
             View and manage your saved recipes
           </p>
         </div>
+
+        {/* Filters and Sort */}
+        {!isLoading && recipes.length > 0 && (
+          <div className="flex flex-wrap gap-3 mb-6">
+            <div className="flex gap-2">
+              <Button
+                variant={filterMode === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("all")}
+                className={
+                  filterMode === "all" ? "bg-blue-600 hover:bg-blue-700" : ""
+                }
+              >
+                All ({recipes.length})
+              </Button>
+              <Button
+                variant={filterMode === "favorites" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("favorites")}
+                className={
+                  filterMode === "favorites"
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : ""
+                }
+              >
+                ❤️ Favorites
+              </Button>
+              <Button
+                variant={filterMode === "recent" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterMode("recent")}
+                className={
+                  filterMode === "recent" ? "bg-blue-600 hover:bg-blue-700" : ""
+                }
+              >
+                🕒 Recent
+              </Button>
+            </div>
+            <div className="flex gap-2 ml-auto">
+              <select
+                value={sortBy}
+                onChange={(e) =>
+                  setSortBy(e.target.value as "name" | "calories")
+                }
+                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="calories">Sort by Calories</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         {/* Loading State */}
         {isLoading && (
@@ -163,9 +279,9 @@ export function MyRecipesPage() {
         )}
 
         {/* Recipes Grid */}
-        {!isLoading && recipes.length > 0 && (
+        {!isLoading && processedRecipes.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recipes.map((recipe) => (
+            {processedRecipes.map((recipe) => (
               <Card
                 key={recipe.recipeId}
                 className="p-6 hover:shadow-xl transition-all duration-200 h-full flex flex-col bg-gradient-to-br from-white to-blue-50/20 dark:from-gray-900 dark:to-blue-900/10 border-gray-200 dark:border-gray-800"

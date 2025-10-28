@@ -376,6 +376,7 @@ class ApiService {
     minMatchPercentage?: number;
     useInventory?: boolean;
     language?: string;
+    allergies?: string[];
     manualIngredients?: Array<{
       name: string;
       quantity: number;
@@ -407,6 +408,21 @@ class ApiService {
     );
     return response.data;
   }
+
+  // Search ingredients for autocomplete
+  async searchIngredients(query: string): Promise<
+    Array<{
+      ingredientId: number;
+      name: string;
+      category: string;
+    }>
+  > {
+    const response = await this.api.get(`/api/ingredients/search`, {
+      params: { q: query },
+    });
+    return response.data;
+  }
+
   // Admin endpoints
   async getAdminStats(): Promise<{
     stats: {

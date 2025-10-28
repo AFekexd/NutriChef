@@ -20,10 +20,16 @@ import {
   TrendingUp,
   BookOpen,
   Save,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { ScrollToTop } from "../components/ScrollToTop";
+import { SkeletonCard } from "../components/Skeleton";
+import { Breadcrumbs } from "../components/Breadcrumbs";
+import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
+import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import type { RecipeRecommendation } from "../types";
@@ -65,6 +71,8 @@ export function RecipeRecommendationPage() {
     unit: "unit",
     category: "other",
   });
+  const [allergies, setAllergies] = useState<string[]>([]);
+  const [newAllergy, setNewAllergy] = useState("");
   const [recommendations, setRecommendations] = useState<
     RecipeRecommendation[]
   >([]);
@@ -98,6 +106,19 @@ export function RecipeRecommendationPage() {
   const configRef = useRef<HTMLDivElement>(null);
   const recommendationsRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Pull to refresh
+  const { isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      if (recommendations.length > 0) {
+        await handleGetRecommendations();
+        toast.success("Recommendations refreshed!");
+      } else {
+        toast.info("Configure preferences and get recommendations first");
+      }
+    },
+    threshold: 80,
+  });
 
   // Show toasts for messages
   useEffect(() => {
@@ -198,17 +219,33 @@ export function RecipeRecommendationPage() {
     setManualIngredients(manualIngredients.filter((_, i) => i !== index));
   };
 
+  const handleAddAllergy = () => {
+    if (
+      newAllergy.trim() &&
+      !allergies.includes(newAllergy.trim().toLowerCase())
+    ) {
+      setAllergies([...allergies, newAllergy.trim().toLowerCase()]);
+      setNewAllergy("");
+    }
+  };
+
+  const handleRemoveAllergy = (allergyToRemove: string) => {
+    setAllergies(allergies.filter((a) => a !== allergyToRemove));
+  };
+
   // Cache helper functions
   const generateCacheKey = (params: {
     servings: number;
     minMatchPercentage: number;
     useInventory: boolean;
     manualIngredients?: ManualIngredient[];
+    allergies?: string[];
   }): string => {
     const key = {
       servings: params.servings,
       minMatchPercentage: params.minMatchPercentage,
       useInventory: params.useInventory,
+      allergies: params.allergies?.sort().join(",") || "none",
       ingredients: params.useInventory
         ? "inventory"
         : params.manualIngredients
@@ -417,6 +454,7 @@ export function RecipeRecommendationPage() {
         minMatchPercentage,
         useInventory,
         manualIngredients,
+        allergies,
       });
 
       // Check if we have cached results
@@ -437,6 +475,7 @@ export function RecipeRecommendationPage() {
         useInventory,
         manualIngredients:
           manualIngredients.length > 0 ? manualIngredients : undefined,
+        allergies: allergies.length > 0 ? allergies : undefined,
         language: i18n.language, // Pass current language to backend
       });
 
@@ -476,7 +515,12 @@ export function RecipeRecommendationPage() {
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+      <PullToRefreshIndicator
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs />
         {/* Header */}
         <div ref={headerRef} className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -660,6 +704,100 @@ export function RecipeRecommendationPage() {
               </div>
             )}
 
+            {/* Allergies/Dietary Restrictions Section */}
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mt-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                Allergies & Foods to Avoid
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Add ingredients you're allergic to or don't like. AI will
+                exclude recipes containing these items.
+              </p>
+
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="e.g., fish, soy, nuts, dairy, shellfish..."
+                  value={newAllergy}
+                  onChange={(e) => setNewAllergy(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddAllergy()}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:border-transparent"
+                />
+                <Button
+                  onClick={handleAddAllergy}
+                  disabled={!newAllergy.trim()}
+                  className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+
+              {/* Common Allergies Quick Add */}
+              <div className="mb-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  Quick add common items:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "fish",
+                    "shellfish",
+                    "nuts",
+                    "peanuts",
+                    "dairy",
+                    "eggs",
+                    "soy",
+                    "gluten",
+                    "wheat",
+                  ].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => {
+                        if (!allergies.includes(item)) {
+                          setAllergies([...allergies, item]);
+                        }
+                      }}
+                      disabled={allergies.includes(item)}
+                      className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                        allergies.includes(item)
+                          ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                          : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800"
+                      }`}
+                    >
+                      + {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Allergies */}
+              {allergies.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Currently avoiding ({allergies.length}):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {allergies.map((allergy, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg border border-red-200 dark:border-red-800"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="capitalize">{allergy}</span>
+                        <button
+                          onClick={() => handleRemoveAllergy(allergy)}
+                          className="hover:text-red-900 dark:hover:text-red-100 ml-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Get Recommendations Button */}
             <div className="mt-6 flex justify-center md:justify-end">
               <Button
@@ -717,6 +855,21 @@ export function RecipeRecommendationPage() {
                   <span>Nutritional Info</span>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Skeletons */}
+        {isLoading && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
+              <Loader2 className="w-6 h-6 text-orange-600 dark:text-orange-400 animate-spin" />
+              Generating recommendations...
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
           </div>
         )}
@@ -1491,6 +1644,9 @@ export function RecipeRecommendationPage() {
             </div>
           </div>
         )}
+
+        {/* Scroll to Top Button */}
+        <ScrollToTop />
       </div>
     </div>
   );

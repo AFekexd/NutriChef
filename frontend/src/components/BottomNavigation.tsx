@@ -11,22 +11,34 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
+import { shoppingListService } from "../services/shoppingListService";
 
 export function BottomNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showActions, setShowActions] = useState(false);
+  const [shoppingListCount, setShoppingListCount] = useState(0);
   const logoRef = useRef<HTMLImageElement>(null);
   const xIconRef = useRef<SVGSVGElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Hide bottom nav on login/register pages
-  if (location.pathname === "/login" || location.pathname === "/register") {
-    return null;
-  }
-
   const isActive = (path: string) => location.pathname === path;
+
+  // Update shopping list count
+  useEffect(() => {
+    const updateCount = () => {
+      const items = shoppingListService.getItems();
+      const uncheckedCount = items.filter((item) => !item.checked).length;
+      setShoppingListCount(uncheckedCount);
+    };
+
+    updateCount();
+    // Update every 3 seconds
+    const interval = setInterval(updateCount, 3000);
+
+    return () => clearInterval(interval);
+  }, [location.pathname]);
 
   const handleActionClick = (action: "scan" | "home") => {
     setShowActions(false);
@@ -105,6 +117,11 @@ export function BottomNavigation() {
       }
     }
   }, [showActions]);
+
+  // Hide bottom nav on login/register pages
+  if (location.pathname === "/login" || location.pathname === "/register") {
+    return null;
+  }
 
   return (
     <>
@@ -206,13 +223,20 @@ export function BottomNavigation() {
 
           <button
             onClick={() => navigate("/shopping-list")}
-            className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
+            className={`relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               isActive("/shopping-list")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <ShoppingBag className="w-6 h-6" />
+            <div className="relative">
+              <ShoppingBag className="w-6 h-6" />
+              {shoppingListCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                  {shoppingListCount > 9 ? "9+" : shoppingListCount}
+                </span>
+              )}
+            </div>
             <span className="text-xs font-medium">{t("nav.shoppingList")}</span>
           </button>
         </div>

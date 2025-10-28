@@ -17,6 +17,8 @@ import {
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { ScrollToTop } from "../components/ScrollToTop";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import type { InventoryItem } from "../types";
@@ -56,6 +58,41 @@ export function ShoppingListPage() {
     loadShoppingListData();
     loadInventoryData();
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "a":
+            e.preventDefault();
+            // Focus on add item input
+            document.getElementById("item-name-input")?.focus();
+            break;
+          case "e":
+            e.preventDefault();
+            handleExportList();
+            break;
+        }
+      } else if (e.key === "Delete" && shoppingItems.length > 0) {
+        // Clear completed items
+        const checkedItems = shoppingItems.filter((item) => item.checked);
+        if (checkedItems.length > 0) {
+          checkedItems.forEach((item) => handleRemoveItem(item.id));
+          toast.success(`Removed ${checkedItems.length} completed items`);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [shoppingItems]);
 
   // Show toast for errors and success messages
   useEffect(() => {
@@ -201,6 +238,17 @@ export function ShoppingListPage() {
     setSuccessMessage("Checked items removed");
   };
 
+  const handleClearCompleted = () => {
+    const checkedItems = shoppingItems.filter((item) => item.checked);
+    if (checkedItems.length === 0) {
+      toast.info("No completed items to clear");
+      return;
+    }
+
+    checkedItems.forEach((item) => handleRemoveItem(item.id));
+    toast.success(`Removed ${checkedItems.length} completed items`);
+  };
+
   const handleExportList = () => {
     const text = shoppingItems
       .map(
@@ -309,6 +357,7 @@ export function ShoppingListPage() {
   return (
     <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumbs />
         {/* Header */}
         <div ref={headerRef} className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -319,6 +368,15 @@ export function ShoppingListPage() {
               </h1>
             </div>
             <div className="flex gap-2">
+              <Button
+                onClick={handleClearCompleted}
+                variant="outline"
+                disabled={shoppingItems.filter((i) => i.checked).length === 0}
+                className="border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Completed
+              </Button>
               <Button
                 onClick={handleExportList}
                 variant="outline"
@@ -510,8 +568,9 @@ export function ShoppingListPage() {
 
               <div className="space-y-3">
                 <input
+                  id="item-name-input"
                   type="text"
-                  placeholder="Item name"
+                  placeholder="Item name (Ctrl+A)"
                   value={newItem.name}
                   onChange={(e) =>
                     setNewItem({ ...newItem, name: e.target.value })
@@ -623,6 +682,9 @@ export function ShoppingListPage() {
           </div>
         </div>
       </div>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

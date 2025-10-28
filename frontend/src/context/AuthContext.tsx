@@ -54,11 +54,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const { user } = await apiService.getProfile();
           dispatch(updateUser(user));
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch user profile:", error);
-        // Clear invalid tokens
-        await apiService.logout();
-        dispatch(logoutAction());
+
+        // Only logout if it's an auth error (401/403), not a connection error
+        const isConnectionError =
+          error.code === "ERR_NETWORK" ||
+          error.code === "ERR_CONNECTION_REFUSED" ||
+          error.message?.includes("Network Error") ||
+          !error.response;
+
+        if (!isConnectionError) {
+          // Clear invalid tokens only for actual auth errors
+          await apiService.logout();
+          dispatch(logoutAction());
+        }
+        // If it's a connection error, keep the user logged in with cached data
       } finally {
         setIsLoading(false);
       }

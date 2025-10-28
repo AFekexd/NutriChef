@@ -92,3 +92,37 @@ export const deleteIngredient = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to delete ingredient" });
   }
 };
+
+// Search ingredients by name (for autocomplete)
+export const searchIngredients = async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || typeof q !== "string" || q.length < 2) {
+      return res.json([]);
+    }
+
+    const ingredients = await prisma.ingredient.findMany({
+      where: {
+        name: {
+          contains: q,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        ingredientId: true,
+        name: true,
+        category: true,
+      },
+      take: 10, // Limit to 10 suggestions
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    res.json(ingredients);
+  } catch (error) {
+    console.error("Search ingredients error:", error);
+    res.status(500).json({ error: "Failed to search ingredients" });
+  }
+};

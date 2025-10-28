@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { ChefHat, Lock, Mail, Loader2 } from "lucide-react";
+import { ChefHat, Lock, Mail, Loader2, Eye, EyeOff } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu";
 
 export default function LoginPage() {
@@ -23,12 +23,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
+
+  // Load remembered email on mount
+  useEffect(() => {
+    const remembered = localStorage.getItem("rememberMe");
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (remembered === "true" && savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -62,6 +74,16 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
+
+      // Store remember me preference
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("rememberedEmail");
+      }
+
       navigate("/dashboard");
     } catch (err: any) {
       const error = err.response?.data.toLowerCase();
@@ -78,6 +100,13 @@ export default function LoginPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle Enter key submission
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleSubmit(e as any);
     }
   };
 
@@ -140,6 +169,7 @@ export default function LoginPage() {
                     placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#4CAF50] focus:ring-[#4CAF50] dark:bg-gray-800 dark:text-gray-100"
                     required
                   />
@@ -157,13 +187,50 @@ export default function LoginPage() {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500 dark:text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 border-gray-300 dark:border-gray-700 focus:border-[#4CAF50] focus:ring-[#4CAF50] dark:bg-gray-800 dark:text-gray-100"
+                    onKeyPress={handleKeyPress}
+                    className="pl-10 pr-10 border-gray-300 dark:border-gray-700 focus:border-[#4CAF50] focus:ring-[#4CAF50] dark:bg-gray-800 dark:text-gray-100"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 text-[#4CAF50] focus:ring-[#4CAF50] border-gray-300 dark:border-gray-700 rounded"
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      {t("auth.rememberMe") || "Remember me"}
+                    </label>
+                  </div>
+                  <div className="text-right">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-[#29B6F6] hover:text-[#0288d1] hover:underline"
+                    >
+                      {t("auth.forgotPassword") || "Forgot password?"}
+                    </Link>
+                  </div>
                 </div>
               </div>
 

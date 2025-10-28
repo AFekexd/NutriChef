@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { toast } from "sonner";
 import {
   Calendar,
   Plus,
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
+import { ScrollToTop } from "../components/ScrollToTop";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import type { MealPlan, Recipe, InventoryItem } from "../types";
@@ -294,9 +297,10 @@ export function MealPlanningPage() {
       setShowAddMeal(false);
       setSelectedRecipe("");
       setSelectedInventoryItems([]);
+      toast.success("Meal added to plan successfully!");
     } catch (error) {
       console.error("Error creating meal plan:", error);
-      alert("Failed to add meal to plan. Please try again.");
+      toast.error("Failed to add meal to plan. Please try again.");
     }
   };
 
@@ -348,10 +352,14 @@ export function MealPlanningPage() {
     });
 
     const addedCount = shoppingListService.addMultipleItems(itemsToAdd);
-    alert(
-      `Added ${addedCount} new items to shopping list! (${
-        itemsToAdd.length - addedCount
-      } items were already in the list and quantities were updated)`
+    toast.success(
+      `Added ${addedCount} new items to shopping list!${
+        itemsToAdd.length - addedCount > 0
+          ? ` (${
+              itemsToAdd.length - addedCount
+            } items were already in the list)`
+          : ""
+      }`
     );
   };
 
@@ -395,6 +403,7 @@ export function MealPlanningPage() {
   return (
     <div className="min-h-screen pb-20 md:pb-8 md:pt-20 bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto px-4 py-8" ref={containerRef}>
+        <Breadcrumbs />
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -594,9 +603,9 @@ export function MealPlanningPage() {
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1">
-                                          <ChefHat className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                          <ChefHat className="w-3 h-3 text-green-600 dark:text-green-400 flex-shrink-0" />
                                           <p
-                                            className="text-sm font-medium text-gray-900 dark:text-gray-100 max-w-[150px] "
+                                            className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"
                                             aria-label={mpr.recipe.title}
                                             title={mpr.recipe.title}
                                           >
@@ -846,6 +855,9 @@ export function MealPlanningPage() {
           </div>
         )}
       </div>
+
+      {/* Scroll to Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

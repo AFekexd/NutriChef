@@ -19,7 +19,8 @@ class RecipeRecommendationService extends BaseAIService {
     }>,
     servings: number = 2,
     minMatchPercentage: number = 60,
-    language: string = "en"
+    language: string = "en",
+    allergies: string[] = []
   ) {
     const ingredientsList = availableIngredients
       .map((ing) => `${ing.name} (${ing.quantity} ${ing.unit})`)
@@ -31,9 +32,19 @@ class RecipeRecommendationService extends BaseAIService {
         ? "Válaszolj magyarul. Minden receptnév, hozzávaló, utasítás és leírás magyar nyelvű legyen."
         : "Respond in English. All recipe names, ingredients, instructions, and descriptions should be in English.";
 
+    const allergiesText =
+      allergies.length > 0
+        ? `\n\nIMPORTANT - DIETARY RESTRICTIONS: The user is allergic to or wants to avoid: ${allergies.join(
+            ", "
+          )}. 
+DO NOT include ANY recipes that contain these ingredients in any form (including derivatives, extracts, or traces).
+Exclude any recipe that might contain: ${allergies.join(", ")}.`
+        : "";
+
     const systemMessage = `You are a professional chef and nutritionist. Generate recipe recommendations based on available ingredients.
 Your recommendations should be realistic, healthy, and delicious.
 ${languageInstructions}
+${allergiesText}
 Provide recipes in JSON format with the following structure:
 {
   "recommendations": [
@@ -60,7 +71,15 @@ Provide recipes in JSON format with the following structure:
 
     const prompt = `Based on these available ingredients: ${ingredientsList}
 
-Generate 5 recipe recommendations that:
+${
+  allergies.length > 0
+    ? `⚠️ CRITICAL: User is allergic to or avoiding: ${allergies.join(", ")}
+DO NOT suggest ANY recipes containing these ingredients or their derivatives!
+Filter out ALL recipes with: ${allergies.join(", ")}
+
+`
+    : ""
+}Generate 5 recipe recommendations that:
 1. Match at least ${minMatchPercentage}% of ingredients from the available list
 2. Serve ${servings} people
 3. Include both recipes that can be made entirely with available ingredients and recipes that need 1-3 additional ingredients
@@ -68,6 +87,11 @@ Generate 5 recipe recommendations that:
 5. Mark additional ingredients as "optional: false" if essential, or "optional: true" if nice-to-have
 6. Include prep time, cook time, calories, and macros
 7. Provide clear, step-by-step instructions
+${
+  allergies.length > 0
+    ? `8. EXCLUDE any recipe containing: ${allergies.join(", ")}`
+    : ""
+}
 
 ${
   language === "hu"
@@ -102,6 +126,7 @@ export const getRecommendations = async (req: Request, res: Response) => {
       useInventory = true,
       manualIngredients = [],
       language = "en",
+      allergies = [],
     } = req.body;
 
     let ingredientsToUse: Array<{
@@ -149,7 +174,8 @@ export const getRecommendations = async (req: Request, res: Response) => {
       ingredientsToUse,
       servings,
       minMatchPercentage,
-      language
+      language,
+      allergies
     );
 
     res.json({
@@ -177,6 +203,7 @@ export const getRecommendationsWithIngredients = async (
       servings = 2,
       minMatchPercentage = 60,
       language = "en",
+      allergies = [],
     } = req.body;
 
     if (!ingredients || ingredients.length === 0) {
@@ -188,7 +215,8 @@ export const getRecommendationsWithIngredients = async (
       ingredients,
       servings,
       minMatchPercentage,
-      language
+      language,
+      allergies
     );
 
     res.json({

@@ -1,5 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
+import { toast } from "sonner";
 
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -19,8 +20,10 @@ import {
   TrendingUp,
   Heart,
   LogOut,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiService } from "../services/api";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -30,6 +33,99 @@ export default function DashboardPage() {
   const welcomeRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    inventoryCount: 0,
+    recipeCount: 0,
+    mealPlanCount: 0,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Generate trend indicators (mock data for demo)
+  const getTrendData = () => {
+    return {
+      inventory: { value: 12, isUp: true },
+      recipes: { value: 5, isUp: true },
+      mealPlans: { value: 3, isUp: false },
+    };
+  };
+
+  const trends = getTrendData();
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Only trigger if not typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "i":
+            e.preventDefault();
+            navigate("/inventory");
+            toast.info("Opening Inventory...");
+            break;
+          case "r":
+            e.preventDefault();
+            navigate("/recipes");
+            toast.info("Opening Recipes...");
+            break;
+          case "s":
+            e.preventDefault();
+            navigate("/shopping-list");
+            toast.info("Opening Shopping List...");
+            break;
+          case "m":
+            e.preventDefault();
+            navigate("/meal-planning");
+            toast.info("Opening Meal Planning...");
+            break;
+          case "p":
+            e.preventDefault();
+            navigate("/profile");
+            toast.info("Opening Profile...");
+            break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [navigate]);
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoadingStats(true);
+        const [inventory, recipesResponse, mealPlansResponse] =
+          await Promise.all([
+            apiService.getAllInventoryItems(),
+            apiService.getRecipes(),
+            apiService.getMealPlans(),
+          ]);
+
+        setStats({
+          inventoryCount: inventory.length,
+          recipeCount: recipesResponse.recipes.length,
+          mealPlanCount: mealPlansResponse.mealPlans.length,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard stats:", error);
+        toast.error("Failed to load dashboard stats");
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     if (welcomeRef.current) {
@@ -59,18 +155,35 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (statsRef.current) {
+    if (statsRef.current && !isLoadingStats) {
+      const statCards = statsRef.current.querySelectorAll(".stat-card");
       gsap.fromTo(
-        statsRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, delay: 0.6, ease: "power2.out" }
+        statCards,
+        { opacity: 0, y: 20, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.4,
+          stagger: 0.15,
+          ease: "back.out(1.3)",
+          delay: 0.3,
+        }
       );
     }
-  }, []);
+  }, [isLoadingStats]);
 
   const handleLogout = async () => {
     await logout();
     navigate("/login");
+  };
+
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   const features = [
@@ -164,7 +277,7 @@ export default function DashboardPage() {
             className="text-4xl font-bold mb-4 text-[#4A4A4A] dark:text-gray-100"
             style={{ fontFamily: "Poppins, sans-serif" }}
           >
-            {t("dashboard.welcome")},{" "}
+            {getGreeting()},{" "}
             <span className="text-[#4CAF50] dark:text-green-400">
               {user?.name?.split(" ")[0]}
             </span>
@@ -174,6 +287,22 @@ export default function DashboardPage() {
             Your AI-powered nutrition assistant is ready to help you plan meals,
             manage inventory, and achieve your health goals.
           </p>
+          {/* Keyboard shortcuts hint */}
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+            💡 Tip: Use{" "}
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
+              Ctrl+I
+            </kbd>{" "}
+            for Inventory,{" "}
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
+              Ctrl+R
+            </kbd>{" "}
+            for Recipes,{" "}
+            <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
+              Ctrl+S
+            </kbd>{" "}
+            for Shopping List
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -240,13 +369,33 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800">
-                  <div
-                    className="text-4xl font-bold text-[#4CAF50] dark:text-green-400 mb-2"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  >
-                    0
-                  </div>
+                <div className="stat-card p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800">
+                  {isLoadingStats ? (
+                    <Loader2 className="h-10 w-10 animate-spin text-[#4CAF50] dark:text-green-400 mb-2" />
+                  ) : (
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <div
+                        className="text-4xl font-bold text-[#4CAF50] dark:text-green-400"
+                        style={{ fontFamily: "Poppins, sans-serif" }}
+                      >
+                        {stats.inventoryCount}
+                      </div>
+                      <div
+                        className={`flex items-center text-sm font-semibold ${
+                          trends.inventory.isUp
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-4 h-4 mr-1 ${
+                            trends.inventory.isUp ? "" : "rotate-180"
+                          }`}
+                        />
+                        {trends.inventory.value}%
+                      </div>
+                    </div>
+                  )}
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
                     {t("dashboard.totalItems")}
                   </p>
@@ -258,38 +407,80 @@ export default function DashboardPage() {
                     Add ingredients →
                   </Button>
                 </div>
-                <div className="p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800">
-                  <div
-                    className="text-4xl font-bold text-[#FF7043] dark:text-orange-400 mb-2"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  >
-                    0
-                  </div>
+                <div className="stat-card p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800">
+                  {isLoadingStats ? (
+                    <Loader2 className="h-10 w-10 animate-spin text-[#FF7043] dark:text-orange-400 mb-2" />
+                  ) : (
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <div
+                        className="text-4xl font-bold text-[#FF7043] dark:text-orange-400"
+                        style={{ fontFamily: "Poppins, sans-serif" }}
+                      >
+                        {stats.recipeCount}
+                      </div>
+                      <div
+                        className={`flex items-center text-sm font-semibold ${
+                          trends.recipes.isUp
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-4 h-4 mr-1 ${
+                            trends.recipes.isUp ? "" : "rotate-180"
+                          }`}
+                        />
+                        {trends.recipes.value}%
+                      </div>
+                    </div>
+                  )}
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
                     Saved Recipes
                   </p>
                   <Button
                     variant="link"
                     className="p-0 h-auto text-[#FF7043] dark:text-orange-400 hover:text-[#f4511e] font-semibold"
+                    onClick={() => navigate("/my-recipes")}
                   >
                     Explore recipes →
                   </Button>
                 </div>
-                <div className="p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
-                  <div
-                    className="text-4xl font-bold text-[#29B6F6] dark:text-blue-400 mb-2"
-                    style={{ fontFamily: "Poppins, sans-serif" }}
-                  >
-                    0
-                  </div>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400">
-                    Meal Plans
+                <div className="stat-card p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                  {isLoadingStats ? (
+                    <Loader2 className="h-10 w-10 animate-spin text-[#29B6F6] dark:text-blue-400 mb-2" />
+                  ) : (
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <div
+                        className="text-4xl font-bold text-[#29B6F6] dark:text-blue-400"
+                        style={{ fontFamily: "Poppins, sans-serif" }}
+                      >
+                        {stats.mealPlanCount}
+                      </div>
+                      <div
+                        className={`flex items-center text-sm font-semibold ${
+                          trends.mealPlans.isUp
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-4 h-4 mr-1 ${
+                            trends.mealPlans.isUp ? "" : "rotate-180"
+                          }`}
+                        />
+                        {trends.mealPlans.value}%
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
+                    Active Meal Plans
                   </p>
                   <Button
                     variant="link"
                     className="p-0 h-auto text-[#29B6F6] dark:text-blue-400 hover:text-[#0288d1] font-semibold"
+                    onClick={() => navigate("/meal-planning")}
                   >
-                    Create plan →
+                    Plan meals →
                   </Button>
                 </div>
               </div>

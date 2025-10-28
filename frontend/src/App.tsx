@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Toaster } from "./components/ui/sonner";
+import { OfflineBanner } from "./components/OfflineBanner";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -144,18 +146,21 @@ function AppRoutes() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-            <TopNavigation />
-            <AppRoutes />
-            <BottomNavigation />
-            <Toaster position="top-right" />
-          </div>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+              <OfflineBanner />
+              <TopNavigation />
+              <AppRoutes />
+              <BottomNavigation />
+              <Toaster position="top-right" />
+            </div>
+          </AuthProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
