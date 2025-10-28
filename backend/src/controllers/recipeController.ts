@@ -6,7 +6,45 @@ const prisma = new PrismaClient();
 // Get all recipes
 export const getRecipes = async (req: Request, res: Response) => {
   try {
+    const {
+      cuisineType,
+      difficulty,
+      maxCookTime,
+      minCookTime,
+      dietaryTags,
+      userId,
+    } = req.query;
+
+    // Build where clause dynamically
+    const where: any = {};
+
+    if (cuisineType && typeof cuisineType === 'string') {
+      where.cuisineType = cuisineType;
+    }
+
+    if (difficulty && typeof difficulty === 'string') {
+      where.difficulty = difficulty;
+    }
+
+    if (maxCookTime || minCookTime) {
+      where.cookTime = {};
+      if (maxCookTime) {
+        where.cookTime.lte = parseInt(maxCookTime as string);
+      }
+      if (minCookTime) {
+        where.cookTime.gte = parseInt(minCookTime as string);
+      }
+    }
+
+    if (userId && typeof userId === 'string') {
+      where.userId = userId;
+    }
+
+    // Note: dietaryTags filtering would require JSON operations
+    // For now, we'll fetch all and filter in memory if needed
+
     const recipes = await prisma.recipe.findMany({
+      where,
       include: {
         recipeIngredients: {
           include: {
@@ -22,8 +60,22 @@ export const getRecipes = async (req: Request, res: Response) => {
         },
       },
     });
-    res.json({ recipes });
+
+    // If dietaryTags filter is provided, filter in memory
+    let filteredRecipes = recipes;
+    if (dietaryTags && typeof dietaryTags === 'string') {
+      const tags = dietaryTags.split(',');
+      filteredRecipes = recipes.filter(recipe => {
+        if (!recipe.dietaryTags || !Array.isArray(recipe.dietaryTags)) {
+          return false;
+        }
+        return tags.some(tag => recipe.dietaryTags.includes(tag));
+      });
+    }
+
+    res.json({ recipes: filteredRecipes });
   } catch (error) {
+    console.error("Error fetching recipes:", error);
     res.status(500).json({ error: "Failed to fetch recipes" });
   }
 };

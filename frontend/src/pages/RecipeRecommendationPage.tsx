@@ -86,6 +86,12 @@ export function RecipeRecommendationPage() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Filter states
+  const [cuisineFilter, setCuisineFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [cookTimeFilter, setCookTimeFilter] = useState<string>("all");
+  
   const [createForm, setCreateForm] = useState<CreateRecipeForm>({
     title: "",
     instructions: "",
@@ -877,13 +883,80 @@ export function RecipeRecommendationPage() {
         {/* Recommendations Grid */}
         {recommendations.length > 0 && (
           <div ref={recommendationsRef}>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              {t("recipes.title")} ({recommendations.length})
-            </h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                {t("recipes.title")} (
+                {recommendations.filter((recipe) => {
+                  if (cuisineFilter !== "all" && recipe.cuisineType !== cuisineFilter) return false;
+                  if (difficultyFilter !== "all" && recipe.difficulty !== difficultyFilter) return false;
+                  if (cookTimeFilter !== "all") {
+                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+                    if (cookTimeFilter === "quick" && totalTime > 30) return false;
+                    if (cookTimeFilter === "medium" && (totalTime <= 30 || totalTime > 60)) return false;
+                    if (cookTimeFilter === "long" && totalTime <= 60) return false;
+                  }
+                  return true;
+                }).length})
+              </h2>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-2">
+                <select
+                  value={cuisineFilter}
+                  onChange={(e) => setCuisineFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="all">All Cuisines</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="Mexican">Mexican</option>
+                  <option value="Indian">Indian</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="American">American</option>
+                  <option value="Mediterranean">Mediterranean</option>
+                  <option value="Thai">Thai</option>
+                  <option value="French">French</option>
+                </select>
+
+                <select
+                  value={difficultyFilter}
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="all">All Difficulties</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+
+                <select
+                  value={cookTimeFilter}
+                  onChange={(e) => setCookTimeFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="all">All Cook Times</option>
+                  <option value="quick">Quick (&lt; 30 min)</option>
+                  <option value="medium">Medium (30-60 min)</option>
+                  <option value="long">Long (&gt; 60 min)</option>
+                </select>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendations.map((recipe, index) => (
+              {recommendations
+                .filter((recipe) => {
+                  if (cuisineFilter !== "all" && recipe.cuisineType !== cuisineFilter) return false;
+                  if (difficultyFilter !== "all" && recipe.difficulty !== difficultyFilter) return false;
+                  if (cookTimeFilter !== "all") {
+                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+                    if (cookTimeFilter === "quick" && totalTime > 30) return false;
+                    if (cookTimeFilter === "medium" && (totalTime <= 30 || totalTime > 60)) return false;
+                    if (cookTimeFilter === "long" && totalTime <= 60) return false;
+                  }
+                  return true;
+                })
+                .map((recipe, index) => (
                 <div key={index} className="recipe-card">
                   <Card className="p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-200 h-full flex flex-col bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-900 dark:to-orange-900/10 border-gray-200 dark:border-gray-800">
                     {/* Header */}

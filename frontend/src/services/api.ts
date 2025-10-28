@@ -374,8 +374,24 @@ class ApiService {
   }
 
   // Recipe Recommendation endpoints
-  async getRecipes(): Promise<{ recipes: import("../types").Recipe[] }> {
-    const response = await this.api.get("/api/recipes");
+  async getRecipes(filters?: {
+    cuisineType?: string;
+    difficulty?: string;
+    maxCookTime?: number;
+    minCookTime?: number;
+    dietaryTags?: string;
+    userId?: string;
+  }): Promise<{ recipes: import("../types").Recipe[] }> {
+    const params: any = {};
+    if (filters) {
+      if (filters.cuisineType) params.cuisineType = filters.cuisineType;
+      if (filters.difficulty) params.difficulty = filters.difficulty;
+      if (filters.maxCookTime) params.maxCookTime = filters.maxCookTime;
+      if (filters.minCookTime) params.minCookTime = filters.minCookTime;
+      if (filters.dietaryTags) params.dietaryTags = filters.dietaryTags;
+      if (filters.userId) params.userId = filters.userId;
+    }
+    const response = await this.api.get("/api/recipes", { params });
     return response.data;
   }
 
