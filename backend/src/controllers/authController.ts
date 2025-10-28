@@ -677,3 +677,34 @@ export const changePassword = async (
     res.status(500).json({ error: "Failed to change password" });
   }
 };
+
+/**
+ * Check email availability
+ */
+export const checkEmailAvailability = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { email } = req.query;
+
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+
+    // Check if email exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { userId: true },
+    });
+
+    res.json({
+      available: !existingUser,
+      email: email.toLowerCase(),
+    });
+  } catch (error) {
+    console.error("Check email availability error:", error);
+    res.status(500).json({ error: "Failed to check email availability" });
+  }
+};

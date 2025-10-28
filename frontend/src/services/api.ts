@@ -126,6 +126,13 @@ class ApiService {
   }
 
   // Auth endpoints
+  async checkEmailAvailability(email: string): Promise<{ available: boolean; email: string }> {
+    const response = await this.api.get("/api/auth/check-email", {
+      params: { email },
+    });
+    return response.data;
+  }
+
   async register(data: RegisterData): Promise<{ message: string; user: User }> {
     const response = await this.api.post("/api/auth/register", data);
     return response.data;

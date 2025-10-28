@@ -27,6 +27,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import SettingsMenu from "../components/SettingsMenu";
+import { apiService } from "../services/api";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -38,12 +39,15 @@ export default function RegisterPage() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
+  const emailCheckTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Email validation
   const isEmailValid = (email: string) => {
@@ -53,6 +57,37 @@ export default function RegisterPage() {
 
   const emailValid = email.length > 0 && isEmailValid(email);
   const emailInvalid = emailTouched && email.length > 0 && !isEmailValid(email);
+
+  // Check email availability with debounce
+  useEffect(() => {
+    if (emailCheckTimeoutRef.current) {
+      clearTimeout(emailCheckTimeoutRef.current);
+    }
+
+    if (email.length > 0 && isEmailValid(email)) {
+      setCheckingEmail(true);
+      emailCheckTimeoutRef.current = setTimeout(async () => {
+        try {
+          const result = await apiService.checkEmailAvailability(email);
+          setEmailAvailable(result.available);
+        } catch (error) {
+          console.error("Error checking email availability:", error);
+          setEmailAvailable(null);
+        } finally {
+          setCheckingEmail(false);
+        }
+      }, 500); // 500ms debounce
+    } else {
+      setEmailAvailable(null);
+      setCheckingEmail(false);
+    }
+
+    return () => {
+      if (emailCheckTimeoutRef.current) {
+        clearTimeout(emailCheckTimeoutRef.current);
+      }
+    };
+  }, [email]);
 
   // Password strength calculation
   const calculatePasswordStrength = (pwd: string) => {
@@ -115,6 +150,11 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (emailAvailable === false) {
+      setError("This email is already registered. Please use a different email.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -233,14 +273,26 @@ export default function RegisterPage() {
                     className={`pl-10 pr-10 border-gray-300 dark:border-gray-700 focus:border-[#FF7043] focus:ring-[#FF7043] dark:bg-gray-800 dark:text-gray-100 ${
                       emailInvalid ? "border-red-500 dark:border-red-500" : ""
                     } ${
-                      emailValid ? "border-green-500 dark:border-green-500" : ""
+                      emailValid && emailAvailable === true
+                        ? "border-green-500 dark:border-green-500"
+                        : ""
+                    } ${
+                      emailValid && emailAvailable === false
+                        ? "border-yellow-500 dark:border-yellow-500"
+                        : ""
                     }`}
                     required
                   />
-                  {emailValid && (
+                  {checkingEmail && (
+                    <Loader2 className="absolute right-3 top-3 h-4 w-4 text-gray-400 animate-spin" />
+                  )}
+                  {!checkingEmail && emailValid && emailAvailable === true && (
                     <Check className="absolute right-3 top-3 h-4 w-4 text-green-500" />
                   )}
-                  {emailInvalid && (
+                  {!checkingEmail && emailValid && emailAvailable === false && (
+                    <X className="absolute right-3 top-3 h-4 w-4 text-yellow-500" />
+                  )}
+                  {!checkingEmail && emailInvalid && (
                     <X className="absolute right-3 top-3 h-4 w-4 text-red-500" />
                   )}
                 </div>
@@ -249,6 +301,28 @@ export default function RegisterPage() {
                     Please enter a valid email address
                   </p>
                 )}
+                {!checkingEmail &&
+                  emailValid &&
+                  emailAvailable === false && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                      This email is already registered. Please use a different
+                      email or{" "}
+                      <Link
+                        to="/login"
+                        className="underline hover:text-yellow-700 dark:hover:text-yellow-300"
+                      >
+                        login here
+                      </Link>
+                      .
+                    </p>
+                  )}
+                {!checkingEmail &&
+                  emailValid &&
+                  emailAvailable === true && (
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Email is available
+                    </p>
+                  )}
               </div>
 
               <div className="space-y-2">

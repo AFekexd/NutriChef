@@ -12,6 +12,7 @@ import {
   getLoginHistory,
   updateProfile,
   changePassword,
+  checkEmailAvailability,
 } from "../controllers/authController.js";
 import { authenticate } from "../middlewares/auth.js";
 
@@ -429,5 +430,41 @@ router.put("/profile", authenticate, updateProfile);
  *         description: Server error
  */
 router.post("/change-password", authenticate, changePassword);
+
+/**
+ * @swagger
+ * /api/auth/check-email:
+ *   get:
+ *     summary: Check email availability
+ *     tags: [Authentication]
+ *     description: Check if an email address is available for registration
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Email address to check
+ *     responses:
+ *       200:
+ *         description: Email availability status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 available:
+ *                   type: boolean
+ *                   description: Whether the email is available
+ *                 email:
+ *                   type: string
+ *                   description: The email address checked
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+router.get("/check-email", checkEmailAvailability);
 
 export default router;

@@ -13,4 +13,15 @@ coverage/
 *.bak
 *.class
 
+# TypeScript build artifacts
+*.d.ts
+*.d.ts.map
+*.js
+*.js.map
+
+# Keep specific JS files that are source files
+!frontend/vite.config.js
+!frontend/eslint.config.js
+!backend/list-models.js
+
 inventory*.jpg
