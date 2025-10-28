@@ -107,6 +107,19 @@ export function RecipeRecommendationPage() {
     imageURL: "",
   });
 
+  // Helper function for filtering recipes
+  const filterRecipe = (recipe: RecipeRecommendation) => {
+    if (cuisineFilter !== "all" && recipe.cuisineType !== cuisineFilter) return false;
+    if (difficultyFilter !== "all" && recipe.difficulty !== difficultyFilter) return false;
+    if (cookTimeFilter !== "all") {
+      const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+      if (cookTimeFilter === "quick" && totalTime > 30) return false;
+      if (cookTimeFilter === "medium" && (totalTime <= 30 || totalTime > 60)) return false;
+      if (cookTimeFilter === "long" && totalTime <= 60) return false;
+    }
+    return true;
+  };
+
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<HTMLDivElement>(null);
@@ -886,18 +899,7 @@ export function RecipeRecommendationPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                {t("recipes.title")} (
-                {recommendations.filter((recipe) => {
-                  if (cuisineFilter !== "all" && recipe.cuisineType !== cuisineFilter) return false;
-                  if (difficultyFilter !== "all" && recipe.difficulty !== difficultyFilter) return false;
-                  if (cookTimeFilter !== "all") {
-                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-                    if (cookTimeFilter === "quick" && totalTime > 30) return false;
-                    if (cookTimeFilter === "medium" && (totalTime <= 30 || totalTime > 60)) return false;
-                    if (cookTimeFilter === "long" && totalTime <= 60) return false;
-                  }
-                  return true;
-                }).length})
+                {t("recipes.title")} ({recommendations.filter(filterRecipe).length})
               </h2>
 
               {/* Filters */}
@@ -936,26 +938,16 @@ export function RecipeRecommendationPage() {
                   className="px-3 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="all">All Cook Times</option>
-                  <option value="quick">Quick (&lt; 30 min)</option>
+                  <option value="quick">Quick (< 30 min)</option>
                   <option value="medium">Medium (30-60 min)</option>
-                  <option value="long">Long (&gt; 60 min)</option>
+                  <option value="long">Long (> 60 min)</option>
                 </select>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendations
-                .filter((recipe) => {
-                  if (cuisineFilter !== "all" && recipe.cuisineType !== cuisineFilter) return false;
-                  if (difficultyFilter !== "all" && recipe.difficulty !== difficultyFilter) return false;
-                  if (cookTimeFilter !== "all") {
-                    const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-                    if (cookTimeFilter === "quick" && totalTime > 30) return false;
-                    if (cookTimeFilter === "medium" && (totalTime <= 30 || totalTime > 60)) return false;
-                    if (cookTimeFilter === "long" && totalTime <= 60) return false;
-                  }
-                  return true;
-                })
+                .filter(filterRecipe)
                 .map((recipe, index) => (
                 <div key={index} className="recipe-card">
                   <Card className="p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-200 h-full flex flex-col bg-gradient-to-br from-white to-orange-50/20 dark:from-gray-900 dark:to-orange-900/10 border-gray-200 dark:border-gray-800">

@@ -29,10 +29,16 @@ export const getRecipes = async (req: Request, res: Response) => {
     if (maxCookTime || minCookTime) {
       where.cookTime = {};
       if (maxCookTime) {
-        where.cookTime.lte = parseInt(maxCookTime as string);
+        const maxTime = parseInt(maxCookTime as string);
+        if (!isNaN(maxTime)) {
+          where.cookTime.lte = maxTime;
+        }
       }
       if (minCookTime) {
-        where.cookTime.gte = parseInt(minCookTime as string);
+        const minTime = parseInt(minCookTime as string);
+        if (!isNaN(minTime)) {
+          where.cookTime.gte = minTime;
+        }
       }
     }
 
@@ -62,12 +68,14 @@ export const getRecipes = async (req: Request, res: Response) => {
     });
 
     // If dietaryTags filter is provided, filter in memory
+    // Note: Recipes without dietary tags are excluded when filtering by tags
+    // This ensures only recipes explicitly marked with the requested tags are returned
     let filteredRecipes = recipes;
     if (dietaryTags && typeof dietaryTags === 'string') {
       const tags = dietaryTags.split(',');
       filteredRecipes = recipes.filter(recipe => {
         if (!recipe.dietaryTags || !Array.isArray(recipe.dietaryTags)) {
-          return false;
+          return false; // Exclude recipes without dietary tags when filtering
         }
         return tags.some(tag => recipe.dietaryTags.includes(tag));
       });
