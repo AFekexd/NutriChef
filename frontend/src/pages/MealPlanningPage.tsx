@@ -77,6 +77,45 @@ export function MealPlanningPage() {
 
   const weekDates = getWeekDates();
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "arrowleft":
+            e.preventDefault();
+            previousWeek();
+            toast.info("Previous week");
+            break;
+          case "arrowright":
+            e.preventDefault();
+            nextWeek();
+            toast.info("Next week");
+            break;
+          case "t":
+            e.preventDefault();
+            const today = new Date();
+            const day = today.getDay();
+            const diff = today.getDate() - day;
+            setCurrentWeekStart(new Date(today.setDate(diff)));
+            toast.info("Jumped to current week");
+            break;
+        }
+      } else if (e.key === "Escape") {
+        if (showAddMeal) setShowAddMeal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [showAddMeal]);
+
   // Load meal plans and recipes
   useEffect(() => {
     fetchMealPlans();

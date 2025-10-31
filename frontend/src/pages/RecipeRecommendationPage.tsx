@@ -21,6 +21,8 @@ import {
   BookOpen,
   Save,
   AlertCircle,
+  Package,
+  Edit3,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -61,7 +63,9 @@ export function RecipeRecommendationPage() {
   const navigate = useNavigate();
   const [servings, setServings] = useState(2);
   const [minMatchPercentage, setMinMatchPercentage] = useState(60);
-  const [useInventory, setUseInventory] = useState(true);
+  const [recipeMode, setRecipeMode] = useState<"inventory" | "custom">(
+    "inventory"
+  );
   const [manualIngredients, setManualIngredients] = useState<
     ManualIngredient[]
   >([]);
@@ -119,6 +123,41 @@ export function RecipeRecommendationPage() {
     },
     threshold: 80,
   });
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case "g":
+            e.preventDefault();
+            if (!isLoading && servings > 0) {
+              handleGetRecommendations();
+              toast.info("Generating recommendations...");
+            }
+            break;
+          case "n":
+            e.preventDefault();
+            resetCreateForm();
+            setShowCreateModal(true);
+            toast.info("Opening create recipe form...");
+            break;
+        }
+      } else if (e.key === "Escape") {
+        if (selectedRecipe) setSelectedRecipe(null);
+        if (showCreateModal) setShowCreateModal(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isLoading, servings, selectedRecipe, showCreateModal]);
 
   // Show toasts for messages
   useEffect(() => {
@@ -237,21 +276,22 @@ export function RecipeRecommendationPage() {
   const generateCacheKey = (params: {
     servings: number;
     minMatchPercentage: number;
-    useInventory: boolean;
+    recipeMode: "inventory" | "custom";
     manualIngredients?: ManualIngredient[];
     allergies?: string[];
   }): string => {
     const key = {
       servings: params.servings,
       minMatchPercentage: params.minMatchPercentage,
-      useInventory: params.useInventory,
+      recipeMode: params.recipeMode,
       allergies: params.allergies?.sort().join(",") || "none",
-      ingredients: params.useInventory
-        ? "inventory"
-        : params.manualIngredients
-            ?.map((ing) => `${ing.name}-${ing.quantity}-${ing.unit}`)
-            .sort()
-            .join(",") || "none",
+      ingredients:
+        params.recipeMode === "inventory"
+          ? "inventory"
+          : params.manualIngredients
+              ?.map((ing) => `${ing.name}-${ing.quantity}-${ing.unit}`)
+              .sort()
+              .join(",") || "none",
     };
     return JSON.stringify(key);
   };
@@ -426,7 +466,11 @@ export function RecipeRecommendationPage() {
   };
 
   const handleAddToShoppingList = (recipe: RecipeRecommendation) => {
-    const itemsToAdd = recipe.missingIngredients.map((ing) => ({
+    // Combine all ingredients (both available and missing)
+    const allIngredients = [
+      ...recipe.availableIngredients,
+      ...recipe.missingIngredients,
+    ].map((ing) => ({
       name: ing.name,
       quantity: ing.quantity,
       unit: ing.unit,
@@ -434,11 +478,13 @@ export function RecipeRecommendationPage() {
       priority: "medium" as const,
     }));
 
-    const addedCount = shoppingListService.addMultipleItems(itemsToAdd);
+    // Use recipe title as ID since RecipeRecommendation doesn't have an ID field
+    const recipeId = recipe.title.toLowerCase().replace(/\s+/g, "-");
+
+    shoppingListService.addRecipe(recipe.title, recipeId, allIngredients);
+
     setSaveSuccess(
-      `Added ${addedCount} missing ingredients to shopping list! (${
-        itemsToAdd.length - addedCount
-      } items were already in the list)`
+      `Added "${recipe.title}" with ${allIngredients.length} ingredients to shopping list!`
     );
   };
 
@@ -452,7 +498,7 @@ export function RecipeRecommendationPage() {
       const cacheKey = generateCacheKey({
         servings,
         minMatchPercentage,
-        useInventory,
+        recipeMode,
         manualIngredients,
         allergies,
       });
@@ -472,7 +518,7 @@ export function RecipeRecommendationPage() {
       const response = await apiService.getRecipeRecommendations({
         servings,
         minMatchPercentage,
-        useInventory,
+        useInventory: recipeMode === "inventory",
         manualIngredients:
           manualIngredients.length > 0 ? manualIngredients : undefined,
         allergies: allergies.length > 0 ? allergies : undefined,
@@ -564,6 +610,81 @@ export function RecipeRecommendationPage() {
               {t("recipes.configTitle")}
             </h2>
 
+            {/* Mode Selection - Two Clear Options */}
+            <div className="mb-6">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+                Choose Recipe Generation Mode
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Inventory Mode */}
+                <button
+                  onClick={() => setRecipeMode("inventory")}
+                  className={`p-6 rounded-xl border-2 transition-all text-left ${
+                    recipeMode === "inventory"
+                      ? "border-green-500 bg-green-50 dark:bg-green-900/20 shadow-lg scale-[1.02]"
+                      : "border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700 hover:shadow"
+                  }`}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        recipeMode === "inventory"
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      <Package className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">
+                        📦 Use My Inventory
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Generate recipes based on ingredients you already have
+                        in your smart fridge
+                      </p>
+                    </div>
+                    {recipeMode === "inventory" && (
+                      <Check className="w-6 h-6 text-green-500 flex-shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Custom Mode */}
+                <button
+                  onClick={() => setRecipeMode("custom")}
+                  className={`p-6 rounded-xl border-2 transition-all text-left ${
+                    recipeMode === "custom"
+                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg scale-[1.02]"
+                      : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow"
+                  }`}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        recipeMode === "custom"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      <Edit3 className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">
+                        ✏️ Custom Ingredients
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Manually add ingredients you want to cook with
+                      </p>
+                    </div>
+                    {recipeMode === "custom" && (
+                      <Check className="w-6 h-6 text-blue-500 flex-shrink-0" />
+                    )}
+                  </div>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {/* Servings */}
               <div>
@@ -598,32 +719,14 @@ export function RecipeRecommendationPage() {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
                 />
               </div>
-
-              {/* Use Inventory Toggle */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("recipes.ingredientSource")}
-                </label>
-                <button
-                  onClick={() => setUseInventory(!useInventory)}
-                  className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
-                    useInventory
-                      ? "bg-orange-600 dark:bg-orange-500 text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  {useInventory
-                    ? `📦 ${t("recipes.usingFridge")}`
-                    : `✋ ${t("recipes.manualInput")}`}
-                </button>
-              </div>
             </div>
 
-            {/* Manual Ingredients Section */}
-            {!useInventory && (
+            {/* Custom Ingredients Section - Only show when custom mode is selected */}
+            {recipeMode === "custom" && (
               <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  {t("recipes.addIngredientsManually")}
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Add Your Ingredients
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -637,7 +740,10 @@ export function RecipeRecommendationPage() {
                         name: e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleAddIngredient()
+                    }
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   />
                   <input
                     type="number"
@@ -651,7 +757,7 @@ export function RecipeRecommendationPage() {
                         quantity: parseFloat(e.target.value) || 1,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   />
                   <select
                     value={newIngredient.unit}
@@ -661,7 +767,7 @@ export function RecipeRecommendationPage() {
                         unit: e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   >
                     <option value="unit">unit</option>
                     <option value="g">g</option>
@@ -674,31 +780,49 @@ export function RecipeRecommendationPage() {
                   </select>
                   <Button
                     onClick={handleAddIngredient}
-                    className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     {t("common.add")}
                   </Button>
                 </div>
 
-                {manualIngredients.length > 0 && (
+                {manualIngredients.length > 0 ? (
                   <div className="space-y-2">
-                    {manualIngredients.map((ing, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg"
-                      >
-                        <span className="text-gray-900 dark:text-gray-100">
-                          {ing.name} - {ing.quantity} {ing.unit}
-                        </span>
-                        <button
-                          onClick={() => handleRemoveIngredient(index)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Your Ingredients ({manualIngredients.length}):
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {manualIngredients.map((ing, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800"
                         >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">🥘</span>
+                            <span className="text-gray-900 dark:text-gray-100 font-medium">
+                              {ing.name}
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400 text-sm">
+                              {ing.quantity} {ing.unit}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveIngredient(index)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 bg-blue-50 dark:bg-blue-900/10 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-blue-300 dark:text-blue-700" />
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      No ingredients added yet. Add some to get started!
+                    </p>
                   </div>
                 )}
               </div>
@@ -799,11 +923,12 @@ export function RecipeRecommendationPage() {
             </div>
 
             {/* Get Recommendations Button */}
-            <div className="mt-6 flex justify-center md:justify-end">
+            <div className="mt-6 flex flex-col items-center md:items-end gap-2">
               <Button
                 onClick={handleGetRecommendations}
                 disabled={
-                  isLoading || (!useInventory && manualIngredients.length === 0)
+                  isLoading ||
+                  (recipeMode === "custom" && manualIngredients.length === 0)
                 }
                 className="bg-gradient-to-r from-orange-600 to-green-600 dark:from-orange-500 dark:to-green-500 text-white hover:from-orange-700 hover:to-green-700 dark:hover:from-orange-600 dark:hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-6 text-lg font-semibold"
               >
@@ -819,6 +944,13 @@ export function RecipeRecommendationPage() {
                   </>
                 )}
               </Button>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                💡 Tip: Press{" "}
+                <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded border">
+                  Ctrl+G
+                </kbd>{" "}
+                to generate
+              </p>
             </div>
           </Card>
         </div>

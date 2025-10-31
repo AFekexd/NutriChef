@@ -33,6 +33,10 @@ interface ShoppingItem {
   priority: "high" | "medium" | "low";
   inInventory?: boolean;
   inventoryQuantity?: number;
+  isRecipe?: boolean;
+  recipeId?: string;
+  subItems?: ShoppingItem[];
+  isExpanded?: boolean;
 }
 
 export function ShoppingListPage() {
@@ -190,6 +194,16 @@ export function ShoppingListPage() {
     loadShoppingListData();
   };
 
+  const handleToggleExpanded = (id: string) => {
+    shoppingListService.toggleExpanded(id);
+    loadShoppingListData();
+  };
+
+  const handleToggleSubItemCheck = (parentId: string, subItemId: string) => {
+    shoppingListService.toggleSubItemCheck(parentId, subItemId);
+    loadShoppingListData();
+  };
+
   const handleOptimizePortions = () => {
     const items = shoppingListService.getItems();
     const optimized = items.map((item) => {
@@ -207,7 +221,26 @@ export function ShoppingListPage() {
         optimizedQty = Math.ceil(item.quantity);
       }
 
-      return { ...item, quantity: optimizedQty };
+      const optimizedItem = { ...item, quantity: optimizedQty };
+
+      // Also optimize sub-items (recipe ingredients) if they exist
+      if (optimizedItem.subItems && optimizedItem.subItems.length > 0) {
+        optimizedItem.subItems = optimizedItem.subItems.map((subItem) => {
+          let subOptimizedQty = subItem.quantity;
+
+          if (subItem.unit === "g" || subItem.unit === "ml") {
+            subOptimizedQty = Math.ceil(subItem.quantity / 100) * 100;
+          } else if (subItem.unit === "kg" || subItem.unit === "l") {
+            subOptimizedQty = Math.ceil(subItem.quantity * 2) / 2;
+          } else {
+            subOptimizedQty = Math.ceil(subItem.quantity);
+          }
+
+          return { ...subItem, quantity: subOptimizedQty };
+        });
+      }
+
+      return optimizedItem;
     });
 
     shoppingListService.saveItems(optimized);
@@ -220,10 +253,22 @@ export function ShoppingListPage() {
 
     const ratio = newServings / servings;
     const items = shoppingListService.getItems();
-    const adjusted = items.map((item) => ({
-      ...item,
-      quantity: item.quantity * ratio,
-    }));
+    const adjusted = items.map((item) => {
+      const adjustedItem = {
+        ...item,
+        quantity: item.quantity * ratio,
+      };
+
+      // Also adjust sub-items (recipe ingredients) if they exist
+      if (adjustedItem.subItems && adjustedItem.subItems.length > 0) {
+        adjustedItem.subItems = adjustedItem.subItems.map((subItem) => ({
+          ...subItem,
+          quantity: subItem.quantity * ratio,
+        }));
+      }
+
+      return adjustedItem;
+    });
 
     setServings(newServings);
     shoppingListService.saveItems(adjusted);
@@ -338,6 +383,7 @@ export function ShoppingListPage() {
     : { all: shoppingItems };
 
   const categories = {
+    recipes: "Recipes",
     produce: "Fruits & Vegetables",
     dairy: "Dairy & Eggs",
     meat: "Meat & Seafood",
@@ -484,58 +530,145 @@ export function ShoppingListPage() {
                     )}
                     <div className="space-y-2">
                       {displayItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`shopping-item flex items-center gap-3 p-3 rounded-lg transition-all ${
-                            item.checked
-                              ? "bg-gray-50 dark:bg-gray-800 opacity-60"
-                              : "bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
-                        >
-                          {/* Checkbox */}
-                          <button
-                            onClick={() => handleToggleCheck(item.id)}
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                        <div key={item.id} className="shopping-item">
+                          {/* Main Item */}
+                          <div
+                            className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
                               item.checked
-                                ? "bg-green-500 border-green-500"
-                                : "border-gray-300 dark:border-gray-600 hover:border-green-500"
+                                ? "bg-gray-50 dark:bg-gray-800 opacity-60"
+                                : "bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800"
                             }`}
                           >
-                            {item.checked && (
-                              <Check className="w-4 h-4 text-white" />
-                            )}
-                          </button>
+                            {/* Expand/Collapse Button for Recipes */}
+                            {item.isRecipe &&
+                              item.subItems &&
+                              item.subItems.length > 0 && (
+                                <button
+                                  onClick={() => handleToggleExpanded(item.id)}
+                                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-all"
+                                >
+                                  {item.isExpanded ? (
+                                    <ChevronUp className="w-5 h-5" />
+                                  ) : (
+                                    <ChevronDown className="w-5 h-5" />
+                                  )}
+                                </button>
+                              )}
 
-                          {/* Item Info */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`font-medium ${
-                                  item.checked
-                                    ? "line-through text-gray-500 dark:text-gray-500"
-                                    : "text-gray-900 dark:text-gray-100"
-                                }`}
-                              >
-                                {item.name}
-                              </span>
-                              {item.inInventory && (
-                                <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs">
-                                  In Stock: {item.inventoryQuantity} {item.unit}
-                                </Badge>
+                            {/* Checkbox */}
+                            <button
+                              onClick={() => handleToggleCheck(item.id)}
+                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                                item.checked
+                                  ? "bg-green-500 border-green-500"
+                                  : "border-gray-300 dark:border-gray-600 hover:border-green-500"
+                              }`}
+                            >
+                              {item.checked && (
+                                <Check className="w-4 h-4 text-white" />
+                              )}
+                            </button>
+
+                            {/* Item Info */}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`font-medium ${
+                                    item.checked
+                                      ? "line-through text-gray-500 dark:text-gray-500"
+                                      : "text-gray-900 dark:text-gray-100"
+                                  }`}
+                                >
+                                  {item.isRecipe && "📖 "}
+                                  {item.name}
+                                </span>
+                                {item.isRecipe && item.subItems && (
+                                  <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs">
+                                    {item.subItems.length} ingredients
+                                  </Badge>
+                                )}
+                                {item.inInventory && !item.isRecipe && (
+                                  <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs">
+                                    In Stock: {item.inventoryQuantity}{" "}
+                                    {item.unit}
+                                  </Badge>
+                                )}
+                              </div>
+                              {!item.isRecipe && (
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  {item.quantity} {item.unit}
+                                </span>
                               )}
                             </div>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {item.quantity} {item.unit}
-                            </span>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => handleRemoveItem(item.id)}
+                              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
 
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          {/* Sub-items (Ingredients) - Accordion Content */}
+                          {item.isRecipe &&
+                            item.subItems &&
+                            item.isExpanded && (
+                              <div className="ml-11 mt-2 space-y-2 border-l-2 border-purple-200 dark:border-purple-800 pl-4">
+                                {item.subItems.map((subItem) => (
+                                  <div
+                                    key={subItem.id}
+                                    className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                                      subItem.checked
+                                        ? "bg-gray-50 dark:bg-gray-800 opacity-60"
+                                        : "bg-gray-50/50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    }`}
+                                  >
+                                    {/* Sub-item Checkbox */}
+                                    <button
+                                      onClick={() =>
+                                        handleToggleSubItemCheck(
+                                          item.id,
+                                          subItem.id
+                                        )
+                                      }
+                                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                        subItem.checked
+                                          ? "bg-green-500 border-green-500"
+                                          : "border-gray-300 dark:border-gray-600 hover:border-green-500"
+                                      }`}
+                                    >
+                                      {subItem.checked && (
+                                        <Check className="w-3 h-3 text-white" />
+                                      )}
+                                    </button>
+
+                                    {/* Sub-item Info */}
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className={`text-sm font-medium ${
+                                            subItem.checked
+                                              ? "line-through text-gray-500 dark:text-gray-500"
+                                              : "text-gray-800 dark:text-gray-200"
+                                          }`}
+                                        >
+                                          {subItem.name}
+                                        </span>
+                                        {subItem.inInventory && (
+                                          <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs">
+                                            In Stock
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                                        {subItem.quantity} {subItem.unit}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                         </div>
                       ))}
                     </div>

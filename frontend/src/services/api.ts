@@ -665,6 +665,132 @@ class ApiService {
     });
     return response.data;
   }
+
+  // Nutrition Tracking Methods
+  async getNutritionGoals(): Promise<{
+    goals: {
+      dailyCalories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+      macroRatios: { protein: number; carbs: number; fat: number } | null;
+    };
+  }> {
+    const response = await this.api.get("/api/nutrition/goals");
+    return response.data;
+  }
+
+  async updateNutritionGoals(goals: {
+    dailyCalories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    macroRatios?: { protein: number; carbs: number; fat: number };
+  }): Promise<{
+    message: string;
+    goals: any;
+  }> {
+    const response = await this.api.put("/api/nutrition/goals", goals);
+    return response.data;
+  }
+
+  async getDailyIntake(date: string): Promise<{
+    date: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    meals: Array<{
+      id: string;
+      mealType: string;
+      name: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+      time: string;
+    }>;
+  }> {
+    const response = await this.api.get(`/api/nutrition/daily/${date}`);
+    return response.data;
+  }
+
+  async logMeal(mealData: {
+    date: string;
+    mealType: string;
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    recipeId?: string;
+  }): Promise<{
+    message: string;
+    meal: any;
+  }> {
+    const response = await this.api.post("/api/nutrition/meals", mealData);
+    return response.data;
+  }
+
+  async deleteMeal(mealId: string): Promise<{ message: string }> {
+    const response = await this.api.delete(`/api/nutrition/meals/${mealId}`);
+    return response.data;
+  }
+
+  async calculateBMR(metrics: {
+    age: number;
+    gender: "male" | "female";
+    weight: number;
+    height: number;
+    activityLevel: "sedentary" | "light" | "moderate" | "active" | "veryActive";
+    goal: "lose" | "loseFast" | "loseAggressive" | "maintain" | "gain";
+  }): Promise<{
+    message: string;
+    recommendations: {
+      bmr: number;
+      tdee: number;
+      dailyCalories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+      macroRatios: { protein: number; carbs: number; fat: number };
+      activityLevel: string;
+      goal: string;
+    };
+  }> {
+    const response = await this.api.post(
+      "/api/nutrition/calculate-bmr",
+      metrics
+    );
+    return response.data;
+  }
+
+  async getNutritionWeeklySummary(weekStart?: string): Promise<{
+    weekStart: string;
+    weekEnd: string;
+    summary: Array<{
+      date: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      fiber: number;
+      meals: number;
+    }>;
+  }> {
+    const params: any = {};
+    if (weekStart) params.weekStart = weekStart;
+    const response = await this.api.get("/api/nutrition/weekly-summary", {
+      params,
+    });
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();

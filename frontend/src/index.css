@@ -184,29 +184,56 @@
       0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
-  /* Custom scrollbar styles */
+  /* Custom scrollbar styles - Light Mode */
   .custom-scrollbar::-webkit-scrollbar {
     height: 8px;
     width: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: hsl(var(--muted) / 0.3);
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
+    background-clip: padding-box;
   }
 
-  /* Firefox */
+  /* Firefox - Light Mode */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted) / 0.3);
+  }
+
+  /* Custom scrollbar styles - Dark Mode */
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--background) / 0.5);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.4);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.6);
+    background-clip: padding-box;
+  }
+
+  /* Firefox - Dark Mode */
+  .dark .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.4)
+      hsl(var(--background) / 0.5);
   }
 
   /* Ripple effect animation */

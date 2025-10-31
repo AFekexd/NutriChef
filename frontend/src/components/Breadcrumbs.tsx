@@ -15,6 +15,7 @@ const routeLabels: Record<string, string> = {
   "meal-planning": "Meal Planning",
   profile: "Profile",
   admin: "Admin Panel",
+  nutrition: "Nutrition Tracking",
 };
 
 export const Breadcrumbs = () => {

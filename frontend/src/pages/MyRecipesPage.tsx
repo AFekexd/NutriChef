@@ -120,19 +120,19 @@ export function MyRecipesPage() {
 
   const handleAddRecipeToShoppingList = (recipe: Recipe) => {
     if (!recipe.recipeIngredients || recipe.recipeIngredients.length === 0) {
-      // Fallback: If no ingredients, add recipe as a reminder
+      // Fallback: If no ingredients, add recipe as a simple item
       shoppingListService.addItem({
         name: `Recipe: ${recipe.title}`,
         quantity: 1,
         unit: "recipe",
-        category: "other",
+        category: "recipes",
         priority: "medium",
       });
       toast.success(`"${recipe.title}" added to shopping list as a reminder!`);
       return;
     }
 
-    // Add all recipe ingredients to shopping list
+    // Add recipe with ingredients as sub-items
     const ingredientsToAdd = recipe.recipeIngredients.map((ri) => ({
       name: ri.ingredient.name,
       quantity: ri.quantity,
@@ -141,9 +141,14 @@ export function MyRecipesPage() {
       priority: "medium" as const,
     }));
 
-    shoppingListService.addMultipleItems(ingredientsToAdd);
+    shoppingListService.addRecipe(
+      recipe.title,
+      recipe.recipeId,
+      ingredientsToAdd
+    );
+
     toast.success(
-      `Added ${ingredientsToAdd.length} ingredients from "${recipe.title}" to shopping list!`
+      `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`
     );
   };
 

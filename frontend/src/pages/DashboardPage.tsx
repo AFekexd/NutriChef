@@ -325,6 +325,8 @@ export default function DashboardPage() {
                       navigate("/shopping-list");
                     } else if (feature.title === "Meal Planning") {
                       navigate("/meal-planning");
+                    } else if (feature.title === "Nutrition Tracking") {
+                      navigate("/nutrition");
                     }
                   }}
                 >

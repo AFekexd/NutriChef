@@ -13,6 +13,7 @@ import inventoryAIRoutes from "./routes/inventoryAIRoutes.js";
 import recipeRecommendationRoutes from "./routes/recipeRecommendationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import mealPlanRoutes from "./routes/mealPlanRoutes.js";
+import nutritionRoutes from "./routes/nutritionRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 
 const app = express();
@@ -109,6 +110,7 @@ app.use("/api/inventory", inventoryAIRoutes); // Vision AI endpoints (MUST be fi
 app.use("/api/inventory", inventoryRoutes); // Regular inventory (catch-all /:id route)
 app.use("/api/recipe-recommendations", recipeRecommendationRoutes);
 app.use("/api/meal-plans", mealPlanRoutes); // Meal planning routes
+app.use("/api/nutrition", nutritionRoutes); // Nutrition tracking routes
 app.use("/api/admin", adminRoutes); // Admin routes
 
 app.listen(PORT, () => {

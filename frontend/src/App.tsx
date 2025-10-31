@@ -14,6 +14,7 @@ import { ShoppingListPage } from "./pages/ShoppingListPage";
 import { MealPlanningPage } from "./pages/MealPlanningPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
+import { NutritionTrackingPage } from "./pages/NutritionTrackingPage";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { TopNavigation } from "./components/TopNavigation";
 import type { ReactNode } from "react";
@@ -131,6 +132,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/nutrition"
+        element={
+          <ProtectedRoute>
+            <NutritionTrackingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/admin"
         element={
           <ProtectedRoute adminOnly>
@@ -150,7 +159,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors ">
               <OfflineBanner />
               <TopNavigation />
               <AppRoutes />
