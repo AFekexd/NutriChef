@@ -23,8 +23,8 @@ import { apiService } from "../services/api";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
 export function ProfilePage() {
-  const { t, i18n } = useTranslation();
-  const [user, setUser] = useState<UserType | null>(null);
+  const { t } = useTranslation();
+  const [_user, setUser] = useState<UserType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);

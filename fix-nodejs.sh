@@ -45,6 +45,20 @@ apt-get update
 echo ""
 echo "✅ Cleanup complete!"
 echo ""
+echo "📋 Checking PostgreSQL status..."
+if systemctl is-active --quiet postgresql; then
+    echo "✅ PostgreSQL is running"
+else
+    echo "⚠️  PostgreSQL is not running. Starting it..."
+    systemctl start postgresql
+    systemctl enable postgresql
+    if systemctl is-active --quiet postgresql; then
+        echo "✅ PostgreSQL started successfully"
+    else
+        echo "❌ PostgreSQL failed to start. Run: sudo systemctl status postgresql"
+    fi
+fi
+echo ""
 echo "Now you can install Node.js cleanly using nvm:"
 echo ""
 echo "  # Install nvm"

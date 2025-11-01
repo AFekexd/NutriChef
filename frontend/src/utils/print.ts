@@ -11,8 +11,9 @@ export function printPage(): void {
 
 /**
  * Print recipe with formatted layout
+ * @param _recipeId - Recipe ID (reserved for future use)
  */
-export function printRecipe(recipeId: number): void {
+export function printRecipe(_recipeId: number): void {
   // Store current scroll position
   const scrollPos = window.scrollY;
 

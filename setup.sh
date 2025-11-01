@@ -105,10 +105,65 @@ echo "✅ npm version: $(npm --version)"
 
 # Configure PostgreSQL
 echo "🗄️  Configuring PostgreSQL..."
+
+# Ensure PostgreSQL is installed
+if ! command -v psql &> /dev/null; then
+    echo "Installing PostgreSQL..."
+    apt-get install -y postgresql postgresql-contrib
+fi
+
+# Get PostgreSQL version
+PG_VERSION=$(psql --version | grep -oP '\d+' | head -1)
+echo "Found PostgreSQL version: $PG_VERSION"
+
+# Check if cluster exists
+if ! pg_lsclusters | grep -q "main"; then
+    echo "Creating PostgreSQL cluster..."
+    pg_createcluster $PG_VERSION main --start
+fi
+
+# Start the cluster if it's down
+CLUSTER_STATUS=$(pg_lsclusters | grep main | awk '{print $4}')
+if [ "$CLUSTER_STATUS" != "online" ]; then
+    echo "Starting PostgreSQL cluster..."
+    pg_ctlcluster $PG_VERSION main start
+fi
+
+# Ensure PostgreSQL service is running
+if ! systemctl is-active --quiet postgresql; then
+    echo "Starting PostgreSQL service..."
+    systemctl start postgresql
+    systemctl enable postgresql
+    sleep 3
+fi
+
+# Create socket directory if missing
+mkdir -p /var/run/postgresql
+chown postgres:postgres /var/run/postgresql
+chmod 755 /var/run/postgresql
+
+# Final check
+sleep 2
+if ! sudo -u postgres psql -c "SELECT 1;" &> /dev/null; then
+    echo "❌ Error: PostgreSQL is not responding. Checking logs..."
+    journalctl -u postgresql -n 20 --no-pager
+    echo ""
+    echo "Try these commands manually:"
+    echo "  sudo pg_lsclusters"
+    echo "  sudo pg_ctlcluster $PG_VERSION main start"
+    echo "  sudo systemctl restart postgresql"
+    exit 1
+fi
+
+echo "✅ PostgreSQL is running and responding"
+
+# Create database and user
 sudo -u postgres psql -c "CREATE DATABASE nutrichef;" 2>/dev/null || echo "Database already exists"
 sudo -u postgres psql -c "CREATE USER nutrichef WITH ENCRYPTED PASSWORD '$POSTGRES_PASSWORD';" 2>/dev/null || echo "User already exists"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE nutrichef TO nutrichef;"
 sudo -u postgres psql -c "ALTER DATABASE nutrichef OWNER TO nutrichef;"
+
+echo "✅ PostgreSQL configured successfully"
 
 # Clone repository
 echo "📥 Cloning repository..."

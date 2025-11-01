@@ -8,3 +8,4 @@
 # Linux/Mac executable scripts
 setup.sh text eol=lf
 fix-nodejs.sh text eol=lf
+fix-postgresql.sh text eol=lf
