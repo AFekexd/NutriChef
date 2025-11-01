@@ -21,7 +21,10 @@
     "home": "Home",
     "mealPlanning": "Meal Planning",
     "profile": "Profile",
-    "shoppingList": "Shopping List"
+    "shoppingList": "Shopping List",
+    "admin": "Admin",
+    "nutrition": "Nutrition",
+    "healthInsights": "Health Insights"
   },
   "auth": {
     "loginTitle": "Login to NutriChef",
@@ -198,5 +201,35 @@
     "revokeSessionConfirm": "Are you sure you want to revoke this session?",
     "sessionRevokedSuccess": "Session revoked successfully!",
     "sessionRevokedError": "Failed to revoke session"
+  },
+  "healthInsights": {
+    "title": "Health Insights",
+    "subtitle": "AI-powered nutrition coaching and personalized recommendations",
+    "analyzingData": "Analyzing your health data...",
+    "unableToLoad": "Unable to load insights",
+    "tryAgainLater": "Please try again later",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "refreshed": "Insights refreshed successfully!",
+    "healthScore": "Your Health Score",
+    "basedOnDays": "Based on {{count}} days of data",
+    "outOf100": "out of 100",
+    "calorieBalance": "Calorie Balance",
+    "macroBalance": "Macro Balance",
+    "consistency": "Consistency",
+    "hydration": "Hydration",
+    "aiCoachSays": "Your AI Nutrition Coach Says:",
+    "bmr": "BMR (cal/day)",
+    "tdee": "TDEE (cal/day)",
+    "avgCalories": "Avg. Calories",
+    "personalizedInsights": "Personalized Insights",
+    "actionRecommendations": "Action Recommendations",
+    "actionItems": "Action Items:",
+    "weeklyGoals": "This Week's Goals",
+    "high": "HIGH",
+    "medium": "MEDIUM",
+    "low": "LOW",
+    "failedToLoad": "Failed to load health insights",
+    "rateLimitExceeded": "You've reached your daily limit for AI health insights. Please try again in {{hours}} hours."
   }
 }

@@ -3,6 +3,18 @@ import { PrismaClient } from "../../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
 
+// Helper function to invalidate recipe recommendations cache when inventory changes
+async function invalidateRecipeCache(userId: string) {
+  try {
+    await prisma.recipeRecommendationsCache.deleteMany({
+      where: { userId },
+    });
+    console.log(`🗑️  Invalidated recipe cache for user ${userId}`);
+  } catch (error) {
+    console.error("Error invalidating recipe cache:", error);
+  }
+}
+
 // Get all inventory items for a user
 export const getInventoryItems = async (req: Request, res: Response) => {
   try {
@@ -101,6 +113,9 @@ export const createInventoryItem = async (req: Request, res: Response) => {
       },
     });
 
+    // Invalidate recipe recommendations cache since inventory changed
+    await invalidateRecipeCache(userId);
+
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ error: "Failed to create inventory item" });
@@ -126,6 +141,9 @@ export const updateInventoryItem = async (req: Request, res: Response) => {
       },
     });
 
+    // Invalidate recipe recommendations cache since inventory changed
+    await invalidateRecipeCache(item.userId);
+
     res.json(item);
   } catch (error) {
     res.status(500).json({ error: "Failed to update inventory item" });
@@ -137,9 +155,19 @@ export const deleteInventoryItem = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    await prisma.inventoryItem.delete({
+    // Get the item first to get userId for cache invalidation
+    const item = await prisma.inventoryItem.findUnique({
       where: { inventoryItemId: id },
     });
+
+    if (item) {
+      await prisma.inventoryItem.delete({
+        where: { inventoryItemId: id },
+      });
+
+      // Invalidate recipe recommendations cache since inventory changed
+      await invalidateRecipeCache(item.userId);
+    }
 
     res.status(204).send();
   } catch (error) {

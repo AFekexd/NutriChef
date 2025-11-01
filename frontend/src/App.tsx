@@ -15,6 +15,7 @@ import { MealPlanningPage } from "./pages/MealPlanningPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminPage } from "./pages/AdminPage";
 import { NutritionTrackingPage } from "./pages/NutritionTrackingPage";
+import { HealthInsightsPage } from "./pages/HealthInsightsPage";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { TopNavigation } from "./components/TopNavigation";
 import type { ReactNode } from "react";
@@ -136,6 +137,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <NutritionTrackingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/health-insights"
+        element={
+          <ProtectedRoute>
+            <HealthInsightsPage />
           </ProtectedRoute>
         }
       />

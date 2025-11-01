@@ -530,7 +530,16 @@ export function RecipeRecommendationPage() {
       // Cache the results
       setCachedRecommendations(cacheKey, response.recommendations);
     } catch (err: any) {
-      setError(err.response?.data?.error || t("common.error"));
+      // Handle rate limit errors specifically
+      if (err.response?.status === 429) {
+        const errorData = err.response?.data;
+        const resetInHours = errorData?.resetInHours || "24";
+        const errorMessage = `You've reached your daily limit for AI recipe recommendations. Please try again in ${resetInHours} hours.`;
+        setError(errorMessage);
+        toast.error(errorMessage, { duration: 5000 });
+      } else {
+        setError(err.response?.data?.error || t("common.error"));
+      }
     } finally {
       setIsLoading(false);
     }

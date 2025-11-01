@@ -1,8 +1,30 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
 import { BaseAIService, AIProvider } from "../services/aiService.js";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
+
+// Helper function to create a hash of ingredients for cache lookup
+function createIngredientsHash(
+  ingredients: Array<{ name: string; quantity: number; unit: string }>,
+  servings: number,
+  minMatchPercentage: number,
+  allergies: string[]
+): string {
+  const sortedIngredients = [...ingredients]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((i) => `${i.name}:${i.quantity}:${i.unit}`);
+
+  const data = [
+    ...sortedIngredients,
+    `servings:${servings}`,
+    `match:${minMatchPercentage}`,
+    `allergies:${allergies.sort().join(",")}`,
+  ].join("|");
+
+  return crypto.createHash("sha256").update(data).digest("hex");
+}
 
 class RecipeRecommendationService extends BaseAIService {
   constructor() {
@@ -168,6 +190,44 @@ export const getRecommendations = async (req: Request, res: Response) => {
       });
     }
 
+    // Create a hash of ingredients for cache lookup
+    const ingredientsHash = createIngredientsHash(
+      ingredientsToUse,
+      servings,
+      minMatchPercentage,
+      allergies
+    );
+
+    // Check cache first
+    const existingCache = await prisma.recipeRecommendationsCache.findFirst({
+      where: {
+        userId,
+        ingredientsHash,
+        language,
+        expiresAt: {
+          gt: new Date(), // Not expired
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Return cached data if available
+    if (existingCache) {
+      console.log(`Returning cached recipe recommendations for user ${userId}`);
+      return res.json({
+        ...(existingCache.recommendations as any),
+        ingredientsUsed: ingredientsToUse.length,
+        servings,
+        minMatchPercentage,
+        cached: true,
+      });
+    }
+
+    // If no valid cache, generate new recommendations
+    console.log(`Generating new recipe recommendations for user ${userId}`);
+
     // Generate recommendations using AI
     const recommendationService = new RecipeRecommendationService();
     const recommendations = await recommendationService.generateRecommendations(
@@ -177,6 +237,33 @@ export const getRecommendations = async (req: Request, res: Response) => {
       language,
       allergies
     );
+
+    // Store in cache (expires in 24 hours - recipes don't change as often)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    await prisma.recipeRecommendationsCache.create({
+      data: {
+        userId,
+        ingredientsHash,
+        servings,
+        minMatchPercentage,
+        language,
+        allergies: allergies as any,
+        recommendations: recommendations as any,
+        expiresAt,
+      },
+    });
+
+    // Clean up old expired cache entries for this user
+    await prisma.recipeRecommendationsCache.deleteMany({
+      where: {
+        userId,
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
 
     res.json({
       ...recommendations,

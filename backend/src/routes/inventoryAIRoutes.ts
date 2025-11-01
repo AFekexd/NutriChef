@@ -1,6 +1,7 @@
 // Vision AI Inventory Routes
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.js";
+import { createAIRateLimiter } from "../middlewares/aiRateLimiter.js";
 import {
   uploadMiddleware,
   uploadInventoryImage,
@@ -13,6 +14,9 @@ import {
 import { getMyInventoryItems } from "../controllers/inventoryController.js";
 
 const router = Router();
+
+// AI rate limiter for inventory image detection (15 requests per day per user)
+const inventoryAIRateLimit = createAIRateLimiter("inventoryAI");
 
 /**
  * @swagger
@@ -90,12 +94,15 @@ router.get("/", authenticate, getMyInventoryItems);
  *         description: No image uploaded or invalid file type
  *       401:
  *         description: Unauthorized
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         description: Image processing failed
  */
 router.post(
   "/upload-image",
   authenticate,
+  inventoryAIRateLimit,
   uploadMiddleware,
   uploadInventoryImage
 );

@@ -4,8 +4,12 @@ import {
   getRecommendationsWithIngredients,
 } from "../controllers/recipeRecommendationController.js";
 import { authenticate } from "../middlewares/auth.js";
+import { createAIRateLimiter } from "../middlewares/aiRateLimiter.js";
 
 const router = Router();
+
+// AI rate limiter for recipe recommendations (20 requests per day per user)
+const recipeRateLimit = createAIRateLimiter("recipeRecommendations");
 
 /**
  * @swagger
@@ -54,10 +58,12 @@ const router = Router();
  *         description: Invalid request or no ingredients provided
  *       401:
  *         description: Unauthorized
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         description: Server error
  */
-router.post("/", authenticate, getRecommendations);
+router.post("/", authenticate, recipeRateLimit, getRecommendations);
 
 /**
  * @swagger
@@ -98,9 +104,11 @@ router.post("/", authenticate, getRecommendations);
  *         description: Recipe recommendations generated successfully
  *       400:
  *         description: Invalid request
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         description: Server error
  */
-router.post("/manual", getRecommendationsWithIngredients);
+router.post("/manual", recipeRateLimit, getRecommendationsWithIngredients);
 
 export default router;

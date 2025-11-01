@@ -290,3 +290,32 @@ model NutritionAnalysis {
   @@unique([itemName, quantity, unit])
 }
 
+// Health Insights Cache
+model HealthInsightsCache {
+  cacheId         String      @id @default(uuid()) @db.Uuid
+  userId          String      @db.Uuid
+  language        String      @default("en")
+  insightsData    Json        // Full health insights response
+  expiresAt       DateTime    // Cache expiration time
+  createdAt       DateTime    @default(now())
+  
+  @@index([userId, language])
+  @@index([expiresAt])
+}
+
+// Recipe Recommendations Cache
+model RecipeRecommendationsCache {
+  cacheId             String      @id @default(uuid()) @db.Uuid
+  userId              String      @db.Uuid
+  ingredientsHash     String      // Hash of ingredients used for lookup
+  servings            Int
+  minMatchPercentage  Int
+  language            String      @default("en")
+  allergies           Json        // Array of allergies
+  recommendations     Json        // Full recommendations response
+  expiresAt           DateTime    // Cache expiration time
+  createdAt           DateTime    @default(now())
+  
+  @@index([userId, ingredientsHash])
+  @@index([expiresAt])
+}

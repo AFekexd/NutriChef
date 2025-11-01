@@ -15,5 +15,15 @@ coverage/
 
 inventory*.jpg
 
+# Keep deployment documentation
 *.md
 !README.md
+!DEPLOYMENT.md
+!DEPLOYMENT_QUICK.md
+
+# Keep important configuration files
+!nginx.conf
+!docker-compose.yml
+!Dockerfile.*
+!setup.sh
+!.github/

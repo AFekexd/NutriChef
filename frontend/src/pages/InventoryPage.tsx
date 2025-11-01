@@ -224,7 +224,16 @@ export function InventoryPage() {
       setDetectionResult(result);
       setShowPhotoUpload(false);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to analyze image");
+      // Handle rate limit errors specifically
+      if (err.response?.status === 429) {
+        const errorData = err.response?.data;
+        const resetInHours = errorData?.resetInHours || "24";
+        const errorMessage = `You've reached your daily limit for AI image analysis. Please try again in ${resetInHours} hours.`;
+        setError(errorMessage);
+        toast.error(errorMessage, { duration: 5000 });
+      } else {
+        setError(err.response?.data?.error || "Failed to analyze image");
+      }
     }
   };
 

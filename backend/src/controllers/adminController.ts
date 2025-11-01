@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
+import { getRateLimitStatus, resetUserRateLimit } from "../middlewares/aiRateLimiter.js";
 
 const prisma = new PrismaClient();
 
@@ -482,5 +483,53 @@ export const getDashboardStats = async (
   } catch (error: any) {
     console.error("Error fetching dashboard stats:", error);
     res.status(500).json({ error: "Failed to fetch dashboard statistics" });
+  }
+};
+
+/**
+ * Get AI rate limit status for a user
+ */
+export const getUserRateLimitStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    const status = getRateLimitStatus(userId);
+
+    res.json({
+      userId,
+      rateLimits: status,
+    });
+  } catch (error: any) {
+    console.error("Error fetching rate limit status:", error);
+    res.status(500).json({ error: "Failed to fetch rate limit status" });
+  }
+};
+
+/**
+ * Reset AI rate limit for a user
+ */
+export const resetUserAIRateLimit = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { service } = req.body;
+
+    resetUserRateLimit(userId, service);
+
+    res.json({
+      message: service
+        ? `Rate limit reset for ${service}`
+        : "All rate limits reset",
+      userId,
+      service: service || "all",
+    });
+  } catch (error: any) {
+    console.error("Error resetting rate limit:", error);
+    res.status(500).json({ error: "Failed to reset rate limit" });
   }
 };

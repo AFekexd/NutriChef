@@ -21,7 +21,10 @@
     "home": "Kezdőlap",
     "mealPlanning": "Étkezés tervezés",
     "profile": "Profil",
-    "shoppingList": "Bevásárlólista"
+    "shoppingList": "Bevásárlólista",
+    "admin": "Admin",
+    "nutrition": "Táplálkozás",
+    "healthInsights": "Egészség Betekintés"
   },
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",
@@ -198,5 +201,35 @@
     "revokeSessionConfirm": "Biztosan vissza akarja vonni ezt a munkamenetet?",
     "sessionRevokedSuccess": "Munkamenet sikeresen visszavonva!",
     "sessionRevokedError": "Nem sikerült visszavonni a munkamenetet"
+  },
+  "healthInsights": {
+    "title": "Egészség Betekintés",
+    "subtitle": "AI-alapú táplálkozási coaching és személyre szabott ajánlások",
+    "analyzingData": "Egészségügyi adatok elemzése...",
+    "unableToLoad": "Nem sikerült betölteni a betekintéseket",
+    "tryAgainLater": "Kérjük, próbálja újra később",
+    "retry": "Újra",
+    "refresh": "Frissítés",
+    "refreshed": "A betekintések sikeresen frissítve!",
+    "healthScore": "Az Ön Egészségi Pontszáma",
+    "basedOnDays": "{{count}} nap adatai alapján",
+    "outOf100": "100-ból",
+    "calorieBalance": "Kalória Egyensúly",
+    "macroBalance": "Makró Egyensúly",
+    "consistency": "Következetesség",
+    "hydration": "Hidratáció",
+    "aiCoachSays": "AI Táplálkozási Coachja mondja:",
+    "bmr": "BMR (kcal/nap)",
+    "tdee": "TDEE (kcal/nap)",
+    "avgCalories": "Átlag Kalória",
+    "personalizedInsights": "Személyre Szabott Betekintések",
+    "actionRecommendations": "Cselekvési Javaslatok",
+    "actionItems": "Teendők:",
+    "weeklyGoals": "Ezen Heti Célok",
+    "high": "MAGAS",
+    "medium": "KÖZEPES",
+    "low": "ALACSONY",
+    "failedToLoad": "Nem sikerült betölteni az egészségügyi betekintéseket",
+    "rateLimitExceeded": "Elérte a napi AI egészség betekintés limitet. Kérjük, próbálja újra {{hours}} óra múlva."
   }
 }

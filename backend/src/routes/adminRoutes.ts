@@ -233,4 +233,55 @@ router.delete("/recipes/:recipeId", adminController.deleteRecipe);
  */
 router.get("/uploads", adminController.getAllUploadedImages);
 
+/**
+ * @swagger
+ * /api/admin/users/{userId}/rate-limits:
+ *   get:
+ *     summary: Get AI rate limit status for a user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rate limit status
+ */
+router.get("/users/:userId/rate-limits", adminController.getUserRateLimitStatus);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/rate-limits/reset:
+ *   post:
+ *     summary: Reset AI rate limits for a user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               service:
+ *                 type: string
+ *                 enum: [healthInsights, recipeRecommendations, inventoryAI]
+ *                 description: Specific service to reset, or omit to reset all
+ *     responses:
+ *       200:
+ *         description: Rate limits reset
+ */
+router.post("/users/:userId/rate-limits/reset", adminController.resetUserAIRateLimit);
+
 export default router;

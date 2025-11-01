@@ -14,10 +14,51 @@ import recipeRecommendationRoutes from "./routes/recipeRecommendationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import mealPlanRoutes from "./routes/mealPlanRoutes.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
+import healthInsightsRoutes from "./routes/healthInsightsRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
+import { PrismaClient } from "../generated/prisma/index.js";
 
+const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Cleanup expired cache entries every hour
+const cleanupExpiredCache = async () => {
+  try {
+    // Clean health insights cache
+    const healthResult = await prisma.healthInsightsCache.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+
+    // Clean recipe recommendations cache
+    const recipeResult = await prisma.recipeRecommendationsCache.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+
+    const totalCleaned = healthResult.count + recipeResult.count;
+    if (totalCleaned > 0) {
+      console.log(
+        `🧹 Cleaned up ${totalCleaned} expired cache entries (${healthResult.count} health insights, ${recipeResult.count} recipe recommendations)`
+      );
+    }
+  } catch (error) {
+    console.error("Error cleaning up cache:", error);
+  }
+};
+
+// Run cleanup on startup
+cleanupExpiredCache();
+
+// Run cleanup every hour
+setInterval(cleanupExpiredCache, 60 * 60 * 1000);
 
 // Security middleware
 app.use(
@@ -111,6 +152,7 @@ app.use("/api/inventory", inventoryRoutes); // Regular inventory (catch-all /:id
 app.use("/api/recipe-recommendations", recipeRecommendationRoutes);
 app.use("/api/meal-plans", mealPlanRoutes); // Meal planning routes
 app.use("/api/nutrition", nutritionRoutes); // Nutrition tracking routes
+app.use("/api/health-insights", healthInsightsRoutes); // Health insights & AI coaching
 app.use("/api/admin", adminRoutes); // Admin routes
 
 app.listen(PORT, () => {

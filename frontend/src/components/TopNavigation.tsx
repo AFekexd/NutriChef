@@ -9,6 +9,7 @@ import {
   Package,
   ShoppingCart,
   Utensils,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -118,7 +119,19 @@ export function TopNavigation() {
               }`}
             >
               <Utensils className="w-5 h-5" />
-              <span className="font-medium">Nutrition</span>
+              <span className="font-medium">{t("nav.nutrition")}</span>
+            </button>
+
+            <button
+              onClick={() => navigate("/health-insights")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                isActive("/health-insights")
+                  ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              <Activity className="w-5 h-5" />
+              <span className="font-medium">{t("nav.healthInsights")}</span>
             </button>
 
             {user?.role === "admin" && (
@@ -131,7 +144,7 @@ export function TopNavigation() {
                 }`}
               >
                 <Shield className="w-5 h-5" />
-                <span className="font-medium">Admin</span>
+                <span className="font-medium">{t("nav.admin")}</span>
               </button>
             )}
           </div>

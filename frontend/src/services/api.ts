@@ -791,6 +791,90 @@ class ApiService {
     });
     return response.data;
   }
+
+  // Health Insights
+  async getHealthInsights(language: string): Promise<{
+    overallScore: number;
+    scoreBreakdown: {
+      calorieBalance: number;
+      macroBalance: number;
+      consistency: number;
+      hydration: number;
+    };
+    insights: Array<{
+      type: "success" | "warning" | "tip" | "info";
+      title: string;
+      description: string;
+      icon: string;
+    }>;
+    recommendations: Array<{
+      category: string;
+      priority: "high" | "medium" | "low";
+      title: string;
+      description: string;
+      actionItems: string[];
+    }>;
+    weeklyGoals: Array<{
+      goal: string;
+      target: string;
+      progress: number;
+    }>;
+    nutritionCoachMessage: string;
+    userData: {
+      bmr: number;
+      tdee: number;
+      averageCalories: number;
+      daysTracked: number;
+    };
+  }> {
+    const response = await this.api.get("/api/health-insights", {
+      params: { language },
+    });
+    return response.data;
+  }
+
+  async getNutritionPlan(language: string): Promise<{
+    mealPlan: Array<{
+      day: string;
+      meals: Array<{
+        mealType: string;
+        name: string;
+        description: string;
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+        ingredients: string[];
+        instructions: string[];
+      }>;
+      dailyTotals: {
+        calories: number;
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+    }>;
+    weeklyTotals: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+  }> {
+    const response = await this.api.get("/api/health-insights/nutrition-plan", {
+      params: { language },
+    });
+    return response.data;
+  }
+
+  async clearHealthInsightsCache(language?: string): Promise<{
+    message: string;
+  }> {
+    const response = await this.api.delete("/api/health-insights/clear-cache", {
+      params: language ? { language } : undefined,
+    });
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();
