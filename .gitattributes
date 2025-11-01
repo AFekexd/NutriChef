@@ -1,0 +1,10 @@
+# Shell scripts should use LF line endings (Unix style)
+*.sh text eol=lf
+
+# Windows batch files should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Linux/Mac executable scripts
+setup.sh text eol=lf
+fix-nodejs.sh text eol=lf

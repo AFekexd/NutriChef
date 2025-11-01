@@ -36,11 +36,53 @@ apt-get install -y \
     build-essential \
     ufw
 
-# Remove old Node.js if exists
-echo "🧹 Removing old Node.js..."
-apt-get remove --purge -y nodejs npm libnode-dev libnode72 nodejs-doc 2>/dev/null || true
+# Complete Node.js removal (aggressive cleanup)
+echo "🧹 Completely removing old Node.js installations..."
+
+# Stop any dpkg process and fix broken packages
+dpkg --configure -a
+apt-get install -f -y
+
+# Remove all Node.js related packages (including the problematic libnode-dev)
+apt-get remove --purge -y \
+    nodejs \
+    npm \
+    libnode-dev \
+    libnode72 \
+    nodejs-doc \
+    2>/dev/null || true
+
+# Force remove if packages are in a broken state
+dpkg --remove --force-remove-reinstreq nodejs npm libnode-dev libnode72 nodejs-doc 2>/dev/null || true
+
+# Autoremove orphaned packages
 apt-get autoremove -y
-rm -rf /usr/include/node /usr/local/bin/npm /usr/local/bin/node
+apt-get autoclean
+
+# Remove all Node.js files and directories manually
+rm -rf \
+    /usr/include/node \
+    /usr/local/bin/node \
+    /usr/local/bin/npm \
+    /usr/local/bin/npx \
+    /usr/local/lib/node* \
+    /usr/local/include/node* \
+    /usr/share/doc/nodejs \
+    /usr/share/man/*/node* \
+    /var/lib/dpkg/info/nodejs* \
+    /var/lib/dpkg/info/libnode* \
+    /var/cache/apt/archives/nodejs* \
+    ~/.npm \
+    ~/.node-gyp \
+    2>/dev/null || true
+
+# Clear apt cache
+apt-get clean
+
+# Fix any remaining broken packages
+apt-get install -f -y
+
+echo "✅ Old Node.js removed successfully"
 
 # Install nvm (Node Version Manager)
 echo "📦 Installing nvm and Node.js 20..."
