@@ -120,14 +120,16 @@ export function HealthInsightsPage() {
       setInsightsData(response);
     } catch (err: any) {
       console.error("Error loading health insights:", err);
-      
+
       // Handle rate limit errors specifically
       if (err.response?.status === 429) {
         const errorData = err.response?.data;
         const resetInHours = errorData?.resetInHours || "24";
-        const errorMessage = t("healthInsights.rateLimitExceeded", { 
-          hours: resetInHours 
-        }) || `Rate limit exceeded. Please try again in ${resetInHours} hours.`;
+        const errorMessage =
+          t("healthInsights.rateLimitExceeded", {
+            hours: resetInHours,
+          }) ||
+          `Rate limit exceeded. Please try again in ${resetInHours} hours.`;
         setError(errorMessage);
         toast.error(errorMessage, { duration: 5000 });
       } else {
@@ -151,14 +153,16 @@ export function HealthInsightsPage() {
       toast.success(t("healthInsights.refreshed") || "Insights refreshed!");
     } catch (err: any) {
       console.error("Error refreshing health insights:", err);
-      
+
       // Handle rate limit errors specifically
       if (err.response?.status === 429) {
         const errorData = err.response?.data;
         const resetInHours = errorData?.resetInHours || "24";
-        const errorMessage = t("healthInsights.rateLimitExceeded", { 
-          hours: resetInHours 
-        }) || `Rate limit exceeded. Please try again in ${resetInHours} hours.`;
+        const errorMessage =
+          t("healthInsights.rateLimitExceeded", {
+            hours: resetInHours,
+          }) ||
+          `Rate limit exceeded. Please try again in ${resetInHours} hours.`;
         setError(errorMessage);
         toast.error(errorMessage, { duration: 5000 });
       } else {

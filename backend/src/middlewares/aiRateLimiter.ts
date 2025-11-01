@@ -37,7 +37,7 @@ export const AI_RATE_LIMITS = {
 // Cleanup expired records every hour
 setInterval(() => {
   const now = Date.now();
-  
+
   Object.values(rateLimits).forEach((limitMap) => {
     for (const [key, record] of limitMap.entries()) {
       if (now > record.resetTime) {
@@ -45,7 +45,7 @@ setInterval(() => {
       }
     }
   });
-  
+
   console.log("🧹 Cleaned up expired AI rate limit records");
 }, 60 * 60 * 1000); // Every hour
 
@@ -80,10 +80,12 @@ export function createAIRateLimiter(
 
     // Check if user exceeded the limit
     if (record.count >= config.maxRequests) {
-      const resetInHours = Math.ceil((record.resetTime - now) / (60 * 60 * 1000));
-      
+      const resetInHours = Math.ceil(
+        (record.resetTime - now) / (60 * 60 * 1000)
+      );
+
       console.log(`⛔ AI rate limit exceeded for user ${userId} on ${service}`);
-      
+
       return res.status(429).json({
         error: "AI rate limit exceeded",
         message: `You have reached the maximum number of ${service} requests (${config.maxRequests} per day). Please try again later.`,
@@ -100,8 +102,14 @@ export function createAIRateLimiter(
 
     // Add rate limit info to response headers
     res.setHeader("X-RateLimit-Limit", config.maxRequests.toString());
-    res.setHeader("X-RateLimit-Remaining", (config.maxRequests - record.count).toString());
-    res.setHeader("X-RateLimit-Reset", new Date(record.resetTime).toISOString());
+    res.setHeader(
+      "X-RateLimit-Remaining",
+      (config.maxRequests - record.count).toString()
+    );
+    res.setHeader(
+      "X-RateLimit-Reset",
+      new Date(record.resetTime).toISOString()
+    );
 
     console.log(
       `✅ AI rate limit check passed for user ${userId} on ${service}: ${record.count}/${config.maxRequests}`
@@ -116,14 +124,22 @@ export function createAIRateLimiter(
  */
 export function getRateLimitStatus(userId: string): {
   healthInsights: { used: number; limit: number; resetTime: string | null };
-  recipeRecommendations: { used: number; limit: number; resetTime: string | null };
+  recipeRecommendations: {
+    used: number;
+    limit: number;
+    resetTime: string | null;
+  };
   inventoryAI: { used: number; limit: number; resetTime: string | null };
 } {
   const now = Date.now();
 
   return {
     healthInsights: getServiceStatus("healthInsights", userId, now),
-    recipeRecommendations: getServiceStatus("recipeRecommendations", userId, now),
+    recipeRecommendations: getServiceStatus(
+      "recipeRecommendations",
+      userId,
+      now
+    ),
     inventoryAI: getServiceStatus("inventoryAI", userId, now),
   };
 }
@@ -154,7 +170,10 @@ function getServiceStatus(
 /**
  * Manually reset rate limit for a user (admin function)
  */
-export function resetUserRateLimit(userId: string, service?: keyof AIRateLimits) {
+export function resetUserRateLimit(
+  userId: string,
+  service?: keyof AIRateLimits
+) {
   if (service) {
     rateLimits[service].delete(userId);
     console.log(`🔄 Reset AI rate limit for user ${userId} on ${service}`);

@@ -60,7 +60,12 @@ router.get("/", authenticate, healthInsightsRateLimit, getHealthInsights);
  *       429:
  *         description: Rate limit exceeded
  */
-router.get("/nutrition-plan", authenticate, healthInsightsRateLimit, getNutritionPlan);
+router.get(
+  "/nutrition-plan",
+  authenticate,
+  healthInsightsRateLimit,
+  getNutritionPlan
+);
 
 /**
  * @swagger

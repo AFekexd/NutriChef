@@ -251,7 +251,10 @@ router.get("/uploads", adminController.getAllUploadedImages);
  *       200:
  *         description: Rate limit status
  */
-router.get("/users/:userId/rate-limits", adminController.getUserRateLimitStatus);
+router.get(
+  "/users/:userId/rate-limits",
+  adminController.getUserRateLimitStatus
+);
 
 /**
  * @swagger
@@ -282,6 +285,9 @@ router.get("/users/:userId/rate-limits", adminController.getUserRateLimitStatus)
  *       200:
  *         description: Rate limits reset
  */
-router.post("/users/:userId/rate-limits/reset", adminController.resetUserAIRateLimit);
+router.post(
+  "/users/:userId/rate-limits/reset",
+  adminController.resetUserAIRateLimit
+);
 
 export default router;

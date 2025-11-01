@@ -1,6 +1,9 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
-import { getRateLimitStatus, resetUserRateLimit } from "../middlewares/aiRateLimiter.js";
+import {
+  getRateLimitStatus,
+  resetUserRateLimit,
+} from "../middlewares/aiRateLimiter.js";
 
 const prisma = new PrismaClient();
 
