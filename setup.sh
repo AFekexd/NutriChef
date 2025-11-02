@@ -216,7 +216,12 @@ fi
 # Install backend dependencies and run migrations
 echo "📦 Installing backend dependencies..."
 cd backend
-npm ci --production
+npm ci  # Remove --production flag to install devDependencies (needed for TypeScript build)
+
+echo "🔨 Building backend TypeScript..."
+npm run build
+
+echo "🗄️  Running Prisma migrations..."
 npx prisma generate
 npx prisma migrate deploy
 
