@@ -1,6 +1,6 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /
+WORKDIR /app
 
 # Copy package files
 COPY backend/package*.json ./
@@ -31,7 +31,7 @@ RUN npm run build && \
 # Production stage
 FROM node:20-alpine
 
-WORKDIR /
+WORKDIR /app
 
 # Copy package files
 COPY backend/package*.json ./
@@ -41,10 +41,10 @@ RUN npm ci --only=production
 
 # Copy prisma schema and generated client
 COPY backend/prisma ./prisma
-COPY --from=builder /backend/generated ./generated
+COPY --from=builder /app/generated ./generated
 
 # Copy built files
-COPY --from=builder /backend/dist ./dist
+COPY --from=builder /app/dist ./dist
 
 # Create uploads directory
 RUN mkdir -p uploads/inventory
@@ -53,4 +53,4 @@ RUN mkdir -p uploads/inventory
 EXPOSE 5000
 
 # Run migrations and start the application
-CMD npx prisma migrate deploy && node dist/index.js
+CMD npx prisma migrate deploy && node dist/src/index.js
