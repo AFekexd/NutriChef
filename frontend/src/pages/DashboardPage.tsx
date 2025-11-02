@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { apiService } from "../services/api";
+import { TutorialButton } from "../components/Tutorial";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -247,7 +248,8 @@ export default function DashboardPage() {
               NutriChef
             </h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <TutorialButton text="" />
             <div className="text-right hidden sm:block">
               <p className="text-sm font-semibold text-[#4A4A4A] dark:text-gray-100">
                 {user?.name}
@@ -272,7 +274,11 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         {/* Welcome Section */}
-        <div ref={welcomeRef} className="text-center mb-12">
+        <div
+          ref={welcomeRef}
+          className="text-center mb-12"
+          data-tutorial="welcome"
+        >
           <h2
             className="text-4xl font-bold mb-4 text-[#4A4A4A] dark:text-gray-100"
             style={{ fontFamily: "Poppins, sans-serif" }}
@@ -309,6 +315,7 @@ export default function DashboardPage() {
         <div
           ref={featuresRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
+          data-tutorial="quick-actions"
         >
           {features.map((feature, index) => {
             const Icon = feature.icon;
@@ -356,7 +363,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Stats */}
-        <div ref={statsRef}>
+        <div ref={statsRef} data-tutorial="daily-summary">
           <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl">
             <CardHeader>
               <CardTitle
@@ -371,7 +378,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="stat-card p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800">
+                <div
+                  className="stat-card p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800"
+                  data-tutorial="inventory-status"
+                >
                   {isLoadingStats ? (
                     <Loader2 className="h-10 w-10 animate-spin text-[#4CAF50] dark:text-green-400 mb-2" />
                   ) : (
@@ -409,7 +419,10 @@ export default function DashboardPage() {
                     Add ingredients →
                   </Button>
                 </div>
-                <div className="stat-card p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800">
+                <div
+                  className="stat-card p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800"
+                  data-tutorial="upcoming-meals"
+                >
                   {isLoadingStats ? (
                     <Loader2 className="h-10 w-10 animate-spin text-[#FF7043] dark:text-orange-400 mb-2" />
                   ) : (

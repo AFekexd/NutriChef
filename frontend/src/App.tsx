@@ -7,6 +7,9 @@ import { OfflineBanner } from "./components/OfflineBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BottomNavigation } from "./components/BottomNavigation";
 import { TopNavigation } from "./components/TopNavigation";
+import { TutorialProvider } from "./components/TutorialProvider";
+import { WelcomeModal } from "./components/WelcomeModal";
+import { TutorialContextProvider } from "./hooks/useTutorial";
 import type { ReactNode } from "react";
 
 // Lazy load pages for code splitting
@@ -207,13 +210,18 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors ">
-              <OfflineBanner />
-              <TopNavigation />
-              <AppRoutes />
-              <BottomNavigation />
-              <Toaster position="top-right" />
-            </div>
+            <TutorialContextProvider>
+              <TutorialProvider>
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors ">
+                  <OfflineBanner />
+                  <WelcomeModal />
+                  <TopNavigation />
+                  <AppRoutes />
+                  <BottomNavigation />
+                  <Toaster position="top-right" />
+                </div>
+              </TutorialProvider>
+            </TutorialContextProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

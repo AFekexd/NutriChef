@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import SettingsMenu from "./SettingsMenu";
+import { TutorialButton } from "./Tutorial";
 
 export function TopNavigation() {
   const location = useLocation();
@@ -151,6 +152,7 @@ export function TopNavigation() {
 
           {/* User Info, Settings, and Logout - Right Side */}
           <div className="flex items-center gap-4 ml-auto">
+            <TutorialButton text="Tutorial" />
             <SettingsMenu />
             <div className="text-right flex items-center gap-3">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">

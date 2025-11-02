@@ -252,6 +252,7 @@ export function BottomNavigation() {
           {/* Left Side - 2 buttons */}
           <button
             onClick={() => navigate("/recipes")}
+            data-tutorial="nav-recipes"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               isActive("/recipes")
                 ? "text-green-600 dark:text-green-400"
@@ -264,6 +265,7 @@ export function BottomNavigation() {
 
           <button
             onClick={() => navigate("/meal-planning")}
+            data-tutorial="nav-meal-planning"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               isActive("/meal-planning")
                 ? "text-green-600 dark:text-green-400"
@@ -278,6 +280,7 @@ export function BottomNavigation() {
           <div className="relative flex items-center justify-center w-20 h-full">
             <button
               ref={buttonRef}
+              data-tutorial="nav-center-action"
               onClick={() => setShowActions(!showActions)}
               className="absolute -top-6 w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow hover:scale-110 border-4 border-white dark:border-gray-900"
             >
@@ -299,6 +302,7 @@ export function BottomNavigation() {
           {/* Right Side - 2 buttons */}
           <button
             onClick={() => navigate("/inventory")}
+            data-tutorial="nav-inventory"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               isActive("/inventory")
                 ? "text-green-600 dark:text-green-400"
@@ -311,6 +315,7 @@ export function BottomNavigation() {
 
           <button
             onClick={() => setShowMoreMenu(!showMoreMenu)}
+            data-tutorial="nav-more"
             className={`relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               showMoreMenu ||
               isActive("/dashboard") ||
