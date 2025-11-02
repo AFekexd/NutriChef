@@ -21,6 +21,7 @@ inventory*.jpg
 !DEPLOYMENT.md
 !DEPLOYMENT_QUICK.md
 
+
 # Keep important configuration files
 !nginx.conf
 docker-compose.yaml
