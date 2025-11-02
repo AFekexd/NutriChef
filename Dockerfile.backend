@@ -39,12 +39,16 @@ COPY backend/package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production
 
-# Copy prisma schema and generated client
+# Copy prisma schema
 COPY backend/prisma ./prisma
-COPY --from=builder /app/generated ./generated
 
 # Copy built files
 COPY --from=builder /app/dist ./dist
+
+# Copy generated Prisma client from builder to the correct location
+# The compiled code imports from '../generated/prisma' relative to dist/src/
+# So we need generated folder at the same level as dist/src/ (inside dist/)
+COPY --from=builder /app/generated ./dist/generated
 
 # Create uploads directory
 RUN mkdir -p uploads/inventory
