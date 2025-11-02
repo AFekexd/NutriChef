@@ -23,7 +23,7 @@ inventory*.jpg
 
 # Keep important configuration files
 !nginx.conf
-!docker-compose.yml
+docker-compose.yaml
 !Dockerfile.*
 !setup.sh
 !.github/
