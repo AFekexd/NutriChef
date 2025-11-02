@@ -20,6 +20,10 @@ export const getInventoryItems = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
     const items = await prisma.inventoryItem.findMany({
       where: { userId },
       include: {
@@ -63,6 +67,11 @@ export const getMyInventoryItems = async (req: Request, res: Response) => {
 export const getInventoryItemById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Inventory item ID is required" });
+    }
+
     const item = await prisma.inventoryItem.findUnique({
       where: { inventoryItemId: id },
       include: {
@@ -315,6 +324,11 @@ export const getItemsByLocation = async (req: Request, res: Response) => {
     }
 
     const { location } = req.params;
+
+    if (!location) {
+      return res.status(400).json({ error: "Location is required" });
+    }
+
     const validLocations = ["fridge", "pantry", "freezer"];
 
     if (!validLocations.includes(location)) {

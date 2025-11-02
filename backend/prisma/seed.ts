@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/prisma";
+import { PrismaClient } from "../generated/prisma/index.js";
 import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient({
@@ -175,17 +175,17 @@ async function main() {
       recipeIngredients: {
         create: [
           {
-            ingredientId: ingredients[1].ingredientId, // Chicken
+            ingredientId: ingredients[1]!.ingredientId, // Chicken
             quantity: 200,
             unit: "g",
           },
           {
-            ingredientId: ingredients[2].ingredientId, // Broccoli
+            ingredientId: ingredients[2]!.ingredientId, // Broccoli
             quantity: 150,
             unit: "g",
           },
           {
-            ingredientId: ingredients[4].ingredientId, // Olive Oil
+            ingredientId: ingredients[4]!.ingredientId, // Olive Oil
             quantity: 1,
             unit: "tbsp",
           },
@@ -208,22 +208,22 @@ async function main() {
       recipeIngredients: {
         create: [
           {
-            ingredientId: ingredients[5].ingredientId, // Salmon
+            ingredientId: ingredients[5]!.ingredientId, // Salmon
             quantity: 180,
             unit: "g",
           },
           {
-            ingredientId: ingredients[6].ingredientId, // Spinach
+            ingredientId: ingredients[6]!.ingredientId, // Spinach
             quantity: 100,
             unit: "g",
           },
           {
-            ingredientId: ingredients[7].ingredientId, // Garlic
+            ingredientId: ingredients[7]!.ingredientId, // Garlic
             quantity: 2,
             unit: "cloves",
           },
           {
-            ingredientId: ingredients[4].ingredientId, // Olive Oil
+            ingredientId: ingredients[4]!.ingredientId, // Olive Oil
             quantity: 2,
             unit: "tbsp",
           },
@@ -246,22 +246,22 @@ async function main() {
       recipeIngredients: {
         create: [
           {
-            ingredientId: ingredients[0].ingredientId, // Tomato
+            ingredientId: ingredients[0]!.ingredientId, // Tomato
             quantity: 200,
             unit: "g",
           },
           {
-            ingredientId: ingredients[3].ingredientId, // Rice
+            ingredientId: ingredients[3]!.ingredientId, // Rice
             quantity: 150,
             unit: "g",
           },
           {
-            ingredientId: ingredients[7].ingredientId, // Garlic
+            ingredientId: ingredients[7]!.ingredientId, // Garlic
             quantity: 1,
             unit: "clove",
           },
           {
-            ingredientId: ingredients[4].ingredientId, // Olive Oil
+            ingredientId: ingredients[4]!.ingredientId, // Olive Oil
             quantity: 1,
             unit: "tbsp",
           },
@@ -276,7 +276,7 @@ async function main() {
   const inventory1 = await prisma.inventoryItem.create({
     data: {
       userId: user1.userId,
-      ingredientId: ingredients[1].ingredientId, // Chicken
+      ingredientId: ingredients[1]!.ingredientId, // Chicken
       quantity: 500,
       unit: "g",
       expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
@@ -287,7 +287,7 @@ async function main() {
   const inventory2 = await prisma.inventoryItem.create({
     data: {
       userId: user1.userId,
-      ingredientId: ingredients[2].ingredientId, // Broccoli
+      ingredientId: ingredients[2]!.ingredientId, // Broccoli
       quantity: 300,
       unit: "g",
       expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days
@@ -298,7 +298,7 @@ async function main() {
   const inventory3 = await prisma.inventoryItem.create({
     data: {
       userId: user2.userId,
-      ingredientId: ingredients[5].ingredientId, // Salmon
+      ingredientId: ingredients[5]!.ingredientId, // Salmon
       quantity: 400,
       unit: "g",
       expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
@@ -312,7 +312,7 @@ async function main() {
   await prisma.groceryListItem.create({
     data: {
       userId: user1.userId,
-      ingredientId: ingredients[6].ingredientId, // Spinach
+      ingredientId: ingredients[6]!.ingredientId, // Spinach
       plannedQuantity: 200,
       recommendedQuantity: 250,
       lastPurchasedPrice: 3.99,
@@ -322,7 +322,7 @@ async function main() {
   await prisma.groceryListItem.create({
     data: {
       userId: user2.userId,
-      ingredientId: ingredients[0].ingredientId, // Tomato
+      ingredientId: ingredients[0]!.ingredientId, // Tomato
       plannedQuantity: 500,
       recommendedQuantity: 600,
       lastPurchasedPrice: 2.5,

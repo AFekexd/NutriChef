@@ -9,7 +9,7 @@ export const getIngredients = async (req: Request, res: Response) => {
     const { category } = req.query;
 
     const ingredients = await prisma.ingredient.findMany({
-      where: category ? { category: category as string } : undefined,
+      ...(category ? { where: { category: category as string } } : {}),
     });
 
     res.json(ingredients);
@@ -22,6 +22,11 @@ export const getIngredients = async (req: Request, res: Response) => {
 export const getIngredientById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Ingredient ID is required" });
+    }
+
     const ingredient = await prisma.ingredient.findUnique({
       where: { ingredientId: id },
     });
@@ -62,6 +67,10 @@ export const updateIngredient = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, category, nutritionalInfo, carbonFootprint } = req.body;
 
+    if (!id) {
+      return res.status(400).json({ error: "Ingredient ID is required" });
+    }
+
     const ingredient = await prisma.ingredient.update({
       where: { ingredientId: id },
       data: {
@@ -82,6 +91,10 @@ export const updateIngredient = async (req: Request, res: Response) => {
 export const deleteIngredient = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Ingredient ID is required" });
+    }
 
     await prisma.ingredient.delete({
       where: { ingredientId: id },

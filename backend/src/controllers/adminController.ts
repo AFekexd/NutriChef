@@ -84,6 +84,11 @@ export const getUserDetails = async (
   try {
     const { userId } = req.params;
 
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { userId },
       select: {
@@ -151,6 +156,11 @@ export const updateUserStatus = async (
     const { userId } = req.params;
     const { isActive } = req.body;
 
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
     // Prevent deactivating yourself
     if (req.user?.userId === userId && !isActive) {
       res.status(400).json({ error: "Cannot deactivate your own account" });
@@ -185,6 +195,11 @@ export const updateUserRole = async (
   try {
     const { userId } = req.params;
     const { role } = req.body;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
 
     // Validate role
     if (!["user", "admin"].includes(role)) {
@@ -225,6 +240,11 @@ export const deleteUser = async (
 ): Promise<void> => {
   try {
     const { userId } = req.params;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
 
     // Prevent deleting yourself
     if (req.user?.userId === userId) {
@@ -309,6 +329,11 @@ export const deleteInventoryItem = async (
   try {
     const { itemId } = req.params;
 
+    if (!itemId) {
+      res.status(400).json({ error: "Item ID is required" });
+      return;
+    }
+
     await prisma.inventoryItem.delete({
       where: { inventoryItemId: itemId },
     });
@@ -387,6 +412,11 @@ export const deleteRecipe = async (
 ): Promise<void> => {
   try {
     const { recipeId } = req.params;
+
+    if (!recipeId) {
+      res.status(400).json({ error: "Recipe ID is required" });
+      return;
+    }
 
     await prisma.recipe.delete({
       where: { recipeId },
@@ -499,6 +529,11 @@ export const getUserRateLimitStatus = async (
   try {
     const { userId } = req.params;
 
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
     const status = getRateLimitStatus(userId);
 
     res.json({
@@ -521,6 +556,11 @@ export const resetUserAIRateLimit = async (
   try {
     const { userId } = req.params;
     const { service } = req.body;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
 
     resetUserRateLimit(userId, service);
 

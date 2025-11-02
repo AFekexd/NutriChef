@@ -46,7 +46,7 @@ export class BaseAIService {
       });
 
       return {
-        content: response.choices[0].message.content,
+        content: response.choices[0]?.message.content || "",
         tokensUsed: response.usage?.total_tokens || 0,
         model: response.model,
       };
