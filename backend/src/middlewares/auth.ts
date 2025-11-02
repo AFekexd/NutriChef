@@ -4,11 +4,11 @@ import { verifyAccessToken, type JWTPayload } from "../utils/jwt.js";
 
 const prisma = new PrismaClient();
 
-// Extend Express Request type to include user
+// Extend Express Request type to include user and ipAddress
 declare global {
   namespace Express {
+    interface User extends JWTPayload {}
     interface Request {
-      user?: JWTPayload;
       ipAddress?: string;
     }
   }

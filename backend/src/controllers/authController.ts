@@ -172,6 +172,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Check if user is an OAuth user (no password)
+    if (!user.passwordHash) {
+      await logFailedLogin("OAuth account - no password");
+      res.status(400).json({
+        error:
+          "This account uses OAuth authentication. Please login with your OAuth provider.",
+      });
+      return;
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
@@ -648,6 +658,15 @@ export const changePassword = async (
 
     if (!user) {
       res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Check if user is an OAuth user (no password)
+    if (!user.passwordHash) {
+      res.status(400).json({
+        error:
+          "Cannot change password for OAuth accounts. Please use your OAuth provider to manage your account.",
+      });
       return;
     }
 

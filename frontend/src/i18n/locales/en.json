@@ -24,7 +24,10 @@
     "shoppingList": "Shopping List",
     "admin": "Admin",
     "nutrition": "Nutrition",
-    "healthInsights": "Health Insights"
+    "healthInsights": "Health Insights",
+    "more": "More",
+    "pages": "Pages",
+    "account": "Account"
   },
   "auth": {
     "loginTitle": "Login to NutriChef",

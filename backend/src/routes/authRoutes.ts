@@ -14,6 +14,11 @@ import {
   changePassword,
 } from "../controllers/authController.js";
 import { authenticate } from "../middlewares/auth.js";
+import passport from "../config/passport.js";
+import {
+  handleOAuthSuccess,
+  handleOAuthFailure,
+} from "../controllers/oauthController.js";
 
 const router = Router();
 
@@ -429,5 +434,90 @@ router.put("/profile", authenticate, updateProfile);
  *         description: Server error
  */
 router.post("/change-password", authenticate, changePassword);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Initiate Google OAuth login
+ *     tags: [Authentication]
+ *     description: Redirect to Google for authentication
+ *     responses:
+ *       302:
+ *         description: Redirect to Google OAuth
+ */
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Google OAuth callback
+ *     tags: [Authentication]
+ *     description: Handle Google OAuth callback and create session
+ *     responses:
+ *       302:
+ *         description: Redirect to frontend with authentication tokens
+ */
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/api/auth/oauth/failure",
+    session: false,
+  }),
+  handleOAuthSuccess
+);
+
+/**
+ * @swagger
+ * /api/auth/discord:
+ *   get:
+ *     summary: Initiate Discord OAuth login
+ *     tags: [Authentication]
+ *     description: Redirect to Discord for authentication
+ *     responses:
+ *       302:
+ *         description: Redirect to Discord OAuth
+ */
+router.get(
+  "/discord",
+  passport.authenticate("discord", { scope: ["identify", "email"] })
+);
+
+/**
+ * @swagger
+ * /api/auth/discord/callback:
+ *   get:
+ *     summary: Discord OAuth callback
+ *     tags: [Authentication]
+ *     description: Handle Discord OAuth callback and create session
+ *     responses:
+ *       302:
+ *         description: Redirect to frontend with authentication tokens
+ */
+router.get(
+  "/discord/callback",
+  passport.authenticate("discord", {
+    failureRedirect: "/api/auth/oauth/failure",
+    session: false,
+  }),
+  handleOAuthSuccess
+);
+
+/**
+ * @swagger
+ * /api/auth/oauth/failure:
+ *   get:
+ *     summary: OAuth failure handler
+ *     tags: [Authentication]
+ *     description: Handle OAuth authentication failures
+ *     responses:
+ *       302:
+ *         description: Redirect to frontend login with error
+ */
+router.get("/oauth/failure", handleOAuthFailure);
 
 export default router;

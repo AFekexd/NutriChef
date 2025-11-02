@@ -24,7 +24,10 @@
     "shoppingList": "Bevásárlólista",
     "admin": "Admin",
     "nutrition": "Táplálkozás",
-    "healthInsights": "Egészség Betekintés"
+    "healthInsights": "Egészség Betekintés",
+    "more": "Több",
+    "pages": "Oldalak",
+    "account": "Fiók"
   },
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",

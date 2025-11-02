@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const OAuthCallbackPage = lazy(() => import("./pages/OAuthCallbackPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const InventoryPage = lazy(() =>
   import("./pages/InventoryPage").then((m) => ({ default: m.InventoryPage }))
@@ -112,6 +113,7 @@ function AppRoutes() {
             )
           }
         />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         <Route
           path="/dashboard"
           element={

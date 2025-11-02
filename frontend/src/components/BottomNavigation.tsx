@@ -7,38 +7,28 @@ import {
   ScanLine,
   X,
   Package,
-  ShoppingBag,
+  Menu,
+  Utensils,
+  Activity,
+  User,
+  Shield,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
-import { shoppingListService } from "../services/shoppingListService";
+import { useAuth } from "../context/AuthContext";
 
 export function BottomNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
-  const [shoppingListCount, setShoppingListCount] = useState(0);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const logoRef = useRef<HTMLImageElement>(null);
   const xIconRef = useRef<SVGSVGElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const isActive = (path: string) => location.pathname === path;
-
-  // Update shopping list count
-  useEffect(() => {
-    const updateCount = () => {
-      const items = shoppingListService.getItems();
-      const uncheckedCount = items.filter((item) => !item.checked).length;
-      setShoppingListCount(uncheckedCount);
-    };
-
-    updateCount();
-    // Update every 3 seconds
-    const interval = setInterval(updateCount, 3000);
-
-    return () => clearInterval(interval);
-  }, [location.pathname]);
 
   const handleActionClick = (action: "scan" | "home") => {
     setShowActions(false);
@@ -125,6 +115,104 @@ export function BottomNavigation() {
 
   return (
     <>
+      {/* More Menu Overlay */}
+      {showMoreMenu && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setShowMoreMenu(false)}
+        >
+          <div className="absolute bottom-24 left-0 right-0 mx-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+              {/* Main Pages */}
+              <div className="p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
+                  {t("nav.pages")}
+                </div>
+                <button
+                  onClick={() => {
+                    navigate("/dashboard");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/dashboard")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Home className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.dashboard")}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/nutrition");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/nutrition")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Utensils className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.nutrition")}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/health-insights");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/health-insights")
+                      ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Activity className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.healthInsights")}</span>
+                </button>
+              </div>
+
+              {/* Account Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
+                  {t("nav.account")}
+                </div>
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/profile")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.profile")}</span>
+                </button>
+                {user?.role === "admin" && (
+                  <button
+                    onClick={() => {
+                      navigate("/admin");
+                      setShowMoreMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      isActive("/admin")
+                        ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span className="font-medium">{t("nav.admin")}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Menu Overlay */}
       {showActions && (
         <div
@@ -222,22 +310,29 @@ export function BottomNavigation() {
           </button>
 
           <button
-            onClick={() => navigate("/shopping-list")}
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
             className={`relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-              isActive("/shopping-list")
+              showMoreMenu ||
+              isActive("/dashboard") ||
+              isActive("/nutrition") ||
+              isActive("/health-insights") ||
+              isActive("/profile") ||
+              isActive("/admin")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
             <div className="relative">
-              <ShoppingBag className="w-6 h-6" />
-              {shoppingListCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                  {shoppingListCount > 9 ? "9+" : shoppingListCount}
-                </span>
+              <Menu className="w-6 h-6" />
+              {(isActive("/dashboard") ||
+                isActive("/nutrition") ||
+                isActive("/health-insights") ||
+                isActive("/profile") ||
+                isActive("/admin")) && (
+                <span className="absolute -top-1 -right-1 bg-green-500 dark:bg-green-400 rounded-full w-2 h-2"></span>
               )}
             </div>
-            <span className="text-xs font-medium">{t("nav.shoppingList")}</span>
+            <span className="text-xs font-medium">{t("nav.more")}</span>
           </button>
         </div>
       </nav>

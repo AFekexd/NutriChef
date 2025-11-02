@@ -18,7 +18,7 @@ model User {
   userId        String        @id @default(uuid()) @db.Uuid
   name          String
   email         String        @unique
-  passwordHash  String
+  passwordHash  String?       // Optional for OAuth users
   role          String        @default("user") // "user", "admin"
   preferences   Json?         // {dietaryRestrictions, allergies, cuisinePreferences, calorieGoal, macroGoals}
   healthGoals   Json?         // {targetWeight, dailyCalories, macroRatios, activityLevel}
@@ -29,6 +29,10 @@ model User {
   failedLoginAttempts Int     @default(0)
   lockedUntil   DateTime?
   refreshToken  String?
+  // OAuth fields
+  oauthProvider String?       // "google", "discord", null for regular users
+  oauthId       String?       // Provider-specific user ID
+  oauthAvatar   String?       // Profile picture URL from OAuth
   inventoryItems InventoryItem[]
   groceryListItems GroceryListItem[]
   recipes       Recipe[]
@@ -41,6 +45,8 @@ model User {
   aiGeneratedRecipes AIGeneratedRecipe[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  
+  @@unique([oauthProvider, oauthId])
 }
 
 model Session {
