@@ -100,7 +100,8 @@ export function MyRecipesPage() {
   const handleDeleteRecipe = async (recipeId: string) => {
     confirmDialog({
       title: "Delete Recipe?",
-      message: "Are you sure you want to delete this recipe? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this recipe? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {

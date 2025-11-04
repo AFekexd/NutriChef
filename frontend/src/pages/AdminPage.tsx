@@ -214,7 +214,8 @@ export function AdminPage() {
   const handleDeleteUser = async (userId: string) => {
     confirmDialog({
       title: "Delete User?",
-      message: "Are you sure you want to delete this user? This action cannot be undone!",
+      message:
+        "Are you sure you want to delete this user? This action cannot be undone!",
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {
@@ -233,7 +234,8 @@ export function AdminPage() {
   const handleDeleteInventoryItem = async (itemId: string) => {
     confirmDialog({
       title: "Delete Inventory Item?",
-      message: "Are you sure you want to delete this inventory item? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this inventory item? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {
@@ -243,7 +245,9 @@ export function AdminPage() {
           loadInventory();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to delete inventory item");
+          setError(
+            err.response?.data?.error || "Failed to delete inventory item"
+          );
         }
       },
     });
@@ -252,7 +256,8 @@ export function AdminPage() {
   const handleDeleteRecipe = async (recipeId: string) => {
     confirmDialog({
       title: "Delete Recipe?",
-      message: "Are you sure you want to delete this recipe? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this recipe? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {

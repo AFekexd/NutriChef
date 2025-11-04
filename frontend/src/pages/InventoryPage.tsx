@@ -341,7 +341,9 @@ export function InventoryPage() {
   const handleDeleteItem = async (itemId: string) => {
     confirmDialog({
       title: t("inventory.confirmDelete") || "Delete Item?",
-      message: t("inventory.confirmDeleteMessage") || "Are you sure you want to delete this item? This action cannot be undone.",
+      message:
+        t("inventory.confirmDeleteMessage") ||
+        "Are you sure you want to delete this item? This action cannot be undone.",
       confirmText: t("common.delete") || "Delete",
       cancelText: t("common.cancel") || "Cancel",
       onConfirm: async () => {

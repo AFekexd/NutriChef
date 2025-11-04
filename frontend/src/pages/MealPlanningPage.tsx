@@ -348,7 +348,8 @@ export function MealPlanningPage() {
   const handleDeleteMeal = async (mealPlanId: string) => {
     confirmDialog({
       title: "Delete Meal Plan?",
-      message: "Are you sure you want to delete this meal plan? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this meal plan? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {

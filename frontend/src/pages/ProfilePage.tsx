@@ -188,7 +188,9 @@ export function ProfilePage() {
   const handleRevokeSession = async (sessionId: string) => {
     confirmDialog({
       title: t("profile.revokeSessionConfirm") || "Revoke Session?",
-      message: t("profile.revokeSessionMessage") || "This will log out the device associated with this session. If this is your current session, you will be logged out immediately.",
+      message:
+        t("profile.revokeSessionMessage") ||
+        "This will log out the device associated with this session. If this is your current session, you will be logged out immediately.",
       confirmText: t("profile.revoke") || "Revoke",
       cancelText: t("common.cancel") || "Cancel",
       onConfirm: async () => {
@@ -203,7 +205,8 @@ export function ProfilePage() {
             // It was another session
             setSessions(sessions.filter((s) => s.sessionId !== sessionId));
             setSuccess(
-              t("profile.sessionRevokedSuccess") || "Session revoked successfully!"
+              t("profile.sessionRevokedSuccess") ||
+                "Session revoked successfully!"
             );
             setTimeout(() => setSuccess(null), 3000);
           }
