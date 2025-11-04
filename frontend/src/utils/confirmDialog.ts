@@ -23,6 +23,7 @@ export const confirmDialog = ({
 }: ConfirmOptions) => {
   toast(title, {
     description: message,
+
     duration: 10000,
     action: {
       label: confirmText,

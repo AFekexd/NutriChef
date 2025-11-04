@@ -29,6 +29,7 @@ import { PhotoUpload } from "../components/inventory/PhotoUpload";
 import { AIDetectionReview } from "../components/inventory/AIDetectionReview";
 import { EnhancedManualItemForm } from "../components/inventory/EnhancedManualItemForm";
 import { ScrollToTop } from "../components/ScrollToTop";
+import { confirmDialog } from "../utils/confirmDialog";
 import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
@@ -338,26 +339,25 @@ export function InventoryPage() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (
-      !confirm(
-        t("inventory.confirmDelete") ||
-          "Are you sure you want to delete this item?"
-      )
-    ) {
-      return;
-    }
-
-    setError(null);
-    try {
-      await apiService.deleteInventoryItem(itemId);
-      setSuccessMessage(
-        t("inventory.itemDeleted") || "Item deleted successfully!"
-      );
-      await loadInventoryData();
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete item");
-    }
+    confirmDialog({
+      title: t("inventory.confirmDelete") || "Delete Item?",
+      message: t("inventory.confirmDeleteMessage") || "Are you sure you want to delete this item? This action cannot be undone.",
+      confirmText: t("common.delete") || "Delete",
+      cancelText: t("common.cancel") || "Cancel",
+      onConfirm: async () => {
+        setError(null);
+        try {
+          await apiService.deleteInventoryItem(itemId);
+          setSuccessMessage(
+            t("inventory.itemDeleted") || "Item deleted successfully!"
+          );
+          await loadInventoryData();
+          setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to delete item");
+        }
+      },
+    });
   };
 
   const handleEditItem = (item: InventoryItem) => {
@@ -458,7 +458,7 @@ export function InventoryPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20">
       {/* Pull to Refresh Indicator */}
       <PullToRefreshIndicator
         pullDistance={pullDistance}
@@ -466,21 +466,24 @@ export function InventoryPage() {
         threshold={80}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs />
 
         {/* Header */}
-        <div ref={headerRef} className="flex items-center justify-between mb-8">
+        <div
+          ref={headerRef}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 md:mb-8 gap-4"
+        >
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
               {t("inventory.title")}
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-2">
               Track your ingredients with AI-powered detection
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <Button
               onClick={() => setShowManualForm(!showManualForm)}
               variant="outline"
@@ -538,7 +541,7 @@ export function InventoryPage() {
         {/* Analytics Cards */}
         <div
           ref={analyticsRef}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8"
         >
           {[
             {
@@ -580,13 +583,15 @@ export function InventoryPage() {
           ].map((card, index) => (
             <div key={index} className="analytics-card">
               <Card
-                className={`p-6 bg-white dark:bg-gray-900 ${card.borderColor} hover:shadow-lg transition-shadow duration-200`}
+                className={`p-4 sm:p-6 bg-white dark:bg-gray-900 ${card.borderColor} hover:shadow-lg transition-shadow duration-200`}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 ${card.bgColor} rounded-lg`}>
-                    <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className={`p-2 sm:p-3 ${card.bgColor} rounded-lg`}>
+                    <card.icon
+                      className={`w-5 h-5 sm:w-6 sm:h-6 ${card.iconColor}`}
+                    />
                   </div>
-                  <BarChart3 className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {card.value}

@@ -51,10 +51,16 @@ class ApiService {
       async (error: AxiosError<ApiError>) => {
         const originalRequest = error.config;
 
+        // Check if this is a refresh token request that failed
+        const isRefreshRequest =
+          originalRequest?.url?.includes("/api/auth/refresh");
+
         if (
           error.response?.status === 401 &&
           originalRequest &&
-          !originalRequest.headers?.["X-Retry"]
+          !originalRequest.headers?.["X-Retry"] &&
+          !originalRequest.headers?.["X-Skip-Auth-Refresh"] &&
+          !isRefreshRequest // Don't retry if the refresh request itself failed
         ) {
           try {
             if (!this.refreshTokenPromise) {
@@ -71,10 +77,18 @@ class ApiService {
 
             return this.api(originalRequest);
           } catch (refreshError) {
+            this.refreshTokenPromise = null; // Reset the promise on error
             this.clearTokens();
             window.location.href = "/login";
             return Promise.reject(refreshError);
           }
+        }
+
+        // If the refresh token request itself failed with 401, logout immediately
+        if (isRefreshRequest && error.response?.status === 401) {
+          this.refreshTokenPromise = null;
+          this.clearTokens();
+          window.location.href = "/login";
         }
 
         return Promise.reject(error);
@@ -178,8 +192,29 @@ class ApiService {
     return response.data;
   }
 
-  async revokeSession(sessionId: string): Promise<void> {
-    await this.api.delete(`/api/auth/sessions/${sessionId}`);
+  async revokeSession(
+    sessionId: string
+  ): Promise<{ wasCurrentSession: boolean }> {
+    try {
+      await this.api.delete(`/api/auth/sessions/${sessionId}`);
+      // Try to verify if we still have access (to detect if we revoked our own session)
+      try {
+        // Add a special header to prevent token refresh on this request
+        await this.api.get("/api/auth/profile", {
+          headers: { "X-Skip-Auth-Refresh": "true" },
+        });
+        return { wasCurrentSession: false };
+      } catch (verifyError: any) {
+        // If we get 401, we revoked our own session
+        if (verifyError.response?.status === 401) {
+          return { wasCurrentSession: true };
+        }
+        throw verifyError;
+      }
+    } catch (error) {
+      // If the delete itself failed, re-throw
+      throw error;
+    }
   }
 
   async getLoginHistory(

@@ -20,10 +20,13 @@ import { Input } from "../components/ui/input";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { confirmDialog } from "../utils/confirmDialog";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
 export function ProfilePage() {
   const { t } = useTranslation();
+  const { logout } = useAuth();
   const [_user, setUser] = useState<UserType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
@@ -183,29 +186,36 @@ export function ProfilePage() {
   };
 
   const handleRevokeSession = async (sessionId: string) => {
-    if (
-      !confirm(
-        t("profile.revokeSessionConfirm") ||
-          "Are you sure you want to revoke this session?"
-      )
-    ) {
-      return;
-    }
+    confirmDialog({
+      title: t("profile.revokeSessionConfirm") || "Revoke Session?",
+      message: t("profile.revokeSessionMessage") || "This will log out the device associated with this session. If this is your current session, you will be logged out immediately.",
+      confirmText: t("profile.revoke") || "Revoke",
+      cancelText: t("common.cancel") || "Cancel",
+      onConfirm: async () => {
+        try {
+          const result = await apiService.revokeSession(sessionId);
 
-    try {
-      await apiService.revokeSession(sessionId);
-      setSessions(sessions.filter((s) => s.sessionId !== sessionId));
-      setSuccess(
-        t("profile.sessionRevokedSuccess") || "Session revoked successfully!"
-      );
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-          t("profile.sessionRevokedError") ||
-          "Failed to revoke session"
-      );
-    }
+          if (result.wasCurrentSession) {
+            // We revoked our own session - logout
+            await logout();
+            window.location.href = "/login";
+          } else {
+            // It was another session
+            setSessions(sessions.filter((s) => s.sessionId !== sessionId));
+            setSuccess(
+              t("profile.sessionRevokedSuccess") || "Session revoked successfully!"
+            );
+            setTimeout(() => setSuccess(null), 3000);
+          }
+        } catch (err: any) {
+          setError(
+            err.response?.data?.error ||
+              t("profile.sessionRevokedError") ||
+              "Failed to revoke session"
+          );
+        }
+      },
+    });
   };
 
   const formatDate = (date: string) => {
@@ -264,15 +274,15 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16 bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20 bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <Breadcrumbs />
         {/* Header */}
-        <div ref={headerRef} className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
+        <div ref={headerRef} className="mb-6 md:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-300 dark:from-green-400 dark:to-green-600 bg-clip-text text-transparent">
             {t("profile.title") || "Profile Settings"}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
             {t("profile.subtitle") ||
               "Manage your account settings and preferences"}
           </p>

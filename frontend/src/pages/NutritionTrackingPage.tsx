@@ -326,38 +326,40 @@ export function NutritionTrackingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 md:pb-8 pt-15 transition-colors w-full">
-      <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20 md:pb-8 pt-0 md:pt-20 transition-colors w-full">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Header */}
         <Breadcrumbs />
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Utensils className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Utensils className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 Nutrition Tracking
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Monitor your daily calories and macros
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setShowCalculatorModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hover-lift flex items-center gap-2"
+              className="px-3 py-2 sm:px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hover-lift flex items-center gap-2"
             >
-              <Calculator className="w-5 h-5" />
-              Calculate My Goals
+              <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Calculate My Goals</span>
+              <span className="sm:hidden">Calculate</span>
             </button>
             <button
               onClick={() => setShowGoalModal(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hover-lift flex items-center gap-2"
+              className="px-3 py-2 sm:px-4 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hover-lift flex items-center gap-2"
             >
-              <Target className="w-5 h-5" />
-              Set Goals
+              <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Set Goals</span>
+              <span className="sm:hidden">Goals</span>
             </button>
           </div>
         </div>
@@ -424,16 +426,16 @@ export function NutritionTrackingPage() {
             </div>
 
             {/* Macros Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
               {/* Protein */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Drumstick className="w-5 h-5 text-red-500" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  <Drumstick className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                     Protein
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.protein)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
@@ -459,14 +461,14 @@ export function NutritionTrackingPage() {
               </div>
 
               {/* Carbs */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Wheat className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  <Wheat className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                     Carbs
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.carbs)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">

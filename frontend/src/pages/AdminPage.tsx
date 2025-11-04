@@ -20,6 +20,7 @@ import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { apiService } from "../services/api";
+import { confirmDialog } from "../utils/confirmDialog";
 
 interface AdminStats {
   totalUsers: number;
@@ -170,93 +171,101 @@ export function AdminPage() {
     userId: string,
     currentStatus: boolean
   ) => {
-    if (
-      !confirm(
-        `Are you sure you want to ${
-          currentStatus ? "deactivate" : "activate"
-        } this user?`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await apiService.updateUserStatus(userId, !currentStatus);
-      setSuccess("User status updated successfully!");
-      loadUsers();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update user status");
-    }
+    confirmDialog({
+      title: `${currentStatus ? "Deactivate" : "Activate"} User?`,
+      message: `Are you sure you want to ${
+        currentStatus ? "deactivate" : "activate"
+      } this user?`,
+      confirmText: currentStatus ? "Deactivate" : "Activate",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.updateUserStatus(userId, !currentStatus);
+          setSuccess("User status updated successfully!");
+          loadUsers();
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to update user status");
+        }
+      },
+    });
   };
 
   const handleToggleUserRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
-    if (
-      !confirm(
-        `Are you sure you want to change this user's role to ${newRole}?`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await apiService.updateUserRole(userId, newRole);
-      setSuccess("User role updated successfully!");
-      loadUsers();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update user role");
-    }
+    confirmDialog({
+      title: "Change User Role?",
+      message: `Are you sure you want to change this user's role to ${newRole}?`,
+      confirmText: "Change Role",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.updateUserRole(userId, newRole);
+          setSuccess("User role updated successfully!");
+          loadUsers();
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to update user role");
+        }
+      },
+    });
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this user? This action cannot be undone!"
-      )
-    ) {
-      return;
-    }
-
-    try {
-      await apiService.deleteUser(userId);
-      setSuccess("User deleted successfully!");
-      loadUsers();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete user");
-    }
+    confirmDialog({
+      title: "Delete User?",
+      message: "Are you sure you want to delete this user? This action cannot be undone!",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.deleteUser(userId);
+          setSuccess("User deleted successfully!");
+          loadUsers();
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to delete user");
+        }
+      },
+    });
   };
 
   const handleDeleteInventoryItem = async (itemId: string) => {
-    if (!confirm("Are you sure you want to delete this inventory item?")) {
-      return;
-    }
-
-    try {
-      await apiService.deleteAdminInventoryItem(itemId);
-      setSuccess("Inventory item deleted successfully!");
-      loadInventory();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete inventory item");
-    }
+    confirmDialog({
+      title: "Delete Inventory Item?",
+      message: "Are you sure you want to delete this inventory item? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.deleteAdminInventoryItem(itemId);
+          setSuccess("Inventory item deleted successfully!");
+          loadInventory();
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to delete inventory item");
+        }
+      },
+    });
   };
 
   const handleDeleteRecipe = async (recipeId: string) => {
-    if (!confirm("Are you sure you want to delete this recipe?")) {
-      return;
-    }
-
-    try {
-      await apiService.deleteAdminRecipe(recipeId);
-      setSuccess("Recipe deleted successfully!");
-      loadRecipes();
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to delete recipe");
-    }
+    confirmDialog({
+      title: "Delete Recipe?",
+      message: "Are you sure you want to delete this recipe? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.deleteAdminRecipe(recipeId);
+          setSuccess("Recipe deleted successfully!");
+          loadRecipes();
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+          setError(err.response?.data?.error || "Failed to delete recipe");
+        }
+      },
+    });
   };
 
   if (isLoading && !stats) {
@@ -268,17 +277,17 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16 bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20 bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Header */}
-        <div ref={headerRef} className="mb-8">
+        <div ref={headerRef} className="mb-6 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Shield className="w-10 h-10 text-purple-600 dark:text-purple-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
+            <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 dark:text-purple-400" />
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
               Admin Dashboard
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Manage users, inventory, recipes, and system data
           </p>
         </div>

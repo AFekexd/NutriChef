@@ -18,6 +18,7 @@ import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
+import { confirmDialog } from "../utils/confirmDialog";
 import type { Recipe } from "../types";
 import { useNavigate } from "react-router-dom";
 
@@ -97,25 +98,31 @@ export function MyRecipesPage() {
   };
 
   const handleDeleteRecipe = async (recipeId: string) => {
-    if (!window.confirm("Are you sure you want to delete this recipe?")) {
-      return;
-    }
-
-    setIsDeleting(true);
-    setError(null);
-    try {
-      await apiService.deleteAdminRecipe(recipeId);
-      setRecipes(recipes.filter((r) => r.recipeId !== recipeId));
-      setSelectedRecipe(null);
-    } catch (err: any) {
-      console.error("Error deleting recipe:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to delete recipe. Please try again."
-      );
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmDialog({
+      title: "Delete Recipe?",
+      message: "Are you sure you want to delete this recipe? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setIsDeleting(true);
+        setError(null);
+        try {
+          await apiService.deleteAdminRecipe(recipeId);
+          setRecipes(recipes.filter((r) => r.recipeId !== recipeId));
+          setSelectedRecipe(null);
+          toast.success("Recipe deleted successfully");
+        } catch (err: any) {
+          console.error("Error deleting recipe:", err);
+          setError(
+            err.response?.data?.error ||
+              "Failed to delete recipe. Please try again."
+          );
+          toast.error("Failed to delete recipe");
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   const handleAddRecipeToShoppingList = (recipe: Recipe) => {
@@ -168,33 +175,33 @@ export function MyRecipesPage() {
     });
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20">
       <PullToRefreshIndicator
         isRefreshing={isRefreshing}
         pullDistance={pullDistance}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Breadcrumbs */}
         <Breadcrumbs />
 
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-4">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-600 bg-clip-text text-transparent">
+              <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" />
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-600 bg-clip-text text-transparent">
                 My Recipes
               </h1>
             </div>
             <Button
               onClick={() => navigate("/recipes")}
-              className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg"
+              className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg w-full sm:w-auto"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create New Recipe
             </Button>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             View and manage your saved recipes
           </p>
         </div>

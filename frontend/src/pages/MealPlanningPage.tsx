@@ -20,6 +20,7 @@ import { ScrollToTop } from "../components/ScrollToTop";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
+import { confirmDialog } from "../utils/confirmDialog";
 import type { MealPlan, Recipe, InventoryItem } from "../types";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
@@ -345,14 +346,22 @@ export function MealPlanningPage() {
 
   // Delete meal
   const handleDeleteMeal = async (mealPlanId: string) => {
-    if (!confirm("Are you sure you want to delete this meal plan?")) return;
-
-    try {
-      await apiService.deleteMealPlan(mealPlanId);
-      await fetchMealPlans();
-    } catch (error) {
-      console.error("Error deleting meal plan:", error);
-    }
+    confirmDialog({
+      title: "Delete Meal Plan?",
+      message: "Are you sure you want to delete this meal plan? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.deleteMealPlan(mealPlanId);
+          await fetchMealPlans();
+          toast.success("Meal plan deleted successfully");
+        } catch (error) {
+          console.error("Error deleting meal plan:", error);
+          toast.error("Failed to delete meal plan");
+        }
+      },
+    });
   };
 
   // Add week's meals to shopping list
@@ -440,26 +449,29 @@ export function MealPlanningPage() {
   }, [weeklyStats]);
 
   return (
-    <div className="min-h-screen pb-20 md:pb-8 md:pt-20 bg-gray-50 dark:bg-gray-950">
-      <div className="container mx-auto px-4 py-8" ref={containerRef}>
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20 bg-gray-50 dark:bg-gray-950">
+      <div
+        className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8"
+        ref={containerRef}
+      >
         <Breadcrumbs />
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 md:mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Meal Planning
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                 Plan your weekly meals effortlessly
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Add to Shopping List Button */}
             <Button
               onClick={handleAddWeekToShoppingList}
@@ -503,45 +515,45 @@ export function MealPlanningPage() {
         {/* Weekly Stats */}
         <div
           ref={statsRef}
-          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8"
         >
-          <Card className="p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-orange-500" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Total Calories
               </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
               {weeklyStats.totalCalories.toFixed(0)}
             </p>
           </Card>
 
-          <Card className="p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Avg/Day
               </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
               {weeklyStats.avgCalories.toFixed(0)}
             </p>
           </Card>
 
-          <Card className="p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-red-500" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 Protein
               </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
               {weeklyStats.totalProtein.toFixed(0)}g
             </p>
           </Card>
 
-          <Card className="p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-yellow-500" />
               <p className="text-sm text-gray-600 dark:text-gray-400">Carbs</p>

@@ -37,146 +37,166 @@ export function TopNavigation() {
 
   return (
     <nav className="hidden md:block w-full fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-50 transition-colors">
-      <div className="max-w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mr-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-400 dark:from-green-200 to-blue-500 dark:to-blue-300 rounded-lg flex items-center justify-center shadow-md">
+      <div className="max-w-full px-2 lg:px-4 xl:px-6">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 gap-2 lg:gap-4">
+          {/* Logo - Left */}
+          <div className="flex items-center gap-2 lg:gap-3">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-green-400 dark:from-green-200 to-blue-500 dark:to-blue-300 rounded-lg flex items-center justify-center shadow-md">
               {/* <ChefHat className="w-6 h-6 text-white" /> */}
               <img src="/nutrichef-512.png" alt="Logo" className="rounded-lg" />
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-green-400 dark:from-green-200 to-blue-500 dark:to-blue-300 bg-clip-text text-transparent">
+            <h1 className="text-base lg:text-xl font-bold bg-gradient-to-r from-green-400 dark:from-green-200 to-blue-500 dark:to-blue-300 bg-clip-text text-transparent hidden lg:block whitespace-nowrap">
               NutriChef
             </h1>
           </div>
 
-          <div className="flex items-center gap-1 flex-1 justify-center">
-            <button
-              onClick={() => navigate("/dashboard")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/dashboard")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">{t("nav.dashboard")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/inventory")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/inventory")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Package className="w-5 h-5" />
-              <span className="font-medium">{t("nav.inventory")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/shopping-list")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/shopping-list")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">{t("nav.shoppingList")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/recipes")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/recipes")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <ChefHat className="w-5 h-5" />
-              <span className="font-medium">{t("nav.recipes")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/meal-planning")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/meal-planning")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Calendar className="w-5 h-5" />
-              <span className="font-medium">{t("nav.mealPlanning")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/nutrition")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/nutrition")
-                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Utensils className="w-5 h-5" />
-              <span className="font-medium">{t("nav.nutrition")}</span>
-            </button>
-
-            <button
-              onClick={() => navigate("/health-insights")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                isActive("/health-insights")
-                  ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <Activity className="w-5 h-5" />
-              <span className="font-medium">{t("nav.healthInsights")}</span>
-            </button>
-
-            {user?.role === "admin" && (
+          {/* Center Navigation */}
+          <div className="flex justify-center">
+            <div className="flex items-center gap-0.5 lg:gap-1">
               <button
-                onClick={() => navigate("/admin")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                  isActive("/admin")
-                    ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Shield className="w-5 h-5" />
-                <span className="font-medium">{t("nav.admin")}</span>
-              </button>
-            )}
-          </div>
-
-          {/* User Info, Settings, and Logout - Right Side */}
-          <div className="flex items-center gap-4 ml-auto">
-            <TutorialButton text="Tutorial" />
-            <SettingsMenu />
-            <div className="text-right flex items-center gap-3">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {user?.name}
-              </p>{" "}
-              <button
-                onClick={() => navigate("/profile")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                  isActive("/profile")
+                onClick={() => navigate("/dashboard")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/dashboard")
                     ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
-                <User className="w-5 h-5" />
+                <Home className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.dashboard")}
+                </span>
               </button>
+
+              <button
+                onClick={() => navigate("/inventory")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/inventory")
+                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Package className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.inventory")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/shopping-list")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/shopping-list")
+                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.shoppingList")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/recipes")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/recipes")
+                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <ChefHat className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.recipes")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/meal-planning")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/meal-planning")
+                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Calendar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.mealPlanning")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/nutrition")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/nutrition")
+                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Utensils className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.nutrition")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate("/health-insights")}
+                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  isActive("/health-insights")
+                    ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Activity className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  {t("nav.healthInsights")}
+                </span>
+              </button>
+
+              {user?.role === "admin" && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                    isActive("/admin")
+                      ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Shield className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                    {t("nav.admin")}
+                  </span>
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* User Info, Settings, and Logout - Right */}
+          <div className="flex items-center gap-1 lg:gap-2 xl:gap-3 justify-end">
+            <TutorialButton text="" />
+            <SettingsMenu />
+            <button
+              onClick={() => navigate("/profile")}
+              className={`flex items-center gap-1 px-2 py-2 rounded-lg transition-all ${
+                isActive("/profile")
+                  ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+              title={user?.name}
+            >
+              <User className="w-4 h-4 lg:w-5 lg:h-5" />
+              <span className="text-xs lg:text-sm font-semibold text-gray-900 dark:text-gray-100 hidden 2xl:inline max-w-[100px] truncate">
+                {user?.name}
+              </span>
+            </button>
             <Button
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+              className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800 px-2 lg:px-3"
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              {t("common.logout")}
+              <LogOut className="w-4 h-4" />
+              <span className="ml-1 lg:ml-2 hidden lg:inline text-sm">
+                {t("common.logout")}
+              </span>
             </Button>
           </div>
         </div>

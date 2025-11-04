@@ -184,6 +184,16 @@
       0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Custom scrollbar styles - Light Mode */
   .custom-scrollbar::-webkit-scrollbar {
     height: 8px;

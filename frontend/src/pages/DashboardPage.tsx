@@ -233,10 +233,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-10">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20">
       {/* Header - Mobile only */}
       <header className="md:hidden border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-[#4CAF50] rounded-xl flex items-center justify-center shadow-md">
               <ChefHat className="w-7 h-7 text-white" />
@@ -272,15 +272,15 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Welcome Section */}
         <div
           ref={welcomeRef}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
           data-tutorial="welcome"
         >
           <h2
-            className="text-4xl font-bold mb-4 text-[#4A4A4A] dark:text-gray-100"
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 text-[#4A4A4A] dark:text-gray-100"
             style={{ fontFamily: "Poppins, sans-serif" }}
           >
             {getGreeting()},{" "}
@@ -289,7 +289,7 @@ export default function DashboardPage() {
             </span>
             ! 👋
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
             Your AI-powered nutrition assistant is ready to help you plan meals,
             manage inventory, and achieve your health goals.
           </p>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
         {/* Features Grid */}
         <div
           ref={featuresRef}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12"
           data-tutorial="quick-actions"
         >
           {features.map((feature, index) => {
@@ -367,19 +367,19 @@ export default function DashboardPage() {
           <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl">
             <CardHeader>
               <CardTitle
-                className="text-[#4A4A4A] dark:text-gray-100 text-2xl"
+                className="text-[#4A4A4A] dark:text-gray-100 text-xl md:text-2xl"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
                 Getting Started
               </CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
+              <CardDescription className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                 Complete these steps to maximize your experience
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 <div
-                  className="stat-card p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800"
+                  className="stat-card p-4 md:p-6 bg-green-50 dark:bg-green-950/30 rounded-xl border-2 border-green-200 dark:border-green-800"
                   data-tutorial="inventory-status"
                 >
                   {isLoadingStats ? (
@@ -420,7 +420,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
                 <div
-                  className="stat-card p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800"
+                  className="stat-card p-4 md:p-6 bg-orange-50 dark:bg-orange-950/30 rounded-xl border-2 border-orange-200 dark:border-orange-800"
                   data-tutorial="upcoming-meals"
                 >
                   {isLoadingStats ? (
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                     Explore recipes →
                   </Button>
                 </div>
-                <div className="stat-card p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                <div className="stat-card p-4 md:p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
                   {isLoadingStats ? (
                     <Loader2 className="h-10 w-10 animate-spin text-[#29B6F6] dark:text-blue-400 mb-2" />
                   ) : (

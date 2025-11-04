@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (!isConnectionError) {
           // Clear invalid tokens only for actual auth errors
-          await apiService.logout();
+          // Don't call logout() which makes HTTP request, just clear tokens
           dispatch(logoutAction());
         }
         // If it's a connection error, keep the user logged in with cached data

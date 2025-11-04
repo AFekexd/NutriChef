@@ -234,10 +234,10 @@ export function HealthInsightsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pb-20 md:pb-0 md:pt-16 flex items-center justify-center">
+      <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-green-600 dark:text-green-400 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             {t("healthInsights.analyzingData")}
           </p>
         </div>
@@ -247,14 +247,14 @@ export function HealthInsightsPage() {
 
   if (error || !insightsData) {
     return (
-      <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="p-12 text-center">
-            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+      <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          <Card className="p-8 md:p-12 text-center">
+            <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-500" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t("healthInsights.unableToLoad")}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
               {error || t("healthInsights.tryAgainLater")}
             </p>
             <Button onClick={loadHealthInsights}>
@@ -268,29 +268,30 @@ export function HealthInsightsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0 md:pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pb-20 md:pb-8 pt-0 md:pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <Breadcrumbs />
 
         {/* Header */}
-        <div ref={headerRef} className="mb-8">
-          <div className="flex items-center justify-between mb-2">
+        <div ref={headerRef} className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-4">
             <div className="flex items-center gap-3">
-              <Brain className="w-10 h-10 text-purple-600 dark:text-purple-400" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-400 dark:to-pink-600 bg-clip-text text-transparent">
+              <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 dark:text-purple-400" />
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-500 dark:from-purple-400 dark:to-pink-600 bg-clip-text text-transparent">
                 {t("healthInsights.title")}
               </h1>
             </div>
             <Button
               onClick={refreshHealthInsights}
               variant="outline"
-              className="border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              size="sm"
+              className="border-purple-600 dark:border-purple-500 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 w-full sm:w-auto"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               {t("healthInsights.refresh")}
             </Button>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             {t("healthInsights.subtitle")}
           </p>
         </div>
@@ -324,11 +325,11 @@ export function HealthInsightsPage() {
             </div>
 
             {/* Score Breakdown */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
-                <Flame className="w-6 h-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <Flame className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-orange-600 dark:text-orange-400" />
                 <div
-                  className={`text-2xl font-bold ${getScoreColor(
+                  className={`text-xl sm:text-2xl font-bold ${getScoreColor(
                     insightsData.scoreBreakdown.calorieBalance
                   )}`}
                 >
@@ -338,10 +339,10 @@ export function HealthInsightsPage() {
                   {t("healthInsights.calorieBalance")}
                 </div>
               </div>
-              <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
-                <Activity className="w-6 h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+              <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <Activity className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-blue-600 dark:text-blue-400" />
                 <div
-                  className={`text-2xl font-bold ${getScoreColor(
+                  className={`text-xl sm:text-2xl font-bold ${getScoreColor(
                     insightsData.scoreBreakdown.macroBalance
                   )}`}
                 >
@@ -351,10 +352,10 @@ export function HealthInsightsPage() {
                   {t("healthInsights.macroBalance")}
                 </div>
               </div>
-              <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
-                <TrendingUp className="w-6 h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
+              <div className="text-center p-3 sm:p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 text-green-600 dark:text-green-400" />
                 <div
-                  className={`text-2xl font-bold ${getScoreColor(
+                  className={`text-xl sm:text-2xl font-bold ${getScoreColor(
                     insightsData.scoreBreakdown.consistency
                   )}`}
                 >

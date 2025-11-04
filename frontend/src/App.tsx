@@ -218,7 +218,7 @@ function App() {
                   <TopNavigation />
                   <AppRoutes />
                   <BottomNavigation />
-                  <Toaster position="top-right" />
+                  <Toaster position="top-center" />
                 </div>
               </TutorialProvider>
             </TutorialContextProvider>
