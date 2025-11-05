@@ -1,8 +1,54 @@
 // User Profile Management Controller
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs/promises";
 
 const prisma = new PrismaClient();
+
+// Extend Express Request type
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+// Configure multer for avatar uploads
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const uploadDir = "./uploads/avatars";
+    await fs.mkdir(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const userId = (req as any).user?.userId;
+    const uniqueSuffix = Date.now();
+    cb(
+      null,
+      `avatar-${userId}-${uniqueSuffix}${path.extname(file.originalname)}`
+    );
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Invalid file type. Only JPEG, PNG, and WebP images are allowed."
+        )
+      );
+    }
+  },
+});
+
+export const avatarUpload = upload.single("avatar");
 
 // Get user profile with preferences and health goals
 export const getUserProfile = async (req: Request, res: Response) => {
@@ -19,8 +65,14 @@ export const getUserProfile = async (req: Request, res: Response) => {
         userId: true,
         name: true,
         email: true,
+        role: true,
         preferences: true,
         healthGoals: true,
+        oauthProvider: true,
+        oauthAvatar: true,
+        isEmailVerified: true,
+        lastLoginAt: true,
+        lastLoginIp: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -238,10 +290,126 @@ export const getActivityFeed = async (req: Request, res: Response) => {
   }
 };
 
+// Upload avatar
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const file = (req as MulterRequest).file;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Check if user is OAuth user (they shouldn't manually upload)
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { oauthProvider: true, oauthAvatar: true },
+    });
+
+    // Delete old avatar file if it exists and is not an OAuth avatar
+    if (user?.oauthAvatar && !user.oauthProvider) {
+      const oldFilePath = path.join(process.cwd(), user.oauthAvatar);
+      try {
+        await fs.unlink(oldFilePath);
+      } catch (err) {
+        // Ignore error if file doesn't exist
+        console.log("Old avatar file not found or already deleted");
+      }
+    }
+
+    // Generate URL for the uploaded file
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
+
+    // Update user with new avatar
+    const updatedUser = await prisma.user.update({
+      where: { userId },
+      data: { oauthAvatar: avatarUrl },
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        role: true,
+        oauthProvider: true,
+        oauthAvatar: true,
+      },
+    });
+
+    res.json({
+      message: "Avatar uploaded successfully",
+      user: updatedUser,
+      avatarUrl,
+    });
+  } catch (error: any) {
+    console.error("Upload avatar error:", error);
+    res.status(500).json({ error: "Failed to upload avatar" });
+  }
+};
+
+// Delete avatar
+export const deleteAvatar = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { oauthProvider: true, oauthAvatar: true },
+    });
+
+    // Don't allow deleting OAuth avatars
+    if (user?.oauthProvider) {
+      return res.status(400).json({
+        error: "Cannot delete OAuth avatar. Disconnect OAuth account first.",
+      });
+    }
+
+    // Delete file if it exists
+    if (user?.oauthAvatar) {
+      const filePath = path.join(process.cwd(), user.oauthAvatar);
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.log("Avatar file not found or already deleted");
+      }
+    }
+
+    // Update user to remove avatar
+    const updatedUser = await prisma.user.update({
+      where: { userId },
+      data: { oauthAvatar: null },
+      select: {
+        userId: true,
+        name: true,
+        email: true,
+        role: true,
+        oauthAvatar: true,
+      },
+    });
+
+    res.json({
+      message: "Avatar deleted successfully",
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    console.error("Delete avatar error:", error);
+    res.status(500).json({ error: "Failed to delete avatar" });
+  }
+};
+
 export default {
   getUserProfile,
   updatePreferences,
   updateHealthGoals,
   getUserStats,
   getActivityFeed,
+  uploadAvatar,
+  deleteAvatar,
+  avatarUpload,
 };

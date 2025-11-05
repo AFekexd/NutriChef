@@ -182,10 +182,22 @@ export function TopNavigation() {
               }`}
               title={user?.name}
             >
-              <User className="w-4 h-4 lg:w-5 lg:h-5" />
-              <span className="text-xs lg:text-sm font-semibold text-gray-900 dark:text-gray-100 hidden 2xl:inline max-w-[100px] truncate">
-                {user?.name}
-              </span>
+              {user?.oauthAvatar ? (
+                <img
+                  src={
+                    user.oauthAvatar.startsWith("http")
+                      ? user.oauthAvatar
+                      : `${
+                          import.meta.env.VITE_API_BASE_URL ||
+                          "http://localhost:5000"
+                        }${user.oauthAvatar}`
+                  }
+                  alt={user.name}
+                  className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                />
+              ) : (
+                <User className="w-4 h-4 lg:w-5 lg:h-5" />
+              )}
             </button>
             <Button
               onClick={handleLogout}

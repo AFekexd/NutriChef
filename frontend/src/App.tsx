@@ -28,6 +28,11 @@ const RecipeRecommendationPage = lazy(() =>
 const MyRecipesPage = lazy(() =>
   import("./pages/MyRecipesPage").then((m) => ({ default: m.MyRecipesPage }))
 );
+const PublicRecipesPage = lazy(() =>
+  import("./pages/PublicRecipesPage").then((m) => ({
+    default: m.PublicRecipesPage,
+  }))
+);
 const ShoppingListPage = lazy(() =>
   import("./pages/ShoppingListPage").then((m) => ({
     default: m.ShoppingListPage,
@@ -135,6 +140,14 @@ function AppRoutes() {
         />
         <Route
           path="/recipes"
+          element={
+            <ProtectedRoute>
+              <PublicRecipesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recipe-recommendation"
           element={
             <ProtectedRoute>
               <RecipeRecommendationPage />

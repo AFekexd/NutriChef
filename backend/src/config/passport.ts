@@ -63,6 +63,14 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
                 },
               });
             }
+          } else {
+            // Update existing user's avatar in case it changed
+            user = await prisma.user.update({
+              where: { userId: user.userId },
+              data: {
+                oauthAvatar: profile.photos?.[0]?.value,
+              },
+            });
           }
 
           return done(null, user as any);
@@ -141,6 +149,16 @@ if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
                 },
               });
             }
+          } else {
+            // Update existing user's avatar in case it changed
+            user = await prisma.user.update({
+              where: { userId: user.userId },
+              data: {
+                oauthAvatar: profile.avatar
+                  ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
+                  : undefined,
+              },
+            });
           }
 
           return done(null, user as any);

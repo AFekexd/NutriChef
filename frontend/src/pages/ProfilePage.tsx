@@ -13,6 +13,8 @@ import {
   Shield,
   Clock,
   LogOut,
+  Trash2,
+  Camera,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -22,17 +24,22 @@ import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { confirmDialog } from "../utils/confirmDialog";
+import { toast } from "sonner";
 import type { User as UserType, Session, LoginHistoryItem } from "../types";
 
 export function ProfilePage() {
   const { t } = useTranslation();
-  const { logout } = useAuth();
+  const { logout, refreshUser } = useAuth();
   const [_user, setUser] = useState<UserType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Avatar upload
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form
   const [profileData, setProfileData] = useState({
@@ -221,6 +228,98 @@ export function ProfilePage() {
     });
   };
 
+  const handleAvatarClick = () => {
+    if (_user?.oauthProvider) {
+      toast.info(
+        t("profile.oauthAvatarInfo") ||
+          "Your avatar is managed by your OAuth provider"
+      );
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(
+        t("profile.avatarTooLarge") || "Avatar file must be less than 5MB"
+      );
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        t("profile.invalidAvatarType") ||
+          "Only JPEG, PNG, and WebP images are allowed"
+      );
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const result = await apiService.uploadAvatar(file);
+      setUser(result.user);
+      await refreshUser();
+      toast.success(
+        t("profile.avatarUploadSuccess") || "Avatar uploaded successfully!"
+      );
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.error ||
+          t("profile.avatarUploadError") ||
+          "Failed to upload avatar"
+      );
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (_user?.oauthProvider) {
+      toast.info(
+        t("profile.oauthAvatarInfo") ||
+          "Your avatar is managed by your OAuth provider"
+      );
+      return;
+    }
+
+    confirmDialog({
+      title: t("profile.deleteAvatarConfirm") || "Delete Avatar?",
+      message:
+        t("profile.deleteAvatarMessage") ||
+        "Are you sure you want to remove your profile picture?",
+      confirmText: t("common.delete") || "Delete",
+      cancelText: t("common.cancel") || "Cancel",
+      onConfirm: async () => {
+        try {
+          const result = await apiService.deleteAvatar();
+          setUser(result.user);
+          await refreshUser();
+          toast.success(
+            t("profile.avatarDeleteSuccess") || "Avatar deleted successfully!"
+          );
+        } catch (err: any) {
+          toast.error(
+            err.response?.data?.error ||
+              t("profile.avatarDeleteError") ||
+              "Failed to delete avatar"
+          );
+        }
+      },
+    });
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString();
   };
@@ -312,10 +411,37 @@ export function ProfilePage() {
           {/* Profile Information */}
           <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-green-100 dark:bg-green-950/50 rounded-lg">
-                <User className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="relative group">
+                <div className="p-3 bg-green-100 dark:bg-green-950/50 rounded-lg overflow-hidden">
+                  {_user?.oauthAvatar ? (
+                    <img
+                      src={
+                        _user.oauthAvatar.startsWith("http")
+                          ? _user.oauthAvatar
+                          : `${
+                              import.meta.env.VITE_API_BASE_URL ||
+                              "http://localhost:5000"
+                            }${_user.oauthAvatar}`
+                      }
+                      alt={_user.name}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-green-200 dark:border-green-700"
+                    />
+                  ) : (
+                    <User className="w-16 h-16 text-green-600 dark:text-green-400" />
+                  )}
+                </div>
+                {!_user?.oauthProvider && (
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={isUploadingAvatar}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
+                    title={t("profile.changeAvatar") || "Change avatar"}
+                  >
+                    <Camera className="w-6 h-6 text-white" />
+                  </button>
+                )}
               </div>
-              <div>
+              <div className="flex-1">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {t("profile.profileInformation") || "Profile Information"}
                 </h2>
@@ -323,8 +449,34 @@ export function ProfilePage() {
                   {t("profile.updatePersonalDetails") ||
                     "Update your personal details"}
                 </p>
+                {_user?.oauthProvider && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    {t("profile.connectedWith") || "Connected with"}{" "}
+                    {_user.oauthProvider.charAt(0).toUpperCase() +
+                      _user.oauthProvider.slice(1)}
+                  </p>
+                )}
               </div>
+              {!_user?.oauthProvider && _user?.oauthAvatar && (
+                <Button
+                  onClick={handleDeleteAvatar}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
 
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div>

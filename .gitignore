@@ -28,3 +28,6 @@ docker-compose.yaml
 !Dockerfile.*
 !setup.sh
 !.github/
+
+avatar-*.jpg
+avatar-*.png

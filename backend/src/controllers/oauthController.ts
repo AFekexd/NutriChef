@@ -81,6 +81,8 @@ export const handleOAuthSuccess = async (
         name: user.name,
         email: user.email,
         role: user.role,
+        oauthProvider: user.oauthProvider,
+        oauthAvatar: user.oauthAvatar,
       })
     );
 

@@ -10,6 +10,11 @@ import {
   Utensils,
   Plus,
   ShoppingCart,
+  User as UserIcon,
+  Calendar,
+  Star,
+  Globe,
+  Lock,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -126,6 +131,22 @@ export function MyRecipesPage() {
     });
   };
 
+  const handleToggleVisibility = async (recipe: Recipe) => {
+    try {
+      const newVisibility = !recipe.isPublic;
+      await apiService.updateRecipeVisibility(recipe.recipeId, newVisibility);
+      setRecipes(
+        recipes.map((r) =>
+          r.recipeId === recipe.recipeId ? { ...r, isPublic: newVisibility } : r
+        )
+      );
+      toast.success(`Recipe is now ${newVisibility ? "public" : "private"}`);
+    } catch (err: any) {
+      console.error("Error updating recipe visibility:", err);
+      toast.error("Failed to update recipe visibility");
+    }
+  };
+
   const handleAddRecipeToShoppingList = (recipe: Recipe) => {
     if (!recipe.recipeIngredients || recipe.recipeIngredients.length === 0) {
       // Fallback: If no ingredients, add recipe as a simple item
@@ -195,7 +216,7 @@ export function MyRecipesPage() {
               </h1>
             </div>
             <Button
-              onClick={() => navigate("/recipes")}
+              onClick={() => navigate("/recipe-recommendation")}
               className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg w-full sm:w-auto"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -281,7 +302,7 @@ export function MyRecipesPage() {
                 recommendations to build your personal cookbook!
               </p>
               <Button
-                onClick={() => navigate("/recipes")}
+                onClick={() => navigate("/recipe-recommendation")}
                 className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700"
               >
                 <Plus className="w-5 h-5 mr-2" />
@@ -302,6 +323,7 @@ export function MyRecipesPage() {
                 {/* Recipe Image */}
                 {recipe.imageURL && (
                   <div className="mb-4 -mx-6 -mt-6 rounded-t-lg overflow-hidden">
+                    asd
                     <img
                       src={recipe.imageURL}
                       alt={recipe.title}
@@ -311,10 +333,65 @@ export function MyRecipesPage() {
                 )}
 
                 {/* Header */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {recipe.title}
                   </h3>
+
+                  {/* Author and Date Info */}
+                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      {recipe.user?.oauthAvatar ? (
+                        <img
+                          src={
+                            import.meta.env.VITE_API_BASE_URL ||
+                            "http://localhost:5000" + recipe.user.oauthAvatar
+                          }
+                          alt={recipe.user.name}
+                          className="w-5 h-5 rounded-full"
+                        />
+                      ) : (
+                        <UserIcon className="w-4 h-4" />
+                      )}
+                      <span>{recipe.user?.name || "Unknown"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>
+                        {new Date(recipe.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rating and Visibility */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {recipe.rating?.toFixed(1) || "0.0"}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        ({recipe.ratingCount || 0})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {recipe.isPublic ? (
+                        <>
+                          <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                            Public
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                          <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                            Private
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Macros */}
@@ -358,6 +435,27 @@ export function MyRecipesPage() {
 
                 {/* Actions */}
                 <div className="mt-auto space-y-2">
+                  <Button
+                    onClick={() => handleToggleVisibility(recipe)}
+                    variant="outline"
+                    className={`w-full ${
+                      recipe.isPublic
+                        ? "border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
+                        : "border-gray-600 dark:border-gray-500 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20"
+                    }`}
+                  >
+                    {recipe.isPublic ? (
+                      <>
+                        <Globe className="w-4 h-4 mr-2" />
+                        Make Private
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4 mr-2" />
+                        Make Public
+                      </>
+                    )}
+                  </Button>
                   <Button
                     onClick={() => setSelectedRecipe(recipe)}
                     variant="outline"

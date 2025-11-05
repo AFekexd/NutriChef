@@ -247,6 +247,25 @@ class ApiService {
     return response.data;
   }
 
+  async uploadAvatar(
+    file: File
+  ): Promise<{ message: string; user: User; avatarUrl: string }> {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await this.api.post("/api/auth/avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  }
+
+  async deleteAvatar(): Promise<{ message: string; user: User }> {
+    const response = await this.api.delete("/api/auth/avatar");
+    return response.data;
+  }
+
   // Helper to get current user from Redux store
   getCurrentUser(): User | null {
     if (this.store) {
@@ -396,6 +415,7 @@ class ApiService {
     difficulty?: string;
     cuisineType?: string;
     imageURL?: string;
+    isPublic?: boolean;
     ingredients?: Array<{
       ingredientId: string;
       quantity: number;
@@ -404,6 +424,30 @@ class ApiService {
   }): Promise<import("../types").Recipe> {
     const response = await this.api.post("/api/recipes", data);
     return response.data;
+  }
+
+  async updateRecipeVisibility(
+    recipeId: string,
+    isPublic: boolean
+  ): Promise<import("../types").Recipe> {
+    const response = await this.api.patch(
+      `/api/recipes/${recipeId}/visibility`,
+      {
+        isPublic,
+      }
+    );
+    return response.data;
+  }
+
+  async rateRecipe(
+    recipeId: string,
+    rating: number,
+    comment?: string
+  ): Promise<void> {
+    await this.api.post(`/api/recipes/${recipeId}/rating`, {
+      rating,
+      comment,
+    });
   }
 
   async getRecipeRecommendations(data: {

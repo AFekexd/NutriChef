@@ -19,6 +19,11 @@ import {
   handleOAuthSuccess,
   handleOAuthFailure,
 } from "../controllers/oauthController.js";
+import {
+  uploadAvatar,
+  deleteAvatar,
+  avatarUpload,
+} from "../controllers/userProfileController.js";
 
 const router = Router();
 
@@ -396,6 +401,70 @@ router.get("/login-history", authenticate, getLoginHistory);
  *         description: Server error
  */
 router.put("/profile", authenticate, updateProfile);
+
+/**
+ * @swagger
+ * /api/auth/avatar:
+ *   post:
+ *     summary: Upload avatar
+ *     tags: [Authentication]
+ *     description: Upload a profile picture for the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file (JPEG, PNG, WebP) max 5MB
+ *     responses:
+ *       200:
+ *         description: Avatar uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 avatarUrl:
+ *                   type: string
+ *       400:
+ *         description: No file uploaded or invalid file type
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.post("/avatar", authenticate, avatarUpload, uploadAvatar);
+
+/**
+ * @swagger
+ * /api/auth/avatar:
+ *   delete:
+ *     summary: Delete avatar
+ *     tags: [Authentication]
+ *     description: Remove the profile picture for the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Avatar deleted successfully
+ *       400:
+ *         description: Cannot delete OAuth avatar
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.delete("/avatar", authenticate, deleteAvatar);
 
 /**
  * @swagger

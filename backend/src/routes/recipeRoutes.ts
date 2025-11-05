@@ -6,7 +6,10 @@ import {
   updateRecipe,
   deleteRecipe,
   getRecipesByUser,
+  updateRecipeVisibility,
+  rateRecipe,
 } from "../controllers/recipeController.js";
+import { authenticate, optionalAuthenticate } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -16,7 +19,9 @@ const router = Router();
  *   get:
  *     summary: Get all recipes
  *     tags: [Recipes]
- *     description: Retrieve all recipes with ingredients and user information
+ *     description: Retrieve all public recipes (and user's own recipes if authenticated)
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of recipes
@@ -29,7 +34,7 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.get("/", getRecipes);
+router.get("/", optionalAuthenticate, getRecipes);
 
 /**
  * @swagger
@@ -95,7 +100,9 @@ router.get("/user/:userId", getRecipesByUser);
  *   post:
  *     summary: Create a new recipe
  *     tags: [Recipes]
- *     description: Add a new recipe with ingredients
+ *     description: Add a new recipe with ingredients (requires authentication)
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -108,10 +115,6 @@ router.get("/user/:userId", getRecipesByUser);
  *               - calories
  *               - macros
  *             properties:
- *               userId:
- *                 type: string
- *                 format: uuid
- *                 example: 550e8400-e29b-41d4-a716-446655440000
  *               title:
  *                 type: string
  *                 example: Avocado Toast
@@ -147,10 +150,12 @@ router.get("/user/:userId", getRecipesByUser);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Recipe'
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
-router.post("/", createRecipe);
+router.post("/", authenticate, createRecipe);
 
 /**
  * @swagger
@@ -158,7 +163,9 @@ router.post("/", createRecipe);
  *   put:
  *     summary: Update recipe
  *     tags: [Recipes]
- *     description: Update recipe information
+ *     description: Update recipe information (requires authentication and ownership)
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -192,10 +199,14 @@ router.post("/", createRecipe);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Recipe'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - can only modify own recipes
  *       500:
  *         description: Server error
  */
-router.put("/:id", updateRecipe);
+router.put("/:id", authenticate, updateRecipe);
 
 /**
  * @swagger
@@ -203,7 +214,9 @@ router.put("/:id", updateRecipe);
  *   delete:
  *     summary: Delete recipe
  *     tags: [Recipes]
- *     description: Remove a recipe from the system
+ *     description: Remove a recipe from the system (requires authentication and ownership)
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -215,9 +228,119 @@ router.put("/:id", updateRecipe);
  *     responses:
  *       204:
  *         description: Recipe deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - can only delete own recipes
  *       500:
  *         description: Server error
  */
-router.delete("/:id", deleteRecipe);
+router.delete("/:id", authenticate, deleteRecipe);
+
+/**
+ * @swagger
+ * /api/recipes/{id}/visibility:
+ *   patch:
+ *     summary: Update recipe visibility
+ *     tags: [Recipes]
+ *     description: Toggle recipe public/private status (requires authentication)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Recipe ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isPublic
+ *             properties:
+ *               isPublic:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Recipe visibility updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Recipe'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - can only modify own recipes
+ *       404:
+ *         description: Recipe not found
+ *       500:
+ *         description: Server error
+ */
+router.patch("/:id/visibility", authenticate, updateRecipeVisibility);
+
+/**
+ * @swagger
+ * /api/recipes/{id}/rating:
+ *   post:
+ *     summary: Rate a recipe
+ *     tags: [Recipes]
+ *     description: Submit or update a rating for a recipe (requires authentication)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Recipe ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *             properties:
+ *               rating:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 4
+ *               comment:
+ *                 type: string
+ *                 example: Great recipe! Very easy to follow.
+ *     responses:
+ *       200:
+ *         description: Recipe rated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 rating:
+ *                   type: number
+ *                 ratingCount:
+ *                   type: integer
+ *       400:
+ *         description: Invalid rating value
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Recipe not found
+ *       500:
+ *         description: Server error
+ */
+router.post("/:id/rating", authenticate, rateRecipe);
 
 export default router;

@@ -8,6 +8,8 @@ export interface User {
   isEmailVerified?: boolean;
   lastLoginAt?: string;
   lastLoginIp?: string;
+  oauthProvider?: string | null;
+  oauthAvatar?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,6 +63,12 @@ export interface LoginHistoryItem {
 export interface Recipe {
   recipeId: string;
   userId?: string;
+  user?: {
+    userId: string;
+    name: string;
+    email: string;
+    oauthAvatar?: string;
+  };
   title: string;
   instructions: string;
   imageURL?: string;
@@ -70,6 +78,14 @@ export interface Recipe {
     carbs: number;
     fat: number;
   };
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+  difficulty?: "easy" | "medium" | "hard";
+  cuisineType?: string;
+  isPublic?: boolean;
+  rating?: number;
+  ratingCount?: number;
   recipeIngredients?: {
     recipeIngredientId: string;
     quantity: number;
@@ -80,6 +96,16 @@ export interface Recipe {
       category: string;
     };
   }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RecipeRating {
+  recipeRatingId: string;
+  recipeId: string;
+  userId: string;
+  rating: number;
+  comment?: string;
   createdAt: string;
   updatedAt: string;
 }

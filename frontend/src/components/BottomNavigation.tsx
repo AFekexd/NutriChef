@@ -188,7 +188,22 @@ export function BottomNavigation() {
                       : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <User className="w-5 h-5" />
+                  {user?.oauthAvatar ? (
+                    <img
+                      src={
+                        user.oauthAvatar.startsWith("http")
+                          ? user.oauthAvatar
+                          : `${
+                              import.meta.env.VITE_API_BASE_URL ||
+                              "http://localhost:5000"
+                            }${user.oauthAvatar}`
+                      }
+                      alt={user.name}
+                      className="w-6 h-6 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                   <span className="font-medium">{t("nav.profile")}</span>
                 </button>
                 {user?.role === "admin" && (

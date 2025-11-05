@@ -36,6 +36,7 @@ model User {
   inventoryItems InventoryItem[]
   groceryListItems GroceryListItem[]
   recipes       Recipe[]
+  recipeRatings RecipeRating[]
   mealPlans     MealPlan[]
   consumptionLogs ConsumptionLog[]
   userHealthData UserHealthData[]
@@ -148,10 +149,30 @@ model Recipe {
   cuisineType      String?
   dietaryTags      Json?               // ["vegetarian", "gluten-free", etc.]
   isAIGenerated    Boolean             @default(false)
+  isPublic         Boolean             @default(false) // Public or private recipe
+  rating           Float?              @default(0) // Average rating
+  ratingCount      Int                 @default(0) // Number of ratings
   recipeIngredients RecipeIngredient[]
   mealPlanRecipes  MealPlanRecipe[]
+  recipeRatings    RecipeRating[]
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+}
+
+model RecipeRating {
+  recipeRatingId String   @id @default(uuid()) @db.Uuid
+  recipe         Recipe   @relation(fields: [recipeId], references: [recipeId], onDelete: Cascade)
+  recipeId       String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [userId])
+  userId         String   @db.Uuid
+  rating         Int      // 1-5 stars
+  comment        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([recipeId, userId]) // One rating per user per recipe
+  @@index([recipeId])
+  @@index([userId])
 }
 
 model RecipeIngredient {

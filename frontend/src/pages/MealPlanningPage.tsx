@@ -518,7 +518,7 @@ export function MealPlanningPage() {
           ref={statsRef}
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8"
         >
-          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-orange-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -530,7 +530,7 @@ export function MealPlanningPage() {
             </p>
           </Card>
 
-          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -542,7 +542,7 @@ export function MealPlanningPage() {
             </p>
           </Card>
 
-          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-red-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
@@ -554,33 +554,37 @@ export function MealPlanningPage() {
             </p>
           </Card>
 
-          <Card className="p-3 sm:p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-yellow-500" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Carbs</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                Carbs
+              </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
               {weeklyStats.totalCarbs.toFixed(0)}g
             </p>
           </Card>
 
-          <Card className="p-4 dark:bg-gray-900 dark:border-gray-800">
+          <Card className="p-3 sm:p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-purple-500" />
-              <p className="text-sm text-gray-600 dark:text-gray-400">Fat</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                Fat
+              </p>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
               {weeklyStats.totalFat.toFixed(0)}g
             </p>
           </Card>
         </div>
 
         {/* Calendar Grid */}
-        <Card className="overflow-hidden dark:bg-gray-900 dark:border-gray-800">
+        <Card className="overflow-hidden bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full min-w-[900px]">
               <thead>
-                <tr className="border-b dark:border-gray-800">
+                <tr className="border-b border-gray-200 dark:border-gray-800">
                   <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 w-32">
                     Meal
                   </th>
@@ -635,7 +639,7 @@ export function MealPlanningPage() {
                 {MEAL_TYPES.map((mealType) => (
                   <tr
                     key={mealType}
-                    className="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <td className="p-4 font-medium text-gray-900 dark:text-gray-100 capitalize">
                       {mealType}
@@ -734,179 +738,179 @@ export function MealPlanningPage() {
             </table>
           </div>
         </Card>
-
-        {/* Add Meal Modal */}
-        {showAddMeal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md p-6 dark:bg-gray-900 dark:border-gray-800">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  Add to Meal Plan
-                </h3>
-                <button
-                  onClick={() => setShowAddMeal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                {selectedDate?.toLocaleDateString()} - {selectedMealType}
-              </p>
-
-              {/* Mode Toggle */}
-              <div className="mb-4 flex gap-2">
-                <Button
-                  onClick={() => setAddMode("recipe")}
-                  variant={addMode === "recipe" ? "default" : "outline"}
-                  className={`flex-1 ${
-                    addMode === "recipe"
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "dark:border-gray-700"
-                  }`}
-                >
-                  <ChefHat className="w-4 h-4 mr-2" />
-                  Recipe
-                </Button>
-                <Button
-                  onClick={() => setAddMode("ingredient")}
-                  variant={addMode === "ingredient" ? "default" : "outline"}
-                  className={`flex-1 ${
-                    addMode === "ingredient"
-                      ? "bg-green-600 hover:bg-green-700 text-white"
-                      : "dark:border-gray-700"
-                  }`}
-                >
-                  <Apple className="w-4 h-4 mr-2" />
-                  Ingredients
-                </Button>
-              </div>
-
-              {/* Recipe Mode */}
-              {addMode === "recipe" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Select Recipe
-                  </label>
-                  {recipes.length === 0 ? (
-                    <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
-                      No recipes available. Please add some recipes first.
-                    </div>
-                  ) : (
-                    <select
-                      value={selectedRecipe}
-                      onChange={(e) => setSelectedRecipe(e.target.value)}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-gray-100"
-                    >
-                      <option value="">Choose a recipe...</option>
-                      {recipes.map((recipe) => (
-                        <option key={recipe.recipeId} value={recipe.recipeId}>
-                          {recipe.title} ({recipe.calories} cal)
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              )}
-
-              {/* Ingredient Mode */}
-              {addMode === "ingredient" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Select Ingredients from Inventory
-                  </label>
-                  {inventoryItems.length === 0 ? (
-                    <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
-                      No inventory items available. Please add items to your
-                      inventory first.
-                    </div>
-                  ) : (
-                    <div className="max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg">
-                      {inventoryItems.map((item) => (
-                        <label
-                          key={item.inventoryItemId}
-                          className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-0"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedInventoryItems.includes(
-                              item.inventoryItemId
-                            )}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedInventoryItems([
-                                  ...selectedInventoryItems,
-                                  item.inventoryItemId,
-                                ]);
-                              } else {
-                                setSelectedInventoryItems(
-                                  selectedInventoryItems.filter(
-                                    (id) => id !== item.inventoryItemId
-                                  )
-                                );
-                              }
-                            }}
-                            className="mr-3"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {item.ingredient.name}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {item.quantity} {item.unit} •{" "}
-                              {item.location || "N/A"}
-                            </p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                  {selectedInventoryItems.length > 0 && (
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                      {selectedInventoryItems.length} item(s) selected
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddMeal(false);
-                    setSelectedRecipe("");
-                    setSelectedInventoryItems([]);
-                  }}
-                  className="flex-1 dark:border-gray-700"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveMeal}
-                  disabled={
-                    addMode === "recipe"
-                      ? !selectedRecipe
-                      : selectedInventoryItems.length === 0
-                  }
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  {addMode === "recipe" ? (
-                    <>
-                      <ChefHat className="w-4 h-4 mr-2" />
-                      Add Recipe
-                    </>
-                  ) : (
-                    <>
-                      <Apple className="w-4 h-4 mr-2" />
-                      Add Ingredients
-                    </>
-                  )}
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
+
+      {/* Add Meal Modal */}
+      {showAddMeal && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Add to Meal Plan
+              </h3>
+              <button
+                onClick={() => setShowAddMeal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {selectedDate?.toLocaleDateString()} - {selectedMealType}
+            </p>
+
+            {/* Mode Toggle */}
+            <div className="mb-4 flex gap-2">
+              <Button
+                onClick={() => setAddMode("recipe")}
+                variant={addMode === "recipe" ? "default" : "outline"}
+                className={`flex-1 ${
+                  addMode === "recipe"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
+              >
+                <ChefHat className="w-4 h-4 mr-2" />
+                Recipe
+              </Button>
+              <Button
+                onClick={() => setAddMode("ingredient")}
+                variant={addMode === "ingredient" ? "default" : "outline"}
+                className={`flex-1 ${
+                  addMode === "ingredient"
+                    ? "bg-green-600 hover:bg-green-700 text-white"
+                    : "border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Apple className="w-4 h-4 mr-2" />
+                Ingredients
+              </Button>
+            </div>
+
+            {/* Recipe Mode */}
+            {addMode === "recipe" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Recipe
+                </label>
+                {recipes.length === 0 ? (
+                  <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
+                    No recipes available. Please add some recipes first.
+                  </div>
+                ) : (
+                  <select
+                    value={selectedRecipe}
+                    onChange={(e) => setSelectedRecipe(e.target.value)}
+                    className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">Choose a recipe...</option>
+                    {recipes.map((recipe) => (
+                      <option key={recipe.recipeId} value={recipe.recipeId}>
+                        {recipe.title} ({recipe.calories} cal)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+
+            {/* Ingredient Mode */}
+            {addMode === "ingredient" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select Ingredients from Inventory
+                </label>
+                {inventoryItems.length === 0 ? (
+                  <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
+                    No inventory items available. Please add items to your
+                    inventory first.
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                    {inventoryItems.map((item) => (
+                      <label
+                        key={item.inventoryItemId}
+                        className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-0"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedInventoryItems.includes(
+                            item.inventoryItemId
+                          )}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedInventoryItems([
+                                ...selectedInventoryItems,
+                                item.inventoryItemId,
+                              ]);
+                            } else {
+                              setSelectedInventoryItems(
+                                selectedInventoryItems.filter(
+                                  (id) => id !== item.inventoryItemId
+                                )
+                              );
+                            }
+                          }}
+                          className="mr-3"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {item.ingredient.name}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.quantity} {item.unit} •{" "}
+                            {item.location || "N/A"}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {selectedInventoryItems.length > 0 && (
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                    {selectedInventoryItems.length} item(s) selected
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddMeal(false);
+                  setSelectedRecipe("");
+                  setSelectedInventoryItems([]);
+                }}
+                className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveMeal}
+                disabled={
+                  addMode === "recipe"
+                    ? !selectedRecipe
+                    : selectedInventoryItems.length === 0
+                }
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addMode === "recipe" ? (
+                  <>
+                    <ChefHat className="w-4 h-4 mr-2" />
+                    Add Recipe
+                  </>
+                ) : (
+                  <>
+                    <Apple className="w-4 h-4 mr-2" />
+                    Add Ingredients
+                  </>
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Scroll to Top Button */}
       <ScrollToTop />
