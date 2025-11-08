@@ -12,6 +12,10 @@ import {
   getLoginHistory,
   updateProfile,
   changePassword,
+  requestPasswordReset,
+  requestPasswordResetValidation,
+  resetPassword,
+  resetPasswordValidation,
 } from "../controllers/authController.js";
 import { authenticate } from "../middlewares/auth.js";
 import passport from "../config/passport.js";
@@ -23,6 +27,9 @@ import {
   uploadAvatar,
   deleteAvatar,
   avatarUpload,
+  getAIApiKeyConfig,
+  saveAIApiKey,
+  deleteAIApiKey,
 } from "../controllers/userProfileController.js";
 
 const router = Router();
@@ -503,6 +510,195 @@ router.delete("/avatar", authenticate, deleteAvatar);
  *         description: Server error
  */
 router.post("/change-password", authenticate, changePassword);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Authentication]
+ *     description: Send password reset email to user's email address
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset email sent (always returns success for security)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  "/forgot-password",
+  requestPasswordResetValidation,
+  requestPasswordReset
+);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     tags: [Authentication]
+ *     description: Reset user password using the token received via email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Reset token from email
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *                 description: Must contain uppercase, lowercase, and number
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid token or password
+ *       500:
+ *         description: Server error
+ */
+router.post("/reset-password", resetPasswordValidation, resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/ai-api-key:
+ *   get:
+ *     summary: Get AI API key configuration
+ *     tags: [Authentication]
+ *     description: Get the user's AI API key configuration (without exposing the actual key)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: AI API key configuration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 hasApiKey:
+ *                   type: boolean
+ *                 provider:
+ *                   type: string
+ *                   enum: [openai, gemini]
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.get("/ai-api-key", authenticate, getAIApiKeyConfig);
+
+/**
+ * @swagger
+ * /api/auth/ai-api-key:
+ *   post:
+ *     summary: Save AI API key
+ *     tags: [Authentication]
+ *     description: Save or update the user's AI API key for using their own AI service
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - apiKey
+ *               - provider
+ *             properties:
+ *               apiKey:
+ *                 type: string
+ *                 description: The AI API key
+ *               provider:
+ *                 type: string
+ *                 enum: [openai, gemini]
+ *                 description: The AI provider
+ *     responses:
+ *       200:
+ *         description: AI API key saved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 provider:
+ *                   type: string
+ *                 hasApiKey:
+ *                   type: boolean
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.post("/ai-api-key", authenticate, saveAIApiKey);
+
+/**
+ * @swagger
+ * /api/auth/ai-api-key:
+ *   delete:
+ *     summary: Delete AI API key
+ *     tags: [Authentication]
+ *     description: Remove the user's AI API key and revert to using the website's API
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: AI API key deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 hasApiKey:
+ *                   type: boolean
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.delete("/ai-api-key", authenticate, deleteAIApiKey);
 
 /**
  * @swagger

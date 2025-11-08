@@ -10,12 +10,21 @@ import {
   ShoppingCart,
   Utensils,
   Activity,
+  ChevronDown,
+  Store,
+  Salad,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import SettingsMenu from "./SettingsMenu";
 import { TutorialButton } from "./Tutorial";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export function TopNavigation() {
   const location = useLocation();
@@ -52,116 +61,148 @@ export function TopNavigation() {
 
           {/* Center Navigation */}
           <div className="flex justify-center">
-            <div className="flex items-center gap-0.5 lg:gap-1">
+            <div className="flex items-center gap-1 lg:gap-2">
+              {/* Dashboard */}
               <button
                 onClick={() => navigate("/dashboard")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
                   isActive("/dashboard")
                     ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
                 <Home className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                <span className="font-medium text-sm lg:text-base">
                   {t("nav.dashboard")}
                 </span>
               </button>
 
-              <button
-                onClick={() => navigate("/inventory")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/inventory")
-                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Package className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.inventory")}
-                </span>
-              </button>
+              {/* Inventory & Shopping */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                    isActive("/inventory") || isActive("/shopping-list")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Store className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm lg:text-base">
+                    Inventory
+                  </span>
+                  <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/inventory")}
+                    className="cursor-pointer"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    {t("nav.inventory")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/shopping-list")}
+                    className="cursor-pointer"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    {t("nav.shoppingList")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              <button
-                onClick={() => navigate("/shopping-list")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/shopping-list")
-                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.shoppingList")}
-                </span>
-              </button>
+              {/* Food & Meals */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                    isActive("/recipes") ||
+                    isActive("/my-recipes") ||
+                    isActive("/recipe-recommendation") ||
+                    isActive("/meal-planning")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Salad className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm lg:text-base">Food</span>
+                  <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/recipes")}
+                    className="cursor-pointer"
+                  >
+                    <ChefHat className="w-4 h-4 mr-2" />
+                    All Recipes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/my-recipes")}
+                    className="cursor-pointer"
+                  >
+                    <ChefHat className="w-4 h-4 mr-2" />
+                    My Recipes
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/recipe-recommendation")}
+                    className="cursor-pointer"
+                  >
+                    <ChefHat className="w-4 h-4 mr-2" />
+                    Recommendations
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/meal-planning")}
+                    className="cursor-pointer"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {t("nav.mealPlanning")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              <button
-                onClick={() => navigate("/recipes")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/recipes")
-                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <ChefHat className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.recipes")}
-                </span>
-              </button>
+              {/* Health */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                    isActive("/nutrition") || isActive("/health-insights")
+                      ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <Activity className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
+                  <span className="font-medium text-sm lg:text-base">
+                    Health
+                  </span>
+                  <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/nutrition")}
+                    className="cursor-pointer"
+                  >
+                    <Utensils className="w-4 h-4 mr-2" />
+                    {t("nav.nutrition")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate("/health-insights")}
+                    className="cursor-pointer"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    {t("nav.healthInsights")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              <button
-                onClick={() => navigate("/meal-planning")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/meal-planning")
-                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Calendar className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.mealPlanning")}
-                </span>
-              </button>
-
-              <button
-                onClick={() => navigate("/nutrition")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/nutrition")
-                    ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Utensils className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.nutrition")}
-                </span>
-              </button>
-
-              <button
-                onClick={() => navigate("/health-insights")}
-                className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-                  isActive("/health-insights")
-                    ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <Activity className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                <span className="font-medium text-sm lg:text-base hidden xl:inline">
-                  {t("nav.healthInsights")}
-                </span>
-              </button>
-
+              {/* Admin */}
               {user?.role === "admin" && (
                 <button
                   onClick={() => navigate("/admin")}
-                  className={`flex items-center gap-1 lg:gap-2 px-2 lg:px-3 xl:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 lg:gap-2 px-3 lg:px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
                     isActive("/admin")
                       ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   <Shield className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm lg:text-base hidden xl:inline">
+                  <span className="font-medium text-sm lg:text-base">
                     {t("nav.admin")}
                   </span>
                 </button>
@@ -193,10 +234,10 @@ export function TopNavigation() {
                         }${user.oauthAvatar}`
                   }
                   alt={user.name}
-                  className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 flex-shrink-0"
                 />
               ) : (
-                <User className="w-4 h-4 lg:w-5 lg:h-5" />
+                <User className="w-5 h-5 flex-shrink-0" />
               )}
             </button>
             <Button

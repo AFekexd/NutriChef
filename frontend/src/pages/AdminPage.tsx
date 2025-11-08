@@ -171,24 +171,66 @@ export function AdminPage() {
     userId: string,
     currentStatus: boolean
   ) => {
-    confirmDialog({
-      title: `${currentStatus ? "Deactivate" : "Activate"} User?`,
-      message: `Are you sure you want to ${
-        currentStatus ? "deactivate" : "activate"
-      } this user?`,
-      confirmText: currentStatus ? "Deactivate" : "Activate",
-      cancelText: "Cancel",
-      onConfirm: async () => {
-        try {
-          await apiService.updateUserStatus(userId, !currentStatus);
-          setSuccess("User status updated successfully!");
-          loadUsers();
-          setTimeout(() => setSuccess(null), 3000);
-        } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to update user status");
-        }
-      },
-    });
+    const isSuspending = currentStatus; // If currently active, we're suspending
+
+    if (isSuspending) {
+      // Show a custom dialog for suspension with optional reason
+      const reason = window.prompt(
+        "Optional: Enter a reason for suspending this account (or leave empty):"
+      );
+
+      // User clicked cancel
+      if (reason === null) return;
+
+      confirmDialog({
+        title: "Suspend User Account?",
+        message:
+          "Are you sure you want to suspend this user? They will be logged out and unable to access their account. An email will be sent to notify them.",
+        confirmText: "Suspend Account",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          try {
+            await apiService.updateUserStatus(
+              userId,
+              false,
+              reason.trim() || undefined
+            );
+            setSuccess(
+              "User account suspended successfully! Notification email sent."
+            );
+            loadUsers();
+            setTimeout(() => setSuccess(null), 3000);
+          } catch (err: any) {
+            setError(
+              err.response?.data?.error || "Failed to suspend user account"
+            );
+          }
+        },
+      });
+    } else {
+      // Reactivating account
+      confirmDialog({
+        title: "Reactivate User Account?",
+        message:
+          "Are you sure you want to reactivate this user's account? They will be able to log in again. An email will be sent to notify them.",
+        confirmText: "Reactivate Account",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          try {
+            await apiService.updateUserStatus(userId, true);
+            setSuccess(
+              "User account reactivated successfully! Notification email sent."
+            );
+            loadUsers();
+            setTimeout(() => setSuccess(null), 3000);
+          } catch (err: any) {
+            setError(
+              err.response?.data?.error || "Failed to reactivate user account"
+            );
+          }
+        },
+      });
+    }
   };
 
   const handleToggleUserRole = async (userId: string, currentRole: string) => {
@@ -213,15 +255,17 @@ export function AdminPage() {
 
   const handleDeleteUser = async (userId: string) => {
     confirmDialog({
-      title: "Delete User?",
+      title: "Delete User Account?",
       message:
-        "Are you sure you want to delete this user? This action cannot be undone!",
-      confirmText: "Delete",
+        "Are you sure you want to permanently delete this user and all their data? This action cannot be undone! A notification email will be sent to the user.",
+      confirmText: "Delete Permanently",
       cancelText: "Cancel",
       onConfirm: async () => {
         try {
           await apiService.deleteUser(userId);
-          setSuccess("User deleted successfully!");
+          setSuccess(
+            "User account deleted successfully! Notification email sent."
+          );
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
@@ -501,6 +545,11 @@ export function AdminPage() {
                           className={
                             user.isActive ? "text-orange-600" : "text-green-600"
                           }
+                          title={
+                            user.isActive
+                              ? "Suspend account (will send email)"
+                              : "Reactivate account (will send email)"
+                          }
                         >
                           {user.isActive ? (
                             <Ban className="w-4 h-4" />
@@ -513,6 +562,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleDeleteUser(user.userId)}
                           className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          title="Delete account permanently (will send email)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

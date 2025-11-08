@@ -40,6 +40,13 @@ export interface DetectionResult {
 }
 
 class VisionAIService {
+  private customApiKey?: string;
+
+  // Set custom API key for this service instance
+  setCustomApiKey(apiKey: string | undefined) {
+    this.customApiKey = apiKey;
+  }
+
   // Compress and optimize uploaded image
   async optimizeImage(inputPath: string, outputPath: string): Promise<void> {
     await sharp(inputPath)
@@ -99,8 +106,13 @@ class VisionAIService {
     language: string = "en"
   ): Promise<DetectedItem[]> {
     try {
+      // Use custom API key if provided, otherwise use default
+      const geminiClient = this.customApiKey
+        ? new GoogleGenerativeAI(this.customApiKey)
+        : gemini;
+
       // Use gemini-1.5-flash for vision + text generation
-      const model = gemini.getGenerativeModel({
+      const model = geminiClient.getGenerativeModel({
         model: "gemini-flash-latest",
       });
 

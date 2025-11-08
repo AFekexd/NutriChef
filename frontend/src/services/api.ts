@@ -14,9 +14,13 @@ import type {
   InventoryItem,
   InventoryAnalytics,
   RecipeRecommendationResponse,
+  AIApiKeyConfig,
+  SaveAIApiKeyRequest,
+  AIApiKeyResponse,
 } from "../types";
 import type { AppStore } from "../store";
 import { updateTokens, logout } from "../store/slices/authSlice";
+import { encryptData } from "../utils/encryption";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -266,6 +270,29 @@ class ApiService {
     return response.data;
   }
 
+  // AI API Key endpoints
+  async getAIApiKeyConfig(): Promise<AIApiKeyConfig> {
+    const response = await this.api.get("/api/auth/ai-api-key");
+    return response.data;
+  }
+
+  async saveAIApiKey(data: SaveAIApiKeyRequest): Promise<AIApiKeyResponse> {
+    // Encrypt the API key on the client side before sending
+    const encryptedApiKey = await encryptData(data.apiKey);
+
+    const response = await this.api.post("/api/auth/ai-api-key", {
+      apiKey: encryptedApiKey,
+      provider: data.provider,
+      isClientEncrypted: true, // Flag to indicate client-side encryption
+    });
+    return response.data;
+  }
+
+  async deleteAIApiKey(): Promise<AIApiKeyResponse> {
+    const response = await this.api.delete("/api/auth/ai-api-key");
+    return response.data;
+  }
+
   // Helper to get current user from Redux store
   getCurrentUser(): User | null {
     if (this.store) {
@@ -443,11 +470,12 @@ class ApiService {
     recipeId: string,
     rating: number,
     comment?: string
-  ): Promise<void> {
-    await this.api.post(`/api/recipes/${recipeId}/rating`, {
+  ): Promise<{ message: string; rating: number; ratingCount: number }> {
+    const response = await this.api.post(`/api/recipes/${recipeId}/rating`, {
       rating,
       comment,
     });
+    return response.data;
   }
 
   async getRecipeRecommendations(data: {
@@ -502,6 +530,41 @@ class ApiService {
     return response.data;
   }
 
+  // Create or get ingredient by name
+  async getOrCreateIngredient(
+    name: string,
+    category: string = "other"
+  ): Promise<{
+    ingredientId: string;
+    name: string;
+    category: string;
+  }> {
+    // First, try to search for existing ingredient
+    const searchResults = await this.searchIngredients(name);
+    const exactMatch = searchResults.find(
+      (ing) => ing.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (exactMatch) {
+      return {
+        ingredientId: exactMatch.ingredientId.toString(),
+        name: exactMatch.name,
+        category: exactMatch.category,
+      };
+    }
+
+    // If not found, create new ingredient
+    const response = await this.api.post("/api/ingredients", {
+      name,
+      category,
+    });
+    return {
+      ingredientId: response.data.ingredientId,
+      name: response.data.name,
+      category: response.data.category,
+    };
+  }
+
   // Admin endpoints
   async getAdminStats(): Promise<{
     stats: {
@@ -546,10 +609,12 @@ class ApiService {
 
   async updateUserStatus(
     userId: string,
-    isActive: boolean
+    isActive: boolean,
+    reason?: string
   ): Promise<{ user: any; message: string }> {
     const response = await this.api.put(`/api/admin/users/${userId}/status`, {
       isActive,
+      ...(reason && { reason }),
     });
     return response.data;
   }

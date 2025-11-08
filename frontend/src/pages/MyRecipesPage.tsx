@@ -24,7 +24,7 @@ import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import { confirmDialog } from "../utils/confirmDialog";
-import type { Recipe } from "../types";
+import type { Recipe, InventoryItem } from "../types";
 import { useNavigate } from "react-router-dom";
 
 export function MyRecipesPage() {
@@ -39,6 +39,7 @@ export function MyRecipesPage() {
     "all"
   );
   const [sortBy, setSortBy] = useState<"name" | "calories">("name");
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   // Pull to refresh
   const { isRefreshing, pullDistance } = usePullToRefresh({
@@ -51,6 +52,7 @@ export function MyRecipesPage() {
 
   useEffect(() => {
     loadRecipes();
+    loadInventoryData();
   }, []);
 
   // Keyboard shortcuts
@@ -85,6 +87,15 @@ export function MyRecipesPage() {
       setError(null);
     }
   }, [error]);
+
+  const loadInventoryData = async () => {
+    try {
+      const items = await apiService.getAllInventoryItems();
+      setInventoryItems(items);
+    } catch (err: any) {
+      console.error("Error loading inventory:", err);
+    }
+  };
 
   const loadRecipes = async () => {
     setIsLoading(true);
@@ -170,15 +181,27 @@ export function MyRecipesPage() {
       priority: "medium" as const,
     }));
 
+    // Pass inventory data to auto-check items in stock
     shoppingListService.addRecipe(
       recipe.title,
       recipe.recipeId,
-      ingredientsToAdd
+      ingredientsToAdd,
+      inventoryItems
     );
 
-    toast.success(
-      `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`
-    );
+    // Count how many ingredients are already in stock
+    const inStockCount = ingredientsToAdd.filter((ing) =>
+      inventoryItems.some(
+        (inv) => inv.ingredient.name.toLowerCase() === ing.name.toLowerCase()
+      )
+    ).length;
+
+    const message =
+      inStockCount > 0
+        ? `Added "${recipe.title}" to shopping list! ${inStockCount} of ${ingredientsToAdd.length} ingredients already in stock ✓`
+        : `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`;
+
+    toast.success(message);
   };
 
   // Filter and sort recipes

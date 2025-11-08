@@ -4,6 +4,11 @@ import {
   getRateLimitStatus,
   resetUserRateLimit,
 } from "../middlewares/aiRateLimiter.js";
+import {
+  sendAccountDeletionEmail,
+  sendAccountSuspensionEmail,
+  sendAccountReactivationEmail,
+} from "../services/emailService.js";
 
 const prisma = new PrismaClient();
 
@@ -154,7 +159,7 @@ export const updateUserStatus = async (
 ): Promise<void> => {
   try {
     const { userId } = req.params;
-    const { isActive } = req.body;
+    const { isActive, reason } = req.body;
 
     if (!userId) {
       res.status(400).json({ error: "User ID is required" });
@@ -164,6 +169,21 @@ export const updateUserStatus = async (
     // Prevent deactivating yourself
     if (req.user?.userId === userId && !isActive) {
       res.status(400).json({ error: "Cannot deactivate your own account" });
+      return;
+    }
+
+    // Get user details before update for email
+    const userBeforeUpdate = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        email: true,
+        name: true,
+        isActive: true,
+      },
+    });
+
+    if (!userBeforeUpdate) {
+      res.status(404).json({ error: "User not found" });
       return;
     }
 
@@ -177,6 +197,26 @@ export const updateUserStatus = async (
         isActive: true,
       },
     });
+
+    // Invalidate all sessions if deactivating
+    if (!isActive) {
+      await prisma.session.updateMany({
+        where: { userId, isValid: true },
+        data: { isValid: false },
+      });
+
+      // Send suspension email
+      sendAccountSuspensionEmail(user.email, user.name, reason).catch(
+        (error) => {
+          console.error("Failed to send account suspension email:", error);
+        }
+      );
+    } else if (userBeforeUpdate.isActive === false) {
+      // Send reactivation email only if account was previously inactive
+      sendAccountReactivationEmail(user.email, user.name).catch((error) => {
+        console.error("Failed to send account reactivation email:", error);
+      });
+    }
 
     res.json({ user, message: "User status updated successfully" });
   } catch (error: any) {
@@ -252,8 +292,29 @@ export const deleteUser = async (
       return;
     }
 
+    // Get user details before deletion for email
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        email: true,
+        name: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Delete user (cascade delete will handle related data)
     await prisma.user.delete({
       where: { userId },
+    });
+
+    // Send deletion notification email
+    sendAccountDeletionEmail(user.email, user.name).catch((error) => {
+      console.error("Failed to send account deletion email:", error);
+      // Don't fail the request if email fails
     });
 
     res.json({ message: "User deleted successfully" });

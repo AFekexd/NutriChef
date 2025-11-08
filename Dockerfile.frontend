@@ -9,9 +9,11 @@ ENV PATH /usr/src/node_modules/.bin:$PATH
 
 # Accept build arguments (from GitHub Actions)
 ARG VITE_API_URL
+ARG VITE_ENCRYPTION_KEY
 
 # Set them as environment variables for Vite to access
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENCRYPTION_KEY=$VITE_ENCRYPTION_KEY
 
 COPY frontend/package.json ./
 

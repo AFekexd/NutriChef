@@ -4,6 +4,7 @@ import { PrismaClient } from "../../generated/prisma/index.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
+import { encryptApiKey, decryptClientData } from "../services/aiService.js";
 
 const prisma = new PrismaClient();
 
@@ -403,6 +404,130 @@ export const deleteAvatar = async (req: Request, res: Response) => {
   }
 };
 
+// Get AI API key configuration (without exposing the actual key)
+export const getAIApiKeyConfig = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        aiProvider: true,
+        useOwnApiKey: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      hasApiKey: user.useOwnApiKey,
+      provider: user.aiProvider,
+    });
+  } catch (error: any) {
+    console.error("Get AI API key config error:", error);
+    res.status(500).json({ error: "Failed to fetch AI API key configuration" });
+  }
+};
+
+// Save or update AI API key
+export const saveAIApiKey = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { apiKey, provider, isClientEncrypted } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!apiKey || !provider) {
+      return res
+        .status(400)
+        .json({ error: "API key and provider are required" });
+    }
+
+    if (!["openai", "gemini"].includes(provider)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid provider. Must be 'openai' or 'gemini'" });
+    }
+
+    let plainTextApiKey = apiKey;
+
+    // If the API key was encrypted on the client side, decrypt it first
+    if (isClientEncrypted) {
+      try {
+        plainTextApiKey = decryptClientData(apiKey);
+        console.log("✅ Successfully decrypted client-encrypted API key");
+      } catch (decryptError) {
+        console.error(
+          "Failed to decrypt client-encrypted API key:",
+          decryptError
+        );
+        return res.status(400).json({
+          error: "Failed to decrypt API key. Please try again.",
+        });
+      }
+    }
+
+    // Encrypt the API key for server-side storage
+    const encryptedKey = encryptApiKey(plainTextApiKey);
+
+    // Update user with encrypted API key
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        aiApiKey: encryptedKey,
+        aiProvider: provider,
+        useOwnApiKey: true,
+      },
+    });
+
+    res.json({
+      message: "AI API key saved successfully",
+      provider,
+      hasApiKey: true,
+    });
+  } catch (error: any) {
+    console.error("Save AI API key error:", error);
+    res.status(500).json({ error: "Failed to save AI API key" });
+  }
+};
+
+// Delete AI API key
+export const deleteAIApiKey = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Remove AI API key from user
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        aiApiKey: null,
+        aiProvider: null,
+        useOwnApiKey: false,
+      },
+    });
+
+    res.json({
+      message: "AI API key deleted successfully",
+      hasApiKey: false,
+    });
+  } catch (error: any) {
+    console.error("Delete AI API key error:", error);
+    res.status(500).json({ error: "Failed to delete AI API key" });
+  }
+};
+
 export default {
   getUserProfile,
   updatePreferences,
@@ -412,4 +537,7 @@ export default {
   uploadAvatar,
   deleteAvatar,
   avatarUpload,
+  getAIApiKeyConfig,
+  saveAIApiKey,
+  deleteAIApiKey,
 };

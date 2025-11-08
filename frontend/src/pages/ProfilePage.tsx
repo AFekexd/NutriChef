@@ -15,6 +15,8 @@ import {
   LogOut,
   Trash2,
   Camera,
+  Key,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -61,6 +63,18 @@ export function ProfilePage() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+  // AI API Key form
+  const [aiApiKeyData, setAiApiKeyData] = useState({
+    apiKey: "",
+    provider: "openai" as "openai" | "gemini",
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [currentProvider, setCurrentProvider] = useState<
+    "openai" | "gemini" | undefined
+  >();
+  const [isUpdatingApiKey, setIsUpdatingApiKey] = useState(false);
+
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -99,11 +113,13 @@ export function ProfilePage() {
   const loadProfileData = async () => {
     setIsLoading(true);
     try {
-      const [profileRes, sessionsRes, historyRes] = await Promise.all([
-        apiService.getProfile(),
-        apiService.getSessions(),
-        apiService.getLoginHistory(10, 0),
-      ]);
+      const [profileRes, sessionsRes, historyRes, aiKeyConfigRes] =
+        await Promise.all([
+          apiService.getProfile(),
+          apiService.getSessions(),
+          apiService.getLoginHistory(10, 0),
+          apiService.getAIApiKeyConfig(),
+        ]);
 
       setUser(profileRes.user);
       setProfileData({
@@ -112,6 +128,14 @@ export function ProfilePage() {
       });
       setSessions(sessionsRes.sessions);
       setLoginHistory(historyRes.history);
+      setHasApiKey(aiKeyConfigRes.hasApiKey);
+      setCurrentProvider(aiKeyConfigRes.provider);
+      if (aiKeyConfigRes.provider) {
+        setAiApiKeyData((prev) => ({
+          ...prev,
+          provider: aiKeyConfigRes.provider!,
+        }));
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
@@ -314,6 +338,67 @@ export function ProfilePage() {
             err.response?.data?.error ||
               t("profile.avatarDeleteError") ||
               "Failed to delete avatar"
+          );
+        }
+      },
+    });
+  };
+
+  const handleSaveApiKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!aiApiKeyData.apiKey) {
+      setError(t("profile.apiKeyRequired") || "API key is required");
+      return;
+    }
+
+    setIsUpdatingApiKey(true);
+
+    try {
+      const result = await apiService.saveAIApiKey(aiApiKeyData);
+      setHasApiKey(result.hasApiKey);
+      setCurrentProvider(aiApiKeyData.provider);
+      setSuccess(
+        t("profile.apiKeySaved") ||
+          "AI API key saved successfully! You can now use AI features without rate limits."
+      );
+      setAiApiKeyData({ ...aiApiKeyData, apiKey: "" }); // Clear the input
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error ||
+          t("profile.apiKeySaveError") ||
+          "Failed to save AI API key"
+      );
+    } finally {
+      setIsUpdatingApiKey(false);
+    }
+  };
+
+  const handleDeleteApiKey = async () => {
+    confirmDialog({
+      title: t("profile.deleteApiKeyConfirm") || "Delete API Key?",
+      message:
+        t("profile.deleteApiKeyMessage") ||
+        "Are you sure you want to remove your AI API key? You will be subject to rate limits again.",
+      confirmText: t("common.delete") || "Delete",
+      cancelText: t("common.cancel") || "Cancel",
+      onConfirm: async () => {
+        try {
+          const result = await apiService.deleteAIApiKey();
+          setHasApiKey(result.hasApiKey);
+          setCurrentProvider(undefined);
+          setAiApiKeyData({ apiKey: "", provider: "openai" });
+          toast.success(
+            t("profile.apiKeyDeleted") || "AI API key deleted successfully!"
+          );
+        } catch (err: any) {
+          toast.error(
+            err.response?.data?.error ||
+              t("profile.apiKeyDeleteError") ||
+              "Failed to delete AI API key"
           );
         }
       },
@@ -686,6 +771,191 @@ export function ProfilePage() {
                   : t("profile.changePassword") || "Change Password"}
               </Button>
             </form>
+          </Card>
+
+          {/* AI API Key Configuration */}
+          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/50 dark:to-pink-950/50 rounded-lg">
+                <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {t("profile.aiApiKey") || "AI API Key Configuration"}
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("profile.aiApiKeyDescription") ||
+                    "Use your own AI API key to bypass rate limits"}
+                </p>
+              </div>
+              {hasApiKey && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                    {t("profile.configured") || "Configured"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {hasApiKey && currentProvider && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-green-900 dark:text-green-100">
+                      {t("profile.apiKeyConfigured") || "API Key Configured"}
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                      {t("profile.usingProvider") || "Using provider"}:{" "}
+                      <span className="font-semibold uppercase">
+                        {currentProvider}
+                      </span>
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                      ✓ {t("profile.noRateLimits") || "No AI rate limits"}
+                      <br />✓{" "}
+                      {t("profile.noTokenUsage") ||
+                        "Not using website's API tokens"}
+                    </p>
+                    <Button
+                      onClick={handleDeleteApiKey}
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {t("profile.removeApiKey") || "Remove API Key"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!hasApiKey && (
+              <form onSubmit={handleSaveApiKey} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.selectProvider") || "Select AI Provider"}
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAiApiKeyData({ ...aiApiKeyData, provider: "openai" })
+                      }
+                      className={`p-4 border-2 rounded-lg transition-all ${
+                        aiApiKeyData.provider === "openai"
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                          : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Key className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          OpenAI
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          GPT-4, GPT-3.5
+                        </span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAiApiKeyData({ ...aiApiKeyData, provider: "gemini" })
+                      }
+                      className={`p-4 border-2 rounded-lg transition-all ${
+                        aiApiKeyData.provider === "gemini"
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                          : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <Sparkles className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          Google Gemini
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          Gemini Pro
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.apiKeyLabel") || "API Key"}
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type={showApiKey ? "text" : "password"}
+                      value={aiApiKeyData.apiKey}
+                      onChange={(e) =>
+                        setAiApiKeyData({
+                          ...aiApiKeyData,
+                          apiKey: e.target.value,
+                        })
+                      }
+                      className="pl-10 pr-10 font-mono text-sm"
+                      placeholder={
+                        aiApiKeyData.provider === "openai"
+                          ? "sk-..."
+                          : "AIza..."
+                      }
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showApiKey ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {t("profile.apiKeyHelp") ||
+                      "Your API key is encrypted and stored securely. Get your key from"}{" "}
+                    {aiApiKeyData.provider === "openai" ? (
+                      <a
+                        href="https://platform.openai.com/api-keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 dark:text-purple-400 hover:underline"
+                      >
+                        OpenAI Platform
+                      </a>
+                    ) : (
+                      <a
+                        href="https://makersuite.google.com/app/apikey"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-600 dark:text-purple-400 hover:underline"
+                      >
+                        Google AI Studio
+                      </a>
+                    )}
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isUpdatingApiKey}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isUpdatingApiKey
+                    ? t("profile.saving") || "Saving..."
+                    : t("profile.saveApiKey") || "Save API Key"}
+                </Button>
+              </form>
+            )}
           </Card>
 
           {/* Active Sessions */}

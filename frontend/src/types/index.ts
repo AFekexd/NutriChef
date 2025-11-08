@@ -59,6 +59,23 @@ export interface LoginHistoryItem {
   timestamp: string;
 }
 
+// AI API Key types
+export interface AIApiKeyConfig {
+  hasApiKey: boolean;
+  provider?: "openai" | "gemini";
+}
+
+export interface SaveAIApiKeyRequest {
+  apiKey: string;
+  provider: "openai" | "gemini";
+}
+
+export interface AIApiKeyResponse {
+  message: string;
+  provider?: string;
+  hasApiKey: boolean;
+}
+
 // Recipe types
 export interface Recipe {
   recipeId: string;

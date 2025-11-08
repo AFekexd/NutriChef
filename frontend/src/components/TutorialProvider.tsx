@@ -28,15 +28,8 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
     const tutorialPage = routeToTutorialMap[location.pathname];
     if (!tutorialPage) return [];
 
-    // Add navigation tutorial steps if on any main page
-    if (isTutorialActive && tutorialPage === "dashboard") {
-      // Combine dashboard and navigation tutorials for first-time users
-      return [
-        ...getTutorialSteps("dashboard"),
-        ...getTutorialSteps("navigation"),
-      ];
-    }
-
+    // Just return the tutorial for the current page
+    // Don't overwhelm users with combined tutorials
     return getTutorialSteps(tutorialPage);
   };
 

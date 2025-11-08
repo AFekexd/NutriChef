@@ -4,14 +4,21 @@ import { Button } from "./ui/button";
 
 import { gsap } from "gsap";
 import { useTutorial } from "@/hooks/useTutorial";
+import { useAuth } from "@/context/AuthContext";
 
 const WELCOME_MODAL_KEY = "nutrichef_welcome_shown";
 
 export function WelcomeModal() {
   const [isVisible, setIsVisible] = useState(false);
   const { startTutorial } = useTutorial();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
+    // Only show welcome modal if user is authenticated
+    if (!isAuthenticated) {
+      return;
+    }
+
     // Check if welcome modal has been shown before
     const hasSeenWelcome = localStorage.getItem(WELCOME_MODAL_KEY) === "true";
 
@@ -40,7 +47,7 @@ export function WelcomeModal() {
 
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const handleStartTutorial = () => {
     localStorage.setItem(WELCOME_MODAL_KEY, "true");

@@ -12,6 +12,7 @@ interface TutorialContextType {
   completeTutorial: () => void;
   skipTutorial: () => void;
   resetTutorial: () => void;
+  isAuthenticatedUser: boolean;
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(
@@ -21,17 +22,31 @@ const TutorialContext = createContext<TutorialContextType | undefined>(
 export function TutorialContextProvider({ children }: { children: ReactNode }) {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
+  const [isAuthenticatedUser, setIsAuthenticatedUser] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
+    // Check if we're on a protected route (not login/register)
+    const isProtectedRoute =
+      location.pathname !== "/login" &&
+      location.pathname !== "/register" &&
+      location.pathname !== "/auth/callback";
+
+    setIsAuthenticatedUser(isProtectedRoute);
+
     // Check if user has completed or dismissed the tutorial
     const completed = localStorage.getItem(TUTORIAL_STORAGE_KEY) === "true";
     const dismissed = localStorage.getItem(TUTORIAL_DISMISSED_KEY) === "true";
 
     setHasCompletedTutorial(completed);
 
-    // Auto-start tutorial on dashboard for first-time users
-    if (!completed && !dismissed && location.pathname === "/dashboard") {
+    // Auto-start tutorial on dashboard for first-time authenticated users
+    if (
+      isProtectedRoute &&
+      !completed &&
+      !dismissed &&
+      location.pathname === "/dashboard"
+    ) {
       // Small delay to ensure page is fully loaded
       const timer = setTimeout(() => {
         setIsTutorialActive(true);
@@ -69,6 +84,7 @@ export function TutorialContextProvider({ children }: { children: ReactNode }) {
     completeTutorial,
     skipTutorial,
     resetTutorial,
+    isAuthenticatedUser,
   };
 
   return (

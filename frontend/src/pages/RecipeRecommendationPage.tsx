@@ -34,7 +34,7 @@ import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
-import type { RecipeRecommendation } from "../types";
+import type { RecipeRecommendation, InventoryItem } from "../types";
 
 interface ManualIngredient {
   name: string;
@@ -90,6 +90,7 @@ export function RecipeRecommendationPage() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [createForm, setCreateForm] = useState<CreateRecipeForm>({
     title: "",
     instructions: "",
@@ -123,6 +124,20 @@ export function RecipeRecommendationPage() {
     },
     threshold: 80,
   });
+
+  // Load inventory data on mount
+  useEffect(() => {
+    loadInventoryData();
+  }, []);
+
+  const loadInventoryData = async () => {
+    try {
+      const items = await apiService.getAllInventoryItems();
+      setInventoryItems(items);
+    } catch (err: any) {
+      console.error("Error loading inventory:", err);
+    }
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -359,6 +374,42 @@ export function RecipeRecommendationPage() {
     setError(null);
 
     try {
+      // Combine all ingredients (available + missing)
+      const allIngredients = [
+        ...recipe.availableIngredients,
+        ...recipe.missingIngredients,
+      ];
+
+      // Get or create ingredient IDs for all ingredients
+      const ingredientsWithIds = await Promise.all(
+        allIngredients.map(async (ing) => {
+          try {
+            const ingredient = await apiService.getOrCreateIngredient(
+              ing.name,
+              "other" // RecipeIngredient doesn't have category, default to "other"
+            );
+            return {
+              ingredientId: ingredient.ingredientId,
+              quantity: ing.quantity,
+              unit: ing.unit,
+            };
+          } catch (err) {
+            console.error(`Failed to get/create ingredient ${ing.name}:`, err);
+            // Skip this ingredient if it fails
+            return null;
+          }
+        })
+      );
+
+      // Filter out any failed ingredients
+      const validIngredients = ingredientsWithIds.filter(
+        (ing) => ing !== null
+      ) as Array<{
+        ingredientId: string;
+        quantity: number;
+        unit: string;
+      }>;
+
       // Convert RecipeRecommendation to Recipe format for API
       const recipeData = {
         title: recipe.title,
@@ -374,15 +425,16 @@ export function RecipeRecommendationPage() {
         cookTime: recipe.cookTime,
         difficulty: recipe.difficulty,
         cuisineType: recipe.cuisineType,
-        // Note: We don't have ingredient IDs from AI recommendations,
-        // so the recipe will be saved without ingredients linked
+        ingredients: validIngredients,
       };
 
       await apiService.createRecipe(recipeData);
 
       // Mark as saved
       setSavedRecipes(new Set([...savedRecipes, recipe.title]));
-      setSaveSuccess(`"${recipe.title}" saved successfully!`);
+      setSaveSuccess(
+        `"${recipe.title}" saved successfully with ${validIngredients.length} ingredients!`
+      );
     } catch (err: any) {
       console.error("Error saving recipe:", err);
       setError(
@@ -481,11 +533,27 @@ export function RecipeRecommendationPage() {
     // Use recipe title as ID since RecipeRecommendation doesn't have an ID field
     const recipeId = recipe.title.toLowerCase().replace(/\s+/g, "-");
 
-    shoppingListService.addRecipe(recipe.title, recipeId, allIngredients);
-
-    setSaveSuccess(
-      `Added "${recipe.title}" with ${allIngredients.length} ingredients to shopping list!`
+    // Pass inventory data to auto-check items in stock
+    shoppingListService.addRecipe(
+      recipe.title,
+      recipeId,
+      allIngredients,
+      inventoryItems
     );
+
+    // Count how many ingredients are already in stock
+    const inStockCount = allIngredients.filter((ing) =>
+      inventoryItems.some(
+        (inv) => inv.ingredient.name.toLowerCase() === ing.name.toLowerCase()
+      )
+    ).length;
+
+    const message =
+      inStockCount > 0
+        ? `Added "${recipe.title}" to shopping list! ${inStockCount} of ${allIngredients.length} ingredients already in stock ✓`
+        : `Added "${recipe.title}" with ${allIngredients.length} ingredients to shopping list!`;
+
+    setSaveSuccess(message);
   };
 
   const handleGetRecommendations = async () => {

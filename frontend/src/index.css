@@ -121,12 +121,33 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Prevent horizontal scrolling and layout shifts */
+    overflow-x: hidden;
+    width: 100%;
+    height: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
       sans-serif;
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+
+  /* Ensure all containers respect boundaries */
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100vh;
   }
 
   h1,

@@ -97,7 +97,8 @@ export const shoppingListService = {
   addRecipe(
     recipeName: string,
     recipeId: string,
-    ingredients: Omit<ShoppingItem, "id" | "checked">[]
+    ingredients: Omit<ShoppingItem, "id" | "checked">[],
+    inventoryItems?: { ingredient: { name: string }; quantity: number }[]
   ): ShoppingItem {
     const items = this.getItems();
 
@@ -116,11 +117,18 @@ export const shoppingListService = {
           if (existingIng) {
             existingIng.quantity += newIng.quantity;
           } else {
+            // Check if ingredient is in inventory
+            const inInventory = inventoryItems?.some(
+              (inv) =>
+                inv.ingredient.name.toLowerCase() === newIng.name.toLowerCase()
+            );
+
             existingRecipe.subItems!.push({
               ...newIng,
               id:
                 Date.now().toString() + Math.random().toString(36).substr(2, 9),
-              checked: false,
+              checked: inInventory || false, // Auto-check if in stock
+              inInventory,
             });
           }
         });
@@ -141,11 +149,19 @@ export const shoppingListService = {
       isRecipe: true,
       recipeId,
       isExpanded: true, // Start expanded
-      subItems: ingredients.map((ing) => ({
-        ...ing,
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        checked: false,
-      })),
+      subItems: ingredients.map((ing) => {
+        // Check if ingredient is in inventory
+        const inInventory = inventoryItems?.some(
+          (inv) => inv.ingredient.name.toLowerCase() === ing.name.toLowerCase()
+        );
+
+        return {
+          ...ing,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          checked: inInventory || false, // Auto-check if in stock
+          inInventory,
+        };
+      }),
     };
 
     items.push(newRecipe);

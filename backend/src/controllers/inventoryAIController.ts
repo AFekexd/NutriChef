@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import visionAI from "../services/visionAI.js";
+import { decryptApiKey } from "../services/aiService.js";
 
 const prisma = new PrismaClient();
 
@@ -79,6 +80,20 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
     });
 
     const imagePath = file.path;
+
+    // Get user's AI configuration
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { useOwnApiKey: true, aiApiKey: true, aiProvider: true },
+    });
+
+    // Set custom API key if user has one configured
+    if (user?.useOwnApiKey && user?.aiApiKey && user.aiProvider === "gemini") {
+      const decryptedKey = decryptApiKey(user.aiApiKey);
+      visionAI.setCustomApiKey(decryptedKey);
+    } else {
+      visionAI.setCustomApiKey(undefined);
+    }
 
     // Optimize image
     const optimizedPath = imagePath.replace(/\.[^.]+$/, "-optimized.jpg");

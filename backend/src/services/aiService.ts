@@ -1,6 +1,14 @@
 // AI Service Configuration and Base Classes
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import crypto from "crypto";
+
+// Encryption key for API keys (should be in environment variables)
+const ENCRYPTION_KEY =
+  process.env.API_KEY_ENCRYPTION_SECRET || "your-32-character-secret-key!!";
+const CLIENT_ENCRYPTION_KEY =
+  process.env.CLIENT_ENCRYPTION_KEY || "your-client-encryption-key-32chars";
+const ALGORITHM = "aes-256-cbc";
 
 // OpenAI Configuration
 export const openai = new OpenAI({
@@ -16,13 +24,79 @@ export enum AIProvider {
   GEMINI = "gemini",
 }
 
+// Utility functions for API key encryption/decryption
+export function encryptApiKey(apiKey: string): string {
+  const iv = crypto.randomBytes(16);
+  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  let encrypted = cipher.update(apiKey, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return iv.toString("hex") + ":" + encrypted;
+}
+
+export function decryptApiKey(encryptedKey: string): string {
+  const parts = encryptedKey.split(":");
+  if (parts.length !== 2) {
+    throw new Error("Invalid encrypted key format");
+  }
+  const iv = Buffer.from(parts[0]!, "hex");
+  const encryptedText = parts[1]!;
+  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
+
+/**
+ * Decrypt client-side encrypted data (using AES-GCM)
+ * The client sends base64-encoded data with IV prepended
+ */
+export function decryptClientData(encryptedBase64: string): string {
+  try {
+    // Decode from base64
+    const combined = Buffer.from(encryptedBase64, "base64");
+
+    // Extract IV (first 12 bytes) and encrypted data
+    const iv = combined.slice(0, 12);
+    const encryptedData = combined.slice(12);
+    const authTag = encryptedData.slice(-16); // Last 16 bytes are the auth tag
+    const ciphertext = encryptedData.slice(0, -16);
+
+    // Derive key using PBKDF2 (matching client-side)
+    const key = crypto.pbkdf2Sync(
+      CLIENT_ENCRYPTION_KEY,
+      "nutrichef-salt",
+      100000,
+      32,
+      "sha256"
+    );
+
+    // Decrypt using AES-GCM
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(ciphertext, undefined, "utf8");
+    decrypted += decipher.final("utf8");
+
+    return decrypted;
+  } catch (error) {
+    console.error("Client data decryption error:", error);
+    throw new Error("Failed to decrypt client-encrypted data");
+  }
+}
+
 // Base AI Service Class
 export class BaseAIService {
   protected provider: AIProvider;
   protected model: string;
+  protected customApiKey?: string;
+  protected usingCustomKey: boolean = false;
 
-  constructor(provider: AIProvider = AIProvider.OPENAI) {
+  constructor(provider: AIProvider = AIProvider.OPENAI, customApiKey?: string) {
     this.provider = provider;
+    this.customApiKey = customApiKey;
+    this.usingCustomKey = !!customApiKey;
     // Use the same model as visionAI.ts for consistency
     this.model =
       provider === AIProvider.OPENAI ? "gpt-4" : "gemini-flash-latest";
@@ -33,7 +107,12 @@ export class BaseAIService {
     systemMessage?: string
   ): Promise<any> {
     try {
-      const response = await openai.chat.completions.create({
+      // Use custom API key if provided, otherwise use default
+      const apiClient = this.customApiKey
+        ? new OpenAI({ apiKey: this.customApiKey })
+        : openai;
+
+      const response = await apiClient.chat.completions.create({
         model: this.model,
         messages: [
           ...(systemMessage
@@ -49,6 +128,7 @@ export class BaseAIService {
         content: response.choices[0]?.message.content || "",
         tokensUsed: response.usage?.total_tokens || 0,
         model: response.model,
+        usingCustomKey: this.usingCustomKey,
       };
     } catch (error: any) {
       console.error("OpenAI API Error:", error);
@@ -61,7 +141,12 @@ export class BaseAIService {
     systemMessage?: string
   ): Promise<any> {
     try {
-      const model = gemini.getGenerativeModel({ model: this.model });
+      // Use custom API key if provided, otherwise use default
+      const geminiClient = this.customApiKey
+        ? new GoogleGenerativeAI(this.customApiKey)
+        : gemini;
+
+      const model = geminiClient.getGenerativeModel({ model: this.model });
 
       const fullPrompt = systemMessage
         ? `${systemMessage}\n\nUser Request: ${prompt}`
@@ -75,6 +160,7 @@ export class BaseAIService {
         content: text,
         tokensUsed: 0, // Gemini doesn't provide token count in free tier
         model: this.model,
+        usingCustomKey: this.usingCustomKey,
       };
     } catch (error: any) {
       console.error("Gemini API Error:", error);

@@ -1,12 +1,36 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
-import { BaseAIService, AIProvider } from "../services/aiService.js";
+import {
+  BaseAIService,
+  AIProvider,
+  decryptApiKey,
+} from "../services/aiService.js";
 
 const prisma = new PrismaClient();
 
+// Helper function to get user's AI configuration
+async function getUserAIConfig(
+  userId: string
+): Promise<{ provider: AIProvider; apiKey?: string }> {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: { useOwnApiKey: true, aiApiKey: true, aiProvider: true },
+  });
+
+  if (user?.useOwnApiKey && user?.aiApiKey && user?.aiProvider) {
+    const decryptedKey = decryptApiKey(user.aiApiKey);
+    const provider =
+      user.aiProvider === "openai" ? AIProvider.OPENAI : AIProvider.GEMINI;
+    return { provider, apiKey: decryptedKey };
+  }
+
+  // Default to Gemini if no custom key
+  return { provider: AIProvider.GEMINI };
+}
+
 class HealthInsightsService extends BaseAIService {
-  constructor() {
-    super(AIProvider.GEMINI);
+  constructor(provider: AIProvider = AIProvider.GEMINI, customApiKey?: string) {
+    super(provider, customApiKey);
   }
 
   async generatePersonalizedInsights(
@@ -224,6 +248,9 @@ export const getHealthInsights = async (req: Request, res: Response) => {
 
     const { language = "en" } = req.query;
 
+    // Get user's AI configuration
+    const aiConfig = await getUserAIConfig(userId);
+
     // Check cache first
     const existingCache = await prisma.healthInsightsCache.findFirst({
       where: {
@@ -368,8 +395,11 @@ export const getHealthInsights = async (req: Request, res: Response) => {
       tdee: Math.round(tdee),
     };
 
-    // Generate AI insights
-    const insightsService = new HealthInsightsService();
+    // Generate AI insights with user's custom API key if available
+    const insightsService = new HealthInsightsService(
+      aiConfig.provider,
+      aiConfig.apiKey
+    );
     const insights = await insightsService.generatePersonalizedInsights(
       userData,
       language as string
@@ -460,8 +490,14 @@ export const getNutritionPlan = async (req: Request, res: Response) => {
       tdee: Math.round(tdee),
     };
 
-    // Generate AI nutrition plan
-    const insightsService = new HealthInsightsService();
+    // Get user's AI configuration
+    const aiConfig = await getUserAIConfig(userId);
+
+    // Generate AI nutrition plan with user's custom API key if available
+    const insightsService = new HealthInsightsService(
+      aiConfig.provider,
+      aiConfig.apiKey
+    );
     const plan = await insightsService.generateNutritionPlan(
       userData,
       language as string

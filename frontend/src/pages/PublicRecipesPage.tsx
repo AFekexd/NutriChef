@@ -26,7 +26,7 @@ import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
 import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
-import type { Recipe } from "../types";
+import type { Recipe, InventoryItem } from "../types";
 import { useNavigate } from "react-router-dom";
 
 export function PublicRecipesPage() {
@@ -35,6 +35,7 @@ export function PublicRecipesPage() {
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   // Search and filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,11 +57,21 @@ export function PublicRecipesPage() {
 
   useEffect(() => {
     loadRecipes();
+    loadInventoryData();
   }, []);
 
   useEffect(() => {
     filterAndSortRecipes();
   }, [recipes, searchQuery, selectedCategory, sortBy, maxCalories]);
+
+  const loadInventoryData = async () => {
+    try {
+      const items = await apiService.getAllInventoryItems();
+      setInventoryItems(items);
+    } catch (err: any) {
+      console.error("Error loading inventory:", err);
+    }
+  };
 
   const loadRecipes = async () => {
     setIsLoading(true);
@@ -144,22 +155,55 @@ export function PublicRecipesPage() {
       priority: "medium" as const,
     }));
 
+    // Pass inventory data to auto-check items in stock
     shoppingListService.addRecipe(
       recipe.title,
       recipe.recipeId,
-      ingredientsToAdd
+      ingredientsToAdd,
+      inventoryItems
     );
 
-    toast.success(
-      `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`
-    );
+    // Count how many ingredients are already in stock
+    const inStockCount = ingredientsToAdd.filter((ing) =>
+      inventoryItems.some(
+        (inv) => inv.ingredient.name.toLowerCase() === ing.name.toLowerCase()
+      )
+    ).length;
+
+    const message =
+      inStockCount > 0
+        ? `Added "${recipe.title}" to shopping list! ${inStockCount} of ${ingredientsToAdd.length} ingredients already in stock ✓`
+        : `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`;
+
+    toast.success(message);
   };
 
   const handleRateRecipe = async (recipeId: string, rating: number) => {
     try {
-      await apiService.rateRecipe(recipeId, rating);
+      const response = await apiService.rateRecipe(recipeId, rating);
       toast.success("Recipe rated successfully!");
-      await loadRecipes();
+
+      // Update the recipes state locally instead of reloading
+      setRecipes((prevRecipes) =>
+        prevRecipes.map((recipe) =>
+          recipe.recipeId === recipeId
+            ? {
+                ...recipe,
+                rating: response.rating,
+                ratingCount: response.ratingCount,
+              }
+            : recipe
+        )
+      );
+
+      // Update selected recipe if it's currently open
+      if (selectedRecipe?.recipeId === recipeId) {
+        setSelectedRecipe({
+          ...selectedRecipe,
+          rating: response.rating,
+          ratingCount: response.ratingCount,
+        });
+      }
     } catch (err: any) {
       console.error("Error rating recipe:", err);
       toast.error(
@@ -654,7 +698,6 @@ export function PublicRecipesPage() {
                         key={star}
                         onClick={() => {
                           handleRateRecipe(selectedRecipe.recipeId, star);
-                          setSelectedRecipe(null);
                         }}
                         className="group"
                       >

@@ -33,6 +33,10 @@ model User {
   oauthProvider String?       // "google", "discord", null for regular users
   oauthId       String?       // Provider-specific user ID
   oauthAvatar   String?       // Profile picture URL from OAuth
+  // AI API Key fields
+  aiApiKey      String?       // Encrypted API key for user's own AI service
+  aiProvider    String?       // "openai", "gemini" - which AI service the key is for
+  useOwnApiKey  Boolean       @default(false) // Whether to use user's own API key
   inventoryItems InventoryItem[]
   groceryListItems GroceryListItem[]
   recipes       Recipe[]
@@ -44,6 +48,7 @@ model User {
   sessions      Session[]
   loginHistory  LoginHistory[]
   aiGeneratedRecipes AIGeneratedRecipe[]
+  passwordResetTokens PasswordResetToken[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
@@ -64,6 +69,20 @@ model Session {
 
   @@index([userId])
   @@index([token])
+}
+
+model PasswordResetToken {
+  resetTokenId  String      @id @default(uuid()) @db.Uuid
+  user          User        @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  userId        String      @db.Uuid
+  token         String      @unique
+  expiresAt     DateTime
+  isUsed        Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 model LoginHistory {

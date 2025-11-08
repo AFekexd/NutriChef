@@ -15,6 +15,8 @@ import type { ReactNode } from "react";
 // Lazy load pages for code splitting
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const OAuthCallbackPage = lazy(() => import("./pages/OAuthCallbackPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const InventoryPage = lazy(() =>
@@ -118,6 +120,26 @@ function AppRoutes() {
               <Navigate to="/dashboard" replace />
             ) : (
               <RegisterPage />
+            )
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <ForgotPasswordPage />
+            )
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <ResetPasswordPage />
             )
           }
         />
@@ -225,13 +247,13 @@ function App() {
           <AuthProvider>
             <TutorialContextProvider>
               <TutorialProvider>
-                <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors ">
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors overflow-x-hidden w-full">
                   <OfflineBanner />
                   <WelcomeModal />
                   <TopNavigation />
                   <AppRoutes />
                   <BottomNavigation />
-                  <Toaster position="top-center" />
+                  <Toaster position="bottom-center" />
                 </div>
               </TutorialProvider>
             </TutorialContextProvider>

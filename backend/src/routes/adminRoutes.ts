@@ -92,12 +92,18 @@ router.get("/users/:userId", adminController.getUserDetails);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - isActive
  *             properties:
  *               isActive:
  *                 type: boolean
+ *                 description: Whether to activate or deactivate the account
+ *               reason:
+ *                 type: string
+ *                 description: Optional reason for suspension (only used when deactivating)
  *     responses:
  *       200:
- *         description: User status updated
+ *         description: User status updated, email sent to user
  */
 router.put("/users/:userId/status", adminController.updateUserStatus);
 
@@ -147,7 +153,9 @@ router.put("/users/:userId/role", adminController.updateUserRole);
  *           type: string
  *     responses:
  *       200:
- *         description: User deleted
+ *         description: User deleted, notification email sent
+ *       404:
+ *         description: User not found
  */
 router.delete("/users/:userId", adminController.deleteUser);
 

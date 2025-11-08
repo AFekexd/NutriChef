@@ -12,6 +12,9 @@ import {
   Activity,
   User,
   Shield,
+  ShoppingCart,
+  Store,
+  Salad,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
@@ -122,7 +125,7 @@ export function BottomNavigation() {
           onClick={() => setShowMoreMenu(false)}
         >
           <div className="absolute bottom-24 left-0 right-0 mx-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
               {/* Main Pages */}
               <div className="p-2">
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
@@ -142,6 +145,111 @@ export function BottomNavigation() {
                   <Home className="w-5 h-5" />
                   <span className="font-medium">{t("nav.dashboard")}</span>
                 </button>
+              </div>
+
+              {/* Inventory Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
+                  Inventory
+                </div>
+                <button
+                  onClick={() => {
+                    navigate("/inventory");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/inventory")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Package className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.inventory")}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/shopping-list");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/shopping-list")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.shoppingList")}</span>
+                </button>
+              </div>
+
+              {/* Food Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
+                  Food
+                </div>
+                <button
+                  onClick={() => {
+                    navigate("/recipes");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/recipes")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <ChefHat className="w-5 h-5" />
+                  <span className="font-medium">All Recipes</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/my-recipes");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/my-recipes")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <ChefHat className="w-5 h-5" />
+                  <span className="font-medium">My Recipes</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/recipe-recommendation");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/recipe-recommendation")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Salad className="w-5 h-5" />
+                  <span className="font-medium">Recommendations</span>
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/meal-planning");
+                    setShowMoreMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    isActive("/meal-planning")
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <Calendar className="w-5 h-5" />
+                  <span className="font-medium">{t("nav.mealPlanning")}</span>
+                </button>
+              </div>
+
+              {/* Health Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 p-2">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
+                  Health
+                </div>
                 <button
                   onClick={() => {
                     navigate("/nutrition");
@@ -266,29 +374,29 @@ export function BottomNavigation() {
         <div className="relative flex items-center justify-around h-20">
           {/* Left Side - 2 buttons */}
           <button
-            onClick={() => navigate("/recipes")}
-            data-tutorial="nav-recipes"
+            onClick={() => navigate("/dashboard")}
+            data-tutorial="nav-dashboard"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-              isActive("/recipes")
+              isActive("/dashboard")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <ChefHat className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.recipes")}</span>
+            <Home className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("nav.dashboard")}</span>
           </button>
 
           <button
-            onClick={() => navigate("/meal-planning")}
-            data-tutorial="nav-meal-planning"
+            onClick={() => navigate("/inventory")}
+            data-tutorial="nav-inventory"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-              isActive("/meal-planning")
+              isActive("/inventory") || isActive("/shopping-list")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <Calendar className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.mealPlanning")}</span>
+            <Store className="w-6 h-6" />
+            <span className="text-xs font-medium">Inventory</span>
           </button>
 
           {/* Center Action Button */}
@@ -316,16 +424,19 @@ export function BottomNavigation() {
 
           {/* Right Side - 2 buttons */}
           <button
-            onClick={() => navigate("/inventory")}
-            data-tutorial="nav-inventory"
+            onClick={() => navigate("/recipes")}
+            data-tutorial="nav-food"
             className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
-              isActive("/inventory")
+              isActive("/recipes") ||
+              isActive("/my-recipes") ||
+              isActive("/recipe-recommendation") ||
+              isActive("/meal-planning")
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
             }`}
           >
-            <Package className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("nav.inventory")}</span>
+            <Salad className="w-6 h-6" />
+            <span className="text-xs font-medium">Food</span>
           </button>
 
           <button
@@ -333,7 +444,6 @@ export function BottomNavigation() {
             data-tutorial="nav-more"
             className={`relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
               showMoreMenu ||
-              isActive("/dashboard") ||
               isActive("/nutrition") ||
               isActive("/health-insights") ||
               isActive("/profile") ||
@@ -344,10 +454,10 @@ export function BottomNavigation() {
           >
             <div className="relative">
               <Menu className="w-6 h-6" />
-              {(isActive("/dashboard") ||
-                isActive("/nutrition") ||
+              {(isActive("/nutrition") ||
                 isActive("/health-insights") ||
                 isActive("/profile") ||
+                isActive("/shopping-list") ||
                 isActive("/admin")) && (
                 <span className="absolute -top-1 -right-1 bg-green-500 dark:bg-green-400 rounded-full w-2 h-2"></span>
               )}

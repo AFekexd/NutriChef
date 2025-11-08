@@ -1,4 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
+import { PrismaClient } from "../../generated/prisma/index.js";
+
+const prisma = new PrismaClient();
 
 interface RateLimitRecord {
   count: number;
@@ -59,63 +62,130 @@ export function createAIRateLimiter(
     const userId = req.user?.userId;
 
     if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Unauthorized" });
+      return;
     }
 
-    const config = AI_RATE_LIMITS[service];
-    const limitMap = rateLimits[service];
-    const now = Date.now();
+    // Check if user has their own API key configured
+    prisma.user
+      .findUnique({
+        where: { userId },
+        select: { useOwnApiKey: true, aiApiKey: true },
+      })
+      .then((user) => {
+        // If user has their own API key, bypass rate limiting
+        if (user?.useOwnApiKey && user?.aiApiKey) {
+          console.log(
+            `✅ AI rate limit bypassed for user ${userId} on ${service} (using own API key)`
+          );
+          // Add header to indicate custom API key is being used
+          res.setHeader("X-Using-Custom-API-Key", "true");
+          next();
+          return;
+        }
 
-    // Get or create rate limit record for this user
-    let record = limitMap.get(userId);
+        const config = AI_RATE_LIMITS[service];
+        const limitMap = rateLimits[service];
+        const now = Date.now();
 
-    if (!record || now > record.resetTime) {
-      // Create new record or reset expired one
-      record = {
-        count: 0,
-        resetTime: now + config.windowMs,
-      };
-      limitMap.set(userId, record);
-    }
+        // Get or create rate limit record for this user
+        let record = limitMap.get(userId);
 
-    // Check if user exceeded the limit
-    if (record.count >= config.maxRequests) {
-      const resetInHours = Math.ceil(
-        (record.resetTime - now) / (60 * 60 * 1000)
-      );
+        if (!record || now > record.resetTime) {
+          // Create new record or reset expired one
+          record = {
+            count: 0,
+            resetTime: now + config.windowMs,
+          };
+          limitMap.set(userId, record);
+        }
 
-      console.log(`⛔ AI rate limit exceeded for user ${userId} on ${service}`);
+        // Check if user exceeded the limit
+        if (record.count >= config.maxRequests) {
+          const resetInHours = Math.ceil(
+            (record.resetTime - now) / (60 * 60 * 1000)
+          );
 
-      return res.status(429).json({
-        error: "AI rate limit exceeded",
-        message: `You have reached the maximum number of ${service} requests (${config.maxRequests} per day). Please try again later.`,
-        service,
-        limit: config.maxRequests,
-        resetInHours,
-        resetTime: new Date(record.resetTime).toISOString(),
+          console.log(
+            `⛔ AI rate limit exceeded for user ${userId} on ${service}`
+          );
+
+          res.status(429).json({
+            error: "AI rate limit exceeded",
+            message: `You have reached the maximum number of ${service} requests (${config.maxRequests} per day). Please try again later or configure your own AI API key in profile settings to bypass rate limits.`,
+            service,
+            limit: config.maxRequests,
+            resetInHours,
+            resetTime: new Date(record.resetTime).toISOString(),
+          });
+          return;
+        }
+
+        // Increment the counter
+        record.count++;
+        limitMap.set(userId, record);
+
+        // Add rate limit info to response headers
+        res.setHeader("X-RateLimit-Limit", config.maxRequests.toString());
+        res.setHeader(
+          "X-RateLimit-Remaining",
+          (config.maxRequests - record.count).toString()
+        );
+        res.setHeader(
+          "X-RateLimit-Reset",
+          new Date(record.resetTime).toISOString()
+        );
+
+        console.log(
+          `✅ AI rate limit check passed for user ${userId} on ${service}: ${record.count}/${config.maxRequests}`
+        );
+
+        next();
+      })
+      .catch((error) => {
+        console.error("Error checking user API key status:", error);
+        // Continue with default rate limiting logic if check fails
+        const config = AI_RATE_LIMITS[service];
+        const limitMap = rateLimits[service];
+        const now = Date.now();
+
+        let record = limitMap.get(userId);
+        if (!record || now > record.resetTime) {
+          record = {
+            count: 0,
+            resetTime: now + config.windowMs,
+          };
+          limitMap.set(userId, record);
+        }
+
+        if (record.count >= config.maxRequests) {
+          const resetInHours = Math.ceil(
+            (record.resetTime - now) / (60 * 60 * 1000)
+          );
+          res.status(429).json({
+            error: "AI rate limit exceeded",
+            message: `You have reached the maximum number of ${service} requests (${config.maxRequests} per day). Please try again later.`,
+            service,
+            limit: config.maxRequests,
+            resetInHours,
+            resetTime: new Date(record.resetTime).toISOString(),
+          });
+          return;
+        }
+
+        record.count++;
+        limitMap.set(userId, record);
+        res.setHeader("X-RateLimit-Limit", config.maxRequests.toString());
+        res.setHeader(
+          "X-RateLimit-Remaining",
+          (config.maxRequests - record.count).toString()
+        );
+        res.setHeader(
+          "X-RateLimit-Reset",
+          new Date(record.resetTime).toISOString()
+        );
+        next();
       });
-    }
-
-    // Increment the counter
-    record.count++;
-    limitMap.set(userId, record);
-
-    // Add rate limit info to response headers
-    res.setHeader("X-RateLimit-Limit", config.maxRequests.toString());
-    res.setHeader(
-      "X-RateLimit-Remaining",
-      (config.maxRequests - record.count).toString()
-    );
-    res.setHeader(
-      "X-RateLimit-Reset",
-      new Date(record.resetTime).toISOString()
-    );
-
-    console.log(
-      `✅ AI rate limit check passed for user ${userId} on ${service}: ${record.count}/${config.maxRequests}`
-    );
-
-    next();
   };
 }
 

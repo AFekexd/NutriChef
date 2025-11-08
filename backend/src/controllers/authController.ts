@@ -8,6 +8,12 @@ import {
   getTokenExpiration,
 } from "../utils/jwt.js";
 import { extractIpAddress } from "../middlewares/auth.js";
+import crypto from "crypto";
+import {
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetConfirmation,
+} from "../services/emailService.js";
 
 const prisma = new PrismaClient();
 
@@ -102,6 +108,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         success: true,
         failureReason: null,
       },
+    });
+
+    // Send welcome email (don't wait for it to complete)
+    sendWelcomeEmail(user.email, user.name).catch((error) => {
+      console.error("Failed to send welcome email:", error);
+      // Don't fail registration if email fails
     });
 
     res.status(201).json({
@@ -704,3 +716,212 @@ export const changePassword = async (
     res.status(500).json({ error: "Failed to change password" });
   }
 };
+
+/**
+ * Request password reset (send email with reset token)
+ */
+export const requestPasswordReset = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ error: "Email is required" });
+      return;
+    }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    // For security, always return success even if user not found
+    if (!user) {
+      res.json({
+        message:
+          "If an account with that email exists, a password reset link has been sent",
+      });
+      return;
+    }
+
+    // Check if user is an OAuth user (no password)
+    if (!user.passwordHash) {
+      res.json({
+        message:
+          "If an account with that email exists, a password reset link has been sent",
+      });
+      return;
+    }
+
+    // Generate secure reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Token expires in 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Invalidate any existing reset tokens for this user
+    await prisma.passwordResetToken.updateMany({
+      where: {
+        userId: user.userId,
+        isUsed: false,
+        expiresAt: {
+          gte: new Date(),
+        },
+      },
+      data: {
+        isUsed: true,
+      },
+    });
+
+    // Create new reset token
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.userId,
+        token: resetToken,
+        expiresAt,
+      },
+    });
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(user.email, user.name, resetToken);
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError);
+      // Don't expose email errors to user
+    }
+
+    res.json({
+      message:
+        "If an account with that email exists, a password reset link has been sent",
+    });
+  } catch (error) {
+    console.error("Request password reset error:", error);
+    res.status(500).json({ error: "Failed to process password reset request" });
+  }
+};
+
+/**
+ * Reset password using token
+ */
+export const resetPassword = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      res.status(400).json({ error: "Token and new password are required" });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res
+        .status(400)
+        .json({ error: "Password must be at least 8 characters long" });
+      return;
+    }
+
+    // Validate password strength
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+      res.status(400).json({
+        error:
+          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      });
+      return;
+    }
+
+    // Find valid reset token
+    const resetTokenRecord = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!resetTokenRecord) {
+      res.status(400).json({ error: "Invalid or expired reset token" });
+      return;
+    }
+
+    // Check if token is already used
+    if (resetTokenRecord.isUsed) {
+      res.status(400).json({ error: "Reset token has already been used" });
+      return;
+    }
+
+    // Check if token is expired
+    if (resetTokenRecord.expiresAt < new Date()) {
+      res.status(400).json({ error: "Reset token has expired" });
+      return;
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update user password
+    await prisma.user.update({
+      where: { userId: resetTokenRecord.userId },
+      data: {
+        passwordHash: newPasswordHash,
+        failedLoginAttempts: 0, // Reset failed attempts
+        lockedUntil: null, // Unlock account if locked
+      },
+    });
+
+    // Mark token as used
+    await prisma.passwordResetToken.update({
+      where: { resetTokenId: resetTokenRecord.resetTokenId },
+      data: { isUsed: true },
+    });
+
+    // Invalidate all existing sessions for security
+    await prisma.session.updateMany({
+      where: {
+        userId: resetTokenRecord.userId,
+        isValid: true,
+      },
+      data: {
+        isValid: false,
+      },
+    });
+
+    // Send confirmation email
+    try {
+      await sendPasswordResetConfirmation(
+        resetTokenRecord.user.email,
+        resetTokenRecord.user.name
+      );
+    } catch (emailError) {
+      console.error("Failed to send password reset confirmation:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    res.json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+};
+
+/**
+ * Validation rules for password reset request
+ */
+export const requestPasswordResetValidation = [
+  body("email")
+    .isEmail()
+    .normalizeEmail()
+    .withMessage("Valid email is required"),
+];
+
+/**
+ * Validation rules for password reset
+ */
+export const resetPasswordValidation = [
+  body("token").notEmpty().withMessage("Reset token is required"),
+  body("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage("Password must contain uppercase, lowercase, and number"),
+];
