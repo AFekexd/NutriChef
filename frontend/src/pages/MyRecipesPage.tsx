@@ -112,9 +112,7 @@ export function MyRecipesPage() {
       setRecipes(response.recipes);
     } catch (err: any) {
       console.error("Error loading recipes:", err);
-      setError(
-        err.response?.data?.error || t("myRecipes.messages.loadFailed")
-      );
+      setError(err.response?.data?.error || t("myRecipes.messages.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -177,7 +175,9 @@ export function MyRecipesPage() {
         category: "recipes",
         priority: "medium",
       });
-      toast.success(t("myRecipes.messages.addedToShoppingList", { name: recipe.title }));
+      toast.success(
+        t("myRecipes.messages.addedToShoppingList", { name: recipe.title })
+      );
       return;
     }
 
@@ -405,7 +405,9 @@ export function MyRecipesPage() {
                       ) : (
                         <UserIcon className="w-4 h-4" />
                       )}
-                      <span>{recipe.user?.name || t("myRecipes.details.unknown")}</span>
+                      <span>
+                        {recipe.user?.name || t("myRecipes.details.unknown")}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
