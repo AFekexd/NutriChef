@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
 import { toast } from "sonner";
 import {
@@ -17,6 +18,13 @@ import {
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { ScrollToTop } from "../components/ScrollToTop";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { apiService } from "../services/api";
@@ -40,6 +48,7 @@ interface ShoppingItem {
 }
 
 export function ShoppingListPage() {
+  const { t } = useTranslation();
   const [shoppingItems, setShoppingItems] = useState<ShoppingItem[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [newItem, setNewItem] = useState({
@@ -89,7 +98,11 @@ export function ShoppingListPage() {
         const checkedItems = shoppingItems.filter((item) => item.checked);
         if (checkedItems.length > 0) {
           checkedItems.forEach((item) => handleRemoveItem(item.id));
-          toast.success(`Removed ${checkedItems.length} completed items`);
+          toast.success(
+            t("shoppingList.messages.removedCompleted", {
+              count: checkedItems.length,
+            })
+          );
         }
       }
     };
@@ -286,12 +299,16 @@ export function ShoppingListPage() {
   const handleClearCompleted = () => {
     const checkedItems = shoppingItems.filter((item) => item.checked);
     if (checkedItems.length === 0) {
-      toast.info("No completed items to clear");
+      toast.info(t("shoppingList.messages.noCompletedItems"));
       return;
     }
 
     checkedItems.forEach((item) => handleRemoveItem(item.id));
-    toast.success(`Removed ${checkedItems.length} completed items`);
+    toast.success(
+      t("shoppingList.messages.removedCompleted", {
+        count: checkedItems.length,
+      })
+    );
   };
 
   const handleExportList = () => {
@@ -383,15 +400,15 @@ export function ShoppingListPage() {
     : { all: shoppingItems };
 
   const categories = {
-    recipes: "Recipes",
-    produce: "Fruits & Vegetables",
-    dairy: "Dairy & Eggs",
-    meat: "Meat & Seafood",
-    grains: "Grains & Bread",
-    pantry: "Pantry",
-    frozen: "Frozen Foods",
-    beverages: "Beverages",
-    other: "Other",
+    recipes: t("shoppingList.categories.recipes"),
+    produce: t("shoppingList.categories.produce"),
+    dairy: t("shoppingList.categories.dairy"),
+    meat: t("shoppingList.categories.meat"),
+    grains: t("shoppingList.categories.grains"),
+    pantry: t("shoppingList.categories.pantry"),
+    frozen: t("shoppingList.categories.frozen"),
+    beverages: t("shoppingList.categories.beverages"),
+    other: t("shoppingList.categories.other"),
   };
 
   const stats = {
@@ -410,7 +427,7 @@ export function ShoppingListPage() {
             <div className="flex items-center gap-3">
               <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" />
               <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-600 bg-clip-text text-transparent">
-                Shopping List
+                {t("shoppingList.title")}
               </h1>
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -421,7 +438,7 @@ export function ShoppingListPage() {
                 className="border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Clear Completed
+                {t("shoppingList.actions.clearCompleted")}
               </Button>
               <Button
                 onClick={handleExportList}
@@ -430,13 +447,12 @@ export function ShoppingListPage() {
                 className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                {t("shoppingList.actions.export")}
               </Button>
             </div>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Smart shopping lists with portion optimization for {servings}{" "}
-            servings
+            {t("shoppingList.subtitle", { servings })}
           </p>
         </div>
 
@@ -450,7 +466,7 @@ export function ShoppingListPage() {
                   {stats.total}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Total Items
+                  {t("shoppingList.stats.totalItems")}
                 </div>
               </Card>
               <Card className="p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
@@ -458,7 +474,7 @@ export function ShoppingListPage() {
                   {stats.checked}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Checked
+                  {t("shoppingList.stats.checked")}
                 </div>
               </Card>
               <Card className="p-3 sm:p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
@@ -466,7 +482,7 @@ export function ShoppingListPage() {
                   {stats.inInventory}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  In Stock
+                  {t("shoppingList.stats.inStock")}
                 </div>
               </Card>
             </div>
@@ -480,7 +496,7 @@ export function ShoppingListPage() {
                   className="bg-gradient-to-r from-blue-600 to-green-600 dark:from-blue-500 dark:to-green-500 text-white hover:from-blue-700 hover:to-green-700"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Optimize Portions
+                  {t("shoppingList.actions.optimize")}
                 </Button>
                 <Button
                   onClick={() => setGroupByCategory(!groupByCategory)}
@@ -489,12 +505,12 @@ export function ShoppingListPage() {
                   {groupByCategory ? (
                     <>
                       <ChevronUp className="w-4 h-4 mr-2" />
-                      Ungroup
+                      {t("shoppingList.actions.ungroup")}
                     </>
                   ) : (
                     <>
                       <ChevronDown className="w-4 h-4 mr-2" />
-                      Group by Category
+                      {t("shoppingList.actions.groupByCategory")}
                     </>
                   )}
                 </Button>
@@ -505,7 +521,7 @@ export function ShoppingListPage() {
                   className="border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Clear Checked
+                  {t("shoppingList.actions.clearChecked")}
                 </Button>
               </div>
             </Card>
@@ -680,10 +696,10 @@ export function ShoppingListPage() {
                 <Card className="p-12 text-center">
                   <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                    Your shopping list is empty
+                    {t("shoppingList.empty.title")}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Add items to start building your smart shopping list
+                    {t("shoppingList.empty.description")}
                   </p>
                 </Card>
               )}
@@ -696,14 +712,14 @@ export function ShoppingListPage() {
             <Card className="p-6 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-900 dark:to-blue-900/5 border-gray-200 dark:border-gray-800 shadow-lg">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                Add Item
+                {t("shoppingList.add.title")}
               </h2>
 
               <div className="space-y-3">
                 <input
                   id="item-name-input"
                   type="text"
-                  placeholder="Item name (Ctrl+A)"
+                  placeholder={t("shoppingList.add.namePlaceholder")}
                   value={newItem.name}
                   onChange={(e) =>
                     setNewItem({ ...newItem, name: e.target.value })
@@ -716,7 +732,7 @@ export function ShoppingListPage() {
                     type="number"
                     min="0.1"
                     step="0.1"
-                    placeholder="Quantity"
+                    placeholder={t("shoppingList.add.quantity")}
                     value={newItem.quantity}
                     onChange={(e) =>
                       setNewItem({
@@ -726,29 +742,73 @@ export function ShoppingListPage() {
                     }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   />
-                  <select
+                  <Select
                     value={newItem.unit}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, unit: e.target.value })
+                    onValueChange={(value) =>
+                      setNewItem({ ...newItem, unit: value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   >
-                    <option value="unit">unit</option>
-                    <option value="g">g</option>
-                    <option value="kg">kg</option>
-                    <option value="ml">ml</option>
-                    <option value="l">l</option>
-                    <option value="cup">cup</option>
-                    <option value="tbsp">tbsp</option>
-                    <option value="tsp">tsp</option>
-                  </select>
+                    <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <SelectValue placeholder={t("units.unit")} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                      <SelectItem
+                        value="unit"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.unit")}
+                      </SelectItem>
+                      <SelectItem
+                        value="g"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.grams")}
+                      </SelectItem>
+                      <SelectItem
+                        value="kg"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.kilograms")}
+                      </SelectItem>
+                      <SelectItem
+                        value="ml"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.milliliters")}
+                      </SelectItem>
+                      <SelectItem
+                        value="l"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.liters")}
+                      </SelectItem>
+                      <SelectItem
+                        value="cup"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.cup")}
+                      </SelectItem>
+                      <SelectItem
+                        value="tbsp"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.tablespoon")}
+                      </SelectItem>
+                      <SelectItem
+                        value="tsp"
+                        className="text-gray-900 dark:text-gray-100"
+                      >
+                        {t("units.teaspoon")}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button
                   onClick={handleAddItem}
                   className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add to List
+                  {t("shoppingList.add.button")}
                 </Button>
               </div>
             </Card>
@@ -757,7 +817,7 @@ export function ShoppingListPage() {
             <Card className="p-6 dark:text-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-green-600 dark:text-green-400" />
-                Adjust Servings
+                {t("shoppingList.servings.title")}
               </h3>
               <div className="flex items-center gap-3">
                 <Button
@@ -773,7 +833,7 @@ export function ShoppingListPage() {
                     {servings}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    servings
+                    {t("shoppingList.servings.subtitle")}
                   </div>
                 </div>
                 <Button
@@ -791,24 +851,24 @@ export function ShoppingListPage() {
             <Card className="p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/10 dark:to-blue-900/10 border-green-200 dark:border-green-800">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                Smart Tips
+                {t("shoppingList.tips.title")}
               </h3>
               <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Optimize portions for standard package sizes</span>
+                  <span>{t("shoppingList.tips.optimize")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Items in your inventory are highlighted</span>
+                  <span>{t("shoppingList.tips.inventory")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Adjust servings to scale quantities</span>
+                  <span>{t("shoppingList.tips.adjust")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>Export your list to share or print</span>
+                  <span>{t("shoppingList.tips.export")}</span>
                 </li>
               </ul>
             </Card>

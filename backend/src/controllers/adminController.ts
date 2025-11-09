@@ -9,6 +9,19 @@ import {
   sendAccountSuspensionEmail,
   sendAccountReactivationEmail,
 } from "../services/emailService.js";
+import {
+  logAdminAction,
+  getAdminLogs,
+  createModerationAction,
+  getActiveModerationActions,
+  getUserModerationHistory,
+  removeModerationAction,
+} from "../services/adminLogService.js";
+import {
+  getApiLogs,
+  getApiStats,
+  cleanupOldApiLogs,
+} from "../middlewares/apiLogger.js";
 
 const prisma = new PrismaClient();
 
@@ -218,6 +231,20 @@ export const updateUserStatus = async (
       });
     }
 
+    // Log the action
+    if (req.user?.userId) {
+      await logAdminAction({
+        adminUserId: req.user.userId,
+        action: isActive ? "user_reactivated" : "user_suspended",
+        targetType: "user",
+        targetId: userId,
+        targetEmail: user.email,
+        targetName: user.name,
+        details: { reason },
+        req,
+      });
+    }
+
     res.json({ user, message: "User status updated successfully" });
   } catch (error: any) {
     console.error("Error updating user status:", error);
@@ -310,6 +337,19 @@ export const deleteUser = async (
     await prisma.user.delete({
       where: { userId },
     });
+
+    // Log the action
+    if (req.user?.userId) {
+      await logAdminAction({
+        adminUserId: req.user.userId,
+        action: "user_deleted",
+        targetType: "user",
+        targetId: userId,
+        targetEmail: user.email,
+        targetName: user.name,
+        req,
+      });
+    }
 
     // Send deletion notification email
     sendAccountDeletionEmail(user.email, user.name).catch((error) => {
@@ -625,6 +665,18 @@ export const resetUserAIRateLimit = async (
 
     resetUserRateLimit(userId, service);
 
+    // Log the action
+    if (req.user?.userId) {
+      await logAdminAction({
+        adminUserId: req.user.userId,
+        action: "rate_limit_reset",
+        targetType: "user",
+        targetId: userId,
+        details: { service: service || "all" },
+        req,
+      });
+    }
+
     res.json({
       message: service
         ? `Rate limit reset for ${service}`
@@ -635,5 +687,516 @@ export const resetUserAIRateLimit = async (
   } catch (error: any) {
     console.error("Error resetting rate limit:", error);
     res.status(500).json({ error: "Failed to reset rate limit" });
+  }
+};
+
+/**
+ * Get admin activity logs
+ */
+export const getActivityLogs = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      action,
+      targetType,
+      adminUserId,
+      startDate,
+      endDate,
+    } = req.query;
+
+    const result = await getAdminLogs({
+      page: Number(page),
+      limit: Number(limit),
+      action: action as string,
+      targetType: targetType as string,
+      adminUserId: adminUserId as string,
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error fetching activity logs:", error);
+    res.status(500).json({ error: "Failed to fetch activity logs" });
+  }
+};
+
+/**
+ * Send warning to user
+ */
+export const sendWarningToUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { reason, adminNote } = req.body;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    if (!req.user?.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { email: true, name: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Create moderation action
+    const moderationAction = await createModerationAction({
+      userId,
+      actionType: "warning",
+      reason,
+      adminUserId: req.user.userId,
+      adminNote,
+    });
+
+    // Log the action
+    await logAdminAction({
+      adminUserId: req.user.userId,
+      action: "user_warned",
+      targetType: "user",
+      targetId: userId,
+      targetEmail: user.email,
+      targetName: user.name,
+      details: {
+        reason,
+        moderationActionId: moderationAction.moderationActionId,
+      },
+      req,
+    });
+
+    // TODO: Send email notification to user
+    // await sendWarningEmail(user.email, user.name, reason);
+
+    res.json({
+      message: "Warning sent successfully",
+      moderationAction,
+    });
+  } catch (error: any) {
+    console.error("Error sending warning:", error);
+    res.status(500).json({ error: "Failed to send warning" });
+  }
+};
+
+/**
+ * Timeout user (temporary suspension)
+ */
+export const timeoutUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { reason, duration, adminNote } = req.body; // duration in hours
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    if (!duration || duration <= 0) {
+      res.status(400).json({ error: "Valid duration in hours is required" });
+      return;
+    }
+
+    if (!req.user?.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Prevent timing out yourself
+    if (req.user.userId === userId) {
+      res.status(400).json({ error: "Cannot timeout your own account" });
+      return;
+    }
+
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { email: true, name: true, isActive: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Create moderation action
+    const moderationAction = await createModerationAction({
+      userId,
+      actionType: "timeout",
+      reason,
+      duration: Number(duration),
+      adminUserId: req.user.userId,
+      adminNote,
+    });
+
+    // Deactivate user account temporarily
+    await prisma.user.update({
+      where: { userId },
+      data: { isActive: false },
+    });
+
+    // Invalidate all sessions
+    await prisma.session.updateMany({
+      where: { userId, isValid: true },
+      data: { isValid: false },
+    });
+
+    // Log the action
+    await logAdminAction({
+      adminUserId: req.user.userId,
+      action: "user_timeout",
+      targetType: "user",
+      targetId: userId,
+      targetEmail: user.email,
+      targetName: user.name,
+      details: {
+        reason,
+        duration,
+        expiresAt: moderationAction.expiresAt,
+        moderationActionId: moderationAction.moderationActionId,
+      },
+      req,
+    });
+
+    // Send timeout notification email
+    await sendAccountSuspensionEmail(
+      user.email,
+      user.name,
+      `Your account has been temporarily suspended for ${duration} hours. Reason: ${
+        reason || "Policy violation"
+      }`
+    ).catch((error) => {
+      console.error("Failed to send timeout email:", error);
+    });
+
+    res.json({
+      message: `User account timed out for ${duration} hours`,
+      moderationAction,
+    });
+  } catch (error: any) {
+    console.error("Error timing out user:", error);
+    res.status(500).json({ error: "Failed to timeout user" });
+  }
+};
+
+/**
+ * Ban user (permanent or with expiry)
+ */
+export const banUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+    const { reason, duration, adminNote } = req.body; // duration in hours (optional, null = permanent)
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    if (!req.user?.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Prevent banning yourself
+    if (req.user.userId === userId) {
+      res.status(400).json({ error: "Cannot ban your own account" });
+      return;
+    }
+
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { email: true, name: true, isActive: true, role: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Prevent banning other admins
+    if (user.role === "admin") {
+      res.status(403).json({ error: "Cannot ban another admin" });
+      return;
+    }
+
+    // Create moderation action
+    const moderationAction = await createModerationAction({
+      userId,
+      actionType: "ban",
+      reason,
+      duration: duration ? Number(duration) : undefined,
+      adminUserId: req.user.userId,
+      adminNote,
+    });
+
+    // Deactivate user account
+    await prisma.user.update({
+      where: { userId },
+      data: { isActive: false },
+    });
+
+    // Invalidate all sessions
+    await prisma.session.updateMany({
+      where: { userId, isValid: true },
+      data: { isValid: false },
+    });
+
+    // Log the action
+    await logAdminAction({
+      adminUserId: req.user.userId,
+      action: "user_banned",
+      targetType: "user",
+      targetId: userId,
+      targetEmail: user.email,
+      targetName: user.name,
+      details: {
+        reason,
+        duration,
+        isPermanent: !duration,
+        expiresAt: moderationAction.expiresAt,
+        moderationActionId: moderationAction.moderationActionId,
+      },
+      req,
+    });
+
+    // Send ban notification email
+    const banMessage = duration
+      ? `Your account has been banned for ${duration} hours. Reason: ${
+          reason || "Policy violation"
+        }`
+      : `Your account has been permanently banned. Reason: ${
+          reason || "Policy violation"
+        }`;
+
+    await sendAccountSuspensionEmail(user.email, user.name, banMessage).catch(
+      (error) => {
+        console.error("Failed to send ban email:", error);
+      }
+    );
+
+    res.json({
+      message: duration
+        ? `User banned for ${duration} hours`
+        : "User permanently banned",
+      moderationAction,
+    });
+  } catch (error: any) {
+    console.error("Error banning user:", error);
+    res.status(500).json({ error: "Failed to ban user" });
+  }
+};
+
+/**
+ * Unban/lift timeout from user
+ */
+export const unbanUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    if (!req.user?.userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Get user details
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { email: true, name: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Get active moderation actions
+    const activeActions = await getActiveModerationActions(userId);
+    const banOrTimeout = activeActions.find(
+      (a) => a.actionType === "ban" || a.actionType === "timeout"
+    );
+
+    if (!banOrTimeout) {
+      res
+        .status(400)
+        .json({ error: "User is not currently banned or timed out" });
+      return;
+    }
+
+    // Remove moderation action
+    await removeModerationAction(
+      banOrTimeout.moderationActionId,
+      req.user.userId
+    );
+
+    // Reactivate user account
+    await prisma.user.update({
+      where: { userId },
+      data: { isActive: true },
+    });
+
+    // Log the action
+    await logAdminAction({
+      adminUserId: req.user.userId,
+      action: "user_unbanned",
+      targetType: "user",
+      targetId: userId,
+      targetEmail: user.email,
+      targetName: user.name,
+      details: {
+        previousActionType: banOrTimeout.actionType,
+        moderationActionId: banOrTimeout.moderationActionId,
+      },
+      req,
+    });
+
+    // Send reactivation email
+    await sendAccountReactivationEmail(user.email, user.name).catch((error) => {
+      console.error("Failed to send reactivation email:", error);
+    });
+
+    res.json({
+      message: "User unbanned successfully",
+    });
+  } catch (error: any) {
+    console.error("Error unbanning user:", error);
+    res.status(500).json({ error: "Failed to unban user" });
+  }
+};
+
+/**
+ * Get user's moderation history
+ */
+export const getUserModeration = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      res.status(400).json({ error: "User ID is required" });
+      return;
+    }
+
+    const [activeActions, history] = await Promise.all([
+      getActiveModerationActions(userId),
+      getUserModerationHistory(userId),
+    ]);
+
+    res.json({
+      activeActions,
+      history,
+    });
+  } catch (error: any) {
+    console.error("Error fetching user moderation:", error);
+    res.status(500).json({ error: "Failed to fetch user moderation data" });
+  }
+};
+
+/**
+ * Get API activity logs (all users)
+ */
+export const getApiActivityLogs = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      userId,
+      method,
+      path,
+      statusCode,
+      startDate,
+      endDate,
+      searchTerm,
+    } = req.query;
+
+    const result = await getApiLogs({
+      page: Number(page),
+      limit: Number(limit),
+      userId: userId as string,
+      method: method as string,
+      path: path as string,
+      statusCode: statusCode ? Number(statusCode) : undefined,
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+      searchTerm: searchTerm as string,
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error fetching API logs:", error);
+    res.status(500).json({ error: "Failed to fetch API logs" });
+  }
+};
+
+/**
+ * Get API activity statistics
+ */
+export const getApiActivityStats = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userId, startDate, endDate } = req.query;
+
+    const stats = await getApiStats({
+      userId: userId as string,
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+    });
+
+    res.json(stats);
+  } catch (error: any) {
+    console.error("Error fetching API stats:", error);
+    res.status(500).json({ error: "Failed to fetch API statistics" });
+  }
+};
+
+/**
+ * Clean up old API logs
+ */
+export const cleanupApiLogs = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { daysToKeep = 30 } = req.body;
+
+    const count = await cleanupOldApiLogs(Number(daysToKeep));
+
+    res.json({
+      message: `Successfully deleted ${count} old API log entries`,
+      deletedCount: count,
+    });
+  } catch (error: any) {
+    console.error("Error cleaning up API logs:", error);
+    res.status(500).json({ error: "Failed to cleanup API logs" });
   }
 };

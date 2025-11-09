@@ -88,7 +88,7 @@ export function TopNavigation() {
                 >
                   <Store className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
                   <span className="font-medium text-sm lg:text-base">
-                    Inventory
+                    {t("nav.inventory")}
                   </span>
                   <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
                 </DropdownMenuTrigger>
@@ -123,7 +123,9 @@ export function TopNavigation() {
                   }`}
                 >
                   <Salad className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                  <span className="font-medium text-sm lg:text-base">Food</span>
+                  <span className="font-medium text-sm lg:text-base">
+                    {t("nav.foodAndMeals")}
+                  </span>
                   <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
@@ -132,21 +134,21 @@ export function TopNavigation() {
                     className="cursor-pointer"
                   >
                     <ChefHat className="w-4 h-4 mr-2" />
-                    All Recipes
+                    {t("nav.allRecipes")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate("/my-recipes")}
                     className="cursor-pointer"
                   >
                     <ChefHat className="w-4 h-4 mr-2" />
-                    My Recipes
+                    {t("nav.myRecipes")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate("/recipe-recommendation")}
                     className="cursor-pointer"
                   >
                     <ChefHat className="w-4 h-4 mr-2" />
-                    Recommendations
+                    {t("nav.recipeRecommendations")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => navigate("/meal-planning")}
@@ -169,7 +171,7 @@ export function TopNavigation() {
                 >
                   <Activity className="w-4 h-4 lg:w-5 lg:h-5 flex-shrink-0" />
                   <span className="font-medium text-sm lg:text-base">
-                    Health
+                    {t("nav.health")}
                   </span>
                   <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />
                 </DropdownMenuTrigger>

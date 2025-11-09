@@ -17,6 +17,7 @@ import mealPlanRoutes from "./routes/mealPlanRoutes.js";
 import nutritionRoutes from "./routes/nutritionRoutes.js";
 import healthInsightsRoutes from "./routes/healthInsightsRoutes.js";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
+import { apiLogger } from "./middlewares/apiLogger.js";
 import { PrismaClient } from "../generated/prisma/index.js";
 
 const prisma = new PrismaClient();
@@ -81,6 +82,9 @@ app.use(cookieParser());
 
 // Initialize Passport
 app.use(passport.initialize());
+
+// API activity logging (logs all API requests for admin review)
+app.use(apiLogger);
 
 // Request logging middleware
 app.use((req, res, next) => {

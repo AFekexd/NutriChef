@@ -1,4 +1,5 @@
 import { ChevronRight, Home } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 interface BreadcrumbItem {
@@ -21,7 +22,7 @@ const routeLabels: Record<string, string> = {
 export const Breadcrumbs = () => {
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
-
+  const { t, i18n } = useTranslation();
   if (
     pathSegments.length === 0 ||
     pathSegments[0] === "login" ||
@@ -30,7 +31,9 @@ export const Breadcrumbs = () => {
     return null;
   }
 
-  const breadcrumbs: BreadcrumbItem[] = [{ label: "Home", path: "/dashboard" }];
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: t("breadcrumbs.home"), path: "/dashboard" },
+  ];
 
   let currentPath = "";
   pathSegments.forEach((segment) => {
@@ -45,6 +48,32 @@ export const Breadcrumbs = () => {
   if (breadcrumbs.length <= 1) {
     return null;
   }
+  const generateLabel = (label: string, lng: string) => {
+    switch (label) {
+      case "Dashboard":
+        return t("breadcrumbs.dashboard", { lng });
+      case "Inventory":
+        return t("breadcrumbs.inventory", { lng });
+      case "Recipe-recommendation":
+        return t("breadcrumbs.recipeRecommendations", { lng });
+      case "My Recipes":
+        return t("breadcrumbs.myRecipes", { lng });
+      case "Shopping List":
+        return t("breadcrumbs.shoppingList", { lng });
+      case "Meal Planning":
+        return t("breadcrumbs.mealPlanning", { lng });
+      case "Profile":
+        return t("breadcrumbs.profile", { lng });
+      case "Admin Panel":
+        return t("breadcrumbs.adminPanel", { lng });
+      case "Nutrition Tracking":
+        return t("breadcrumbs.nutritionTracking", { lng });
+      case "Home":
+        return t("common.home", { lng });
+      default:
+        return label;
+    }
+  };
 
   return (
     <nav className="hidden md:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -57,7 +86,7 @@ export const Breadcrumbs = () => {
             {index > 0 && <ChevronRight className="w-4 h-4 mx-2" />}
             {isLast ? (
               <span className="font-medium text-gray-900 dark:text-gray-100">
-                {crumb.label}
+                {generateLabel(crumb.label, i18n.language)}
               </span>
             ) : (
               <Link
@@ -65,7 +94,7 @@ export const Breadcrumbs = () => {
                 className="hover:text-green-600 dark:hover:text-green-400 transition-colors flex items-center gap-1"
               >
                 {isHome && <Home className="w-4 h-4" />}
-                {crumb.label}
+                {generateLabel(crumb.label, i18n.language)}
               </Link>
             )}
           </div>

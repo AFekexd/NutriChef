@@ -18,6 +18,13 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { PullToRefreshIndicator } from "../components/PullToRefreshIndicator";
 import { usePullToRefresh } from "../hooks/usePullToRefresh";
@@ -45,7 +52,7 @@ export function MyRecipesPage() {
   const { isRefreshing, pullDistance } = usePullToRefresh({
     onRefresh: async () => {
       await loadRecipes();
-      toast.success("Recipes refreshed!");
+      toast.success(t("myRecipes.recipesRefreshed"));
     },
     threshold: 80,
   });
@@ -69,7 +76,7 @@ export function MyRecipesPage() {
           case "n":
             e.preventDefault();
             navigate("/recipe-recommendation");
-            toast.info("Opening Recipe Recommendations...");
+            toast.info(t("myRecipes.openingRecommendations"));
             break;
         }
       } else if (e.key === "Escape") {
@@ -106,7 +113,7 @@ export function MyRecipesPage() {
     } catch (err: any) {
       console.error("Error loading recipes:", err);
       setError(
-        err.response?.data?.error || "Failed to load recipes. Please try again."
+        err.response?.data?.error || t("myRecipes.messages.loadFailed")
       );
     } finally {
       setIsLoading(false);
@@ -115,11 +122,10 @@ export function MyRecipesPage() {
 
   const handleDeleteRecipe = async (recipeId: string) => {
     confirmDialog({
-      title: "Delete Recipe?",
-      message:
-        "Are you sure you want to delete this recipe? This action cannot be undone.",
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      title: t("myRecipes.messages.deleteConfirm"),
+      message: t("myRecipes.messages.deleteMessage"),
+      confirmText: t("myRecipes.messages.confirmDelete"),
+      cancelText: t("myRecipes.messages.cancel"),
       onConfirm: async () => {
         setIsDeleting(true);
         setError(null);
@@ -127,14 +133,13 @@ export function MyRecipesPage() {
           await apiService.deleteAdminRecipe(recipeId);
           setRecipes(recipes.filter((r) => r.recipeId !== recipeId));
           setSelectedRecipe(null);
-          toast.success("Recipe deleted successfully");
+          toast.success(t("myRecipes.messages.deleteSuccess"));
         } catch (err: any) {
           console.error("Error deleting recipe:", err);
           setError(
-            err.response?.data?.error ||
-              "Failed to delete recipe. Please try again."
+            err.response?.data?.error || t("myRecipes.messages.deleteFailed")
           );
-          toast.error("Failed to delete recipe");
+          toast.error(t("myRecipes.messages.deleteFailed"));
         } finally {
           setIsDeleting(false);
         }
@@ -151,10 +156,14 @@ export function MyRecipesPage() {
           r.recipeId === recipe.recipeId ? { ...r, isPublic: newVisibility } : r
         )
       );
-      toast.success(`Recipe is now ${newVisibility ? "public" : "private"}`);
+      toast.success(
+        newVisibility
+          ? t("myRecipes.messages.visibilityPublic")
+          : t("myRecipes.messages.visibilityPrivate")
+      );
     } catch (err: any) {
       console.error("Error updating recipe visibility:", err);
-      toast.error("Failed to update recipe visibility");
+      toast.error(t("myRecipes.messages.visibilityFailed"));
     }
   };
 
@@ -168,7 +177,7 @@ export function MyRecipesPage() {
         category: "recipes",
         priority: "medium",
       });
-      toast.success(`"${recipe.title}" added to shopping list as a reminder!`);
+      toast.success(t("myRecipes.messages.addedToShoppingList", { name: recipe.title }));
       return;
     }
 
@@ -198,8 +207,15 @@ export function MyRecipesPage() {
 
     const message =
       inStockCount > 0
-        ? `Added "${recipe.title}" to shopping list! ${inStockCount} of ${ingredientsToAdd.length} ingredients already in stock ✓`
-        : `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`;
+        ? t("myRecipes.messages.addedWithStock", {
+            name: recipe.title,
+            inStock: inStockCount,
+            total: ingredientsToAdd.length,
+          })
+        : t("myRecipes.messages.addedWithIngredients", {
+            name: recipe.title,
+            count: ingredientsToAdd.length,
+          });
 
     toast.success(message);
   };
@@ -235,7 +251,7 @@ export function MyRecipesPage() {
             <div className="flex items-center gap-3">
               <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" />
               <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-600 bg-clip-text text-transparent">
-                My Recipes
+                {t("myRecipes.title")}
               </h1>
             </div>
             <Button
@@ -243,11 +259,11 @@ export function MyRecipesPage() {
               className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg w-full sm:w-auto"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Create New Recipe
+              {t("myRecipes.createNew")}
             </Button>
           </div>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            View and manage your saved recipes
+            {t("myRecipes.subtitle")}
           </p>
         </div>
 
@@ -263,7 +279,7 @@ export function MyRecipesPage() {
                   filterMode === "all" ? "bg-blue-600 hover:bg-blue-700" : ""
                 }
               >
-                All ({recipes.length})
+                {t("myRecipes.filters.all")} ({recipes.length})
               </Button>
               <Button
                 variant={filterMode === "favorites" ? "default" : "outline"}
@@ -275,7 +291,7 @@ export function MyRecipesPage() {
                     : ""
                 }
               >
-                ❤️ Favorites
+                ❤️ {t("myRecipes.filters.favorites")}
               </Button>
               <Button
                 variant={filterMode === "recent" ? "default" : "outline"}
@@ -285,20 +301,34 @@ export function MyRecipesPage() {
                   filterMode === "recent" ? "bg-blue-600 hover:bg-blue-700" : ""
                 }
               >
-                🕒 Recent
+                🕒 {t("myRecipes.filters.recent")}
               </Button>
             </div>
             <div className="flex gap-2 ml-auto">
-              <select
+              <Select
                 value={sortBy}
-                onChange={(e) =>
-                  setSortBy(e.target.value as "name" | "calories")
+                onValueChange={(value) =>
+                  setSortBy(value as "name" | "calories")
                 }
-                className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="name">Sort by Name</option>
-                <option value="calories">Sort by Calories</option>
-              </select>
+                <SelectTrigger className="w-[200px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <SelectValue placeholder={t("myRecipes.sort.sortBy")} />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                  <SelectItem
+                    value="name"
+                    className="text-gray-900 dark:text-gray-100"
+                  >
+                    {t("myRecipes.sort.name")}
+                  </SelectItem>
+                  <SelectItem
+                    value="calories"
+                    className="text-gray-900 dark:text-gray-100"
+                  >
+                    {t("myRecipes.sort.calories")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
@@ -318,18 +348,17 @@ export function MyRecipesPage() {
                 <ChefHat className="w-24 h-24 text-blue-300 dark:text-blue-700" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
-                No Recipes Yet
+                {t("myRecipes.emptyState.title")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Start creating your own recipes or save AI-generated
-                recommendations to build your personal cookbook!
+                {t("myRecipes.emptyState.description")}
               </p>
               <Button
                 onClick={() => navigate("/recipe-recommendation")}
                 className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create Your First Recipe
+                {t("myRecipes.emptyState.createFirst")}
               </Button>
             </div>
           </div>
@@ -376,7 +405,7 @@ export function MyRecipesPage() {
                       ) : (
                         <UserIcon className="w-4 h-4" />
                       )}
-                      <span>{recipe.user?.name || "Unknown"}</span>
+                      <span>{recipe.user?.name || t("myRecipes.details.unknown")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
@@ -402,14 +431,14 @@ export function MyRecipesPage() {
                         <>
                           <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
                           <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                            Public
+                            {t("myRecipes.details.public")}
                           </span>
                         </>
                       ) : (
                         <>
                           <Lock className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                           <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                            Private
+                            {t("myRecipes.details.private")}
                           </span>
                         </>
                       )}
@@ -470,12 +499,12 @@ export function MyRecipesPage() {
                     {recipe.isPublic ? (
                       <>
                         <Globe className="w-4 h-4 mr-2" />
-                        Make Private
+                        {t("myRecipes.actions.makePrivate")}
                       </>
                     ) : (
                       <>
                         <Lock className="w-4 h-4 mr-2" />
-                        Make Public
+                        {t("myRecipes.actions.makePublic")}
                       </>
                     )}
                   </Button>
@@ -485,7 +514,7 @@ export function MyRecipesPage() {
                     className="w-full border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
                     <Utensils className="w-4 h-4 mr-2" />
-                    View Recipe
+                    {t("myRecipes.actions.viewRecipe")}
                   </Button>
                   <Button
                     onClick={() => handleAddRecipeToShoppingList(recipe)}
@@ -493,7 +522,7 @@ export function MyRecipesPage() {
                     className="w-full border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Shopping List
+                    {t("myRecipes.actions.addToShoppingList")}
                   </Button>
                   <Button
                     onClick={() => handleDeleteRecipe(recipe.recipeId)}
@@ -502,7 +531,7 @@ export function MyRecipesPage() {
                     className="w-full border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    {t("myRecipes.actions.delete")}
                   </Button>
                 </div>
               </Card>
@@ -594,7 +623,7 @@ export function MyRecipesPage() {
                   selectedRecipe.recipeIngredients.length > 0 && (
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                        Ingredients
+                        {t("myRecipes.details.ingredients")}
                       </h3>
                       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
                         {selectedRecipe.recipeIngredients.map((ri) => (
@@ -631,7 +660,7 @@ export function MyRecipesPage() {
                     variant="outline"
                     className="w-full dark:border-gray-700"
                   >
-                    Close
+                    {t("myRecipes.details.close")}
                   </Button>
                 </div>
               </div>

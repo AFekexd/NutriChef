@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
-import { X, Sparkles, ChefHat } from "lucide-react";
-import { Button } from "./ui/button";
+// Tutorial disabled for now
+// import { useEffect, useState } from "react";
+// import { X, Sparkles, ChefHat } from "lucide-react";
+// import { Button } from "./ui/button";
+// import { gsap } from "gsap";
+// import { useTutorial } from "@/hooks/useTutorial";
+// import { useAuth } from "@/context/AuthContext";
 
-import { gsap } from "gsap";
-import { useTutorial } from "@/hooks/useTutorial";
-import { useAuth } from "@/context/AuthContext";
+// const WELCOME_MODAL_KEY = "nutrichef_welcome_shown";
 
-const WELCOME_MODAL_KEY = "nutrichef_welcome_shown";
+export function WelcomeModal() {
+  // Tutorial disabled - don't show welcome modal
+  return null;
+} /*
+
+/*
+Original implementation commented out for future re-enabling:
 
 export function WelcomeModal() {
   const [isVisible, setIsVisible] = useState(false);
@@ -63,13 +71,13 @@ export function WelcomeModal() {
   if (!isVisible) return null;
 
   return (
+   
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="welcome-modal-content bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
-        {/* Decorative background */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-orange-400/20 to-transparent rounded-full blur-3xl -z-10" />
 
-        {/* Close button */}
+  
         <button
           onClick={handleSkip}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
@@ -77,14 +85,14 @@ export function WelcomeModal() {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Logo */}
+
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
             <ChefHat className="w-12 h-12 text-white" />
           </div>
         </div>
 
-        {/* Content */}
+
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-3">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -100,7 +108,7 @@ export function WelcomeModal() {
           </p>
         </div>
 
-        {/* Features list */}
+
         <div className="space-y-3 mb-8">
           <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-xl">
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -145,7 +153,7 @@ export function WelcomeModal() {
           </div>
         </div>
 
-        {/* Action buttons */}
+    
         <div className="space-y-3">
           <Button
             onClick={handleStartTutorial}
@@ -169,5 +177,10 @@ export function WelcomeModal() {
         </p>
       </div>
     </div>
+
+
+
   );
 }
+  
+*/

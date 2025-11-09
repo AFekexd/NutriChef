@@ -27,7 +27,12 @@
     "healthInsights": "Egészség Betekintés",
     "more": "Több",
     "pages": "Oldalak",
-    "account": "Fiók"
+    "account": "Fiók",
+    "foodAndMeals": "Étel & Étkezés",
+    "allRecipes": "Összes Recept",
+    "myRecipes": "Saját Receptek",
+    "recipeRecommendations": "Recept Ajánlások",
+    "health": "Egészség"
   },
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",
@@ -47,7 +52,37 @@
     "invalidEmail": "Érvénytelen e-mail cím.",
     "invalidPassword": "A jelszó nem megfelelő.",
     "tooManyAttempts": "Túl sok sikertelen próbálkozás. Kérjük, próbálja újra később.",
-    "loginFailed": "A bejelentkezés sikertelen. Kérjük, ellenőrizze adatait és próbálja újra."
+    "loginFailed": "A bejelentkezés sikertelen. Kérjük, ellenőrizze adatait és próbálja újra.",
+    "resetPasswordTitle": "Jelszó Visszaállítása",
+    "resetPasswordSubtitle": "Adja meg új jelszavát lent",
+    "newPassword": "Új Jelszó",
+    "enterNewPassword": "Adjon meg új jelszót",
+    "confirmNewPassword": "Erősítse meg az új jelszót",
+    "passwordRequirements": "Jelszó Követelmények:",
+    "atLeast8Chars": "Legalább 8 karakter",
+    "oneLowercase": "Egy kisbetű",
+    "oneUppercase": "Egy nagybetű",
+    "oneNumber": "Egy szám",
+    "passwordsDoNotMatch": "A jelszavak nem egyeznek",
+    "passwordStrength": {
+      "weak": "Gyenge",
+      "fair": "Elfogadható",
+      "good": "Jó",
+      "strong": "Erős",
+      "veryStrong": "Nagyon Erős"
+    },
+    "resettingPassword": "Jelszó Visszaállítása...",
+    "resetPasswordButton": "Jelszó Visszaállítása",
+    "backToLogin": "← Vissza a Bejelentkezéshez",
+    "resetSuccess": "Jelszó sikeresen visszaállítva! Kérjük, jelentkezzen be.",
+    "resetFailed": "Nem sikerült visszaállítani a jelszót. A link lehet, hogy lejárt vagy érvénytelen.",
+    "invalidResetToken": "Érvénytelen vagy hiányzó visszaállítási token",
+    "oauth": {
+      "completing": "Hitelesítés befejezése...",
+      "error": "OAuth hiba",
+      "missingParameters": "Hiányzó OAuth paraméterek",
+      "callbackFailed": "OAuth callback sikertelen"
+    }
   },
   "dashboard": {
     "title": "Vezérlőpult",
@@ -56,10 +91,54 @@
     "totalItems": "Összes termék",
     "expiringItems": "Hamarosan lejár",
     "lowStockItems": "Alacsony készlet",
-    "recentActivity": "Legutóbbi tevékenység"
+    "recentActivity": "Legutóbbi tevékenység",
+    "noRecentActivity": "Nincs legutóbbi tevékenység",
+    "quickStats": "Gyors statisztikák",
+    "goodMorning": "Jó reggelt",
+    "goodAfternoon": "Jó napot",
+    "goodEvening": "Jó estét",
+    "welcomeMessage": "Reméljük, hogy nagyszerű napja van!",
+    "keyboardShortcutsHint": "Gyorsbillentyűk: ",
+    "for": "a",
+    "inventory": "készlethez",
+    "recipes": "receptekhez",
+    "shoppingList": "bevásárlólistához",
+    "features": {
+      "smartInventory": {
+        "title": "Okos Készletkezelés",
+        "description": "AI-alapú termékfelismerés és lejárati értesítések"
+      },
+      "aiRecipeGenerator": {
+        "title": "AI Recept Generátor",
+        "description": "Személyre szabott recept ajánlások az összetevők alapján"
+      },
+      "groceryPlanning": {
+        "title": "Bevásárló Tervezés",
+        "description": "Okos bevásárlólisták és adag optimalizálás"
+      },
+      "mealPlanning": {
+        "title": "Étkezés Tervezés",
+        "description": "Heti étkezési tervek egyszerű létrehozása"
+      },
+      "nutritionTracking": {
+        "title": "Táplálkozás Nyomon Követése",
+        "description": "Napi kalória és makró követés"
+      },
+      "healthInsights": {
+        "title": "Egészség Betekintés",
+        "description": "AI-alapú táplálkozási coaching és ajánlások"
+      }
+    },
+    "quickStatsDescription": "Teljesítse ezeket a lépéseket a maximális élmény érdekében",
+    "addIngredients": "Összetevők hozzáadása",
+    "savedRecipes": "Mentett Receptek",
+    "exploreRecipes": "Receptek felfedezése",
+    "activeMealPlans": "Aktív Étkezési Tervek",
+    "planMeals": "Étkezések tervezése"
   },
   "inventory": {
     "title": "Készletem",
+    "subtitle": "Kezelje élelmiszerkészletét hatékonyan AI támogatással",
     "addItem": "Termék hozzáadása",
     "scanPhoto": "Fotó beolvasása",
     "manualAdd": "Manuális hozzáadás",
@@ -110,7 +189,20 @@
     "cameraAccessError": "Nem sikerült hozzáférni a kamerához. Kérjük, adjon engedélyt a kamerához.",
     "itemNameRequired": "A termék neve kötelező",
     "quantityMustBePositive": "A mennyiségnek nullánál nagyobbnak kell lennie",
-    "addAtLeastOneItem": "Kérjük, adjon hozzá legalább egy terméket"
+    "addAtLeastOneItem": "Kérjük, adjon hozzá legalább egy terméket",
+    "locations": {
+      "fridge": "Hűtő",
+      "freezer": "Fagyasztó",
+      "pantry": "Kamra",
+      "unknown": "Ismeretlen"
+    },
+    "aiPowered": "AI által vezérelt",
+    "automaticDetection": "Automatikus összetevő felismerés a képek alapján",
+    "deleteExpired": "Lejárt termékek törlése",
+    "low": "Alacsony készlet",
+    "normal": "Normál készlet",
+    "expiring": "Hamarosan lejár",
+    "showingResults": "{{count}} eredmény megjelenítve"
   },
   "recipes": {
     "title": "Recept ajánlások",
@@ -234,5 +326,385 @@
     "low": "ALACSONY",
     "failedToLoad": "Nem sikerült betölteni az egészségügyi betekintéseket",
     "rateLimitExceeded": "Elérte a napi AI egészség betekintés limitet. Kérjük, próbálja újra {{hours}} óra múlva."
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Felhasználók és rendszer kezelése",
+    "tabs": {
+      "dashboard": "Irányítópult",
+      "users": "Felhasználók",
+      "inventory": "Készlet",
+      "recipes": "Receptek",
+      "uploads": "Feltöltések",
+      "adminLogs": "Admin Naplók",
+      "apiLogs": "API Naplók"
+    },
+    "stats": {
+      "totalUsers": "Összes Felhasználó",
+      "activeUsers": "Aktív Felhasználók",
+      "inventoryItems": "Készlet Elemek",
+      "recipes": "Receptek",
+      "totalUploads": "Összes Feltöltés"
+    },
+    "actions": {
+      "warn": "Figyelmeztetés",
+      "timeout": "Időzítés",
+      "ban": "Tiltás",
+      "unban": "Tiltás Feloldása",
+      "changeRole": "Szerep Módosítása",
+      "delete": "Törlés",
+      "viewHistory": "Előzmények Megtekintése",
+      "loadMore": "Továbbiak Betöltése"
+    },
+    "filters": {
+      "search": "Keresés...",
+      "allMethods": "Minden Módszer",
+      "allCodes": "Minden Kód",
+      "pathFilter": "Útvonal Szűrő"
+    },
+    "status": {
+      "active": "Aktív",
+      "inactive": "Inaktív",
+      "admin": "Admin",
+      "user": "Felhasználó"
+    },
+    "messages": {
+      "userWarned": "Felhasználó sikeresen figyelmeztetve",
+      "userTimedOut": "Felhasználó sikeresen időzítve",
+      "userBanned": "Felhasználó sikeresen tiltva",
+      "userUnbanned": "Felhasználó tiltása sikeresen feloldva",
+      "roleChanged": "Felhasználó szerepe sikeresen módosítva",
+      "userDeleted": "Felhasználó sikeresen törölve",
+      "actionFailed": "A művelet sikertelen. Kérjük, próbálja újra.",
+      "loadingMoreLogs": "További naplók betöltése...",
+      "allLogsLoaded": "Minden napló betöltve"
+    },
+    "apiStats": {
+      "totalRequests": "Összes Kérés",
+      "successRate": "Sikerességi Arány",
+      "avgResponse": "Átlag Válaszidő",
+      "failedRequests": "Sikertelen Kérések"
+    },
+    "loading": "Betöltés...",
+    "noDataAvailable": "Nincs elérhető adat"
+  },
+  "mealPlanning": {
+    "title": "Étkezés Tervezés",
+    "subtitle": "Tervezze meg heti étkezéseit könnyedén",
+    "weekNavigation": {
+      "thisWeek": "Ez a Hét",
+      "previousWeek": "Előző hét",
+      "nextWeek": "Következő hét",
+      "jumpedToCurrentWeek": "Ugrás az aktuális hétre"
+    },
+    "stats": {
+      "totalCalories": "Összes Kalória",
+      "avgPerDay": "Átlag/Nap",
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír"
+    },
+    "mealTypes": {
+      "breakfast": "Reggeli",
+      "lunch": "Ebéd",
+      "dinner": "Vacsora",
+      "snack": "Snack"
+    },
+    "actions": {
+      "addToShoppingList": "Hozzáadás a Bevásárlólistához",
+      "addMeal": "Étkezés hozzáadása",
+      "addMore": "Továbbiak hozzáadása"
+    },
+    "modal": {
+      "title": "Hozzáadás az Étkezési Tervhez",
+      "selectRecipe": "Recept Kiválasztása",
+      "selectIngredients": "Hozzávalók Kiválasztása a Készletből",
+      "chooseRecipe": "Válasszon egy receptet...",
+      "noRecipes": "Nincsenek elérhető receptek. Kérjük, adjon hozzá recepteket először.",
+      "noInventory": "Nincsenek elérhető készlet elemek. Kérjük, adjon hozzá elemeket a készlethez először.",
+      "itemsSelected": "elem kiválasztva",
+      "cancel": "Mégse",
+      "addRecipe": "Recept Hozzáadása",
+      "addIngredients": "Hozzávalók Hozzáadása",
+      "recipe": "Recept",
+      "ingredients": "Hozzávalók"
+    },
+    "messages": {
+      "mealAdded": "Étkezés sikeresen hozzáadva a tervhez!",
+      "mealAddFailed": "Nem sikerült hozzáadni az étkezést. Kérjük, próbálja újra.",
+      "mealDeleted": "Étkezési terv sikeresen törölve",
+      "mealDeleteFailed": "Nem sikerült törölni az étkezési tervet",
+      "addedToShoppingList": "{{count}} új elem hozzáadva a bevásárlólistához!",
+      "itemsAlreadyInList": "{{count}} elem már a listában volt",
+      "deleteMealPlan": "Étkezési Terv Törlése?",
+      "deleteMealPlanMessage": "Biztosan törölni szeretné ezt az étkezési tervet? Ez a művelet nem vonható vissza.",
+      "confirmDelete": "Törlés"
+    },
+    "days": {
+      "sun": "Vas",
+      "mon": "Hét",
+      "tue": "Kedd",
+      "wed": "Szer",
+      "thu": "Csüt",
+      "fri": "Pén",
+      "sat": "Szo"
+    }
+  },
+  "nutrition": {
+    "title": "Táplálkozás Nyomon Követése",
+    "subtitle": "Figyelje napi kalóriáit és makróit",
+    "dailyCalories": "Napi Kalóriák",
+    "remaining": "{{value}} maradt",
+    "goalReached": "Cél elérve!",
+    "of": "/",
+    "goal": "Cél",
+    "macros": {
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír",
+      "fiber": "Rost"
+    },
+    "todayMeals": "Mai Étkezések",
+    "logMeal": "+ Étkezés Naplózása",
+    "noMealsLogged": "Még nincs naplózott étkezés ma",
+    "clickToStart": "Kattintson az \"Étkezés Naplózása\" gombra a kezdéshez",
+    "remove": "Eltávolítás",
+    "weeklyInsights": "Heti Betekintések",
+    "weeklyInsightsSubtitle": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel. Hamarosan!",
+    "setGoals": "Célok Beállítása",
+    "calculateMyGoals": "Céljaim Kiszámítása",
+    "calculate": "Számítás",
+    "goals": "Célok",
+    "setNutritionGoals": "Táplálkozási Célok Beállítása",
+    "dailyCaloriesGoal": "Napi Kalóriák",
+    "proteinGoal": "Fehérje (g)",
+    "carbsGoal": "Szénhidrát (g)",
+    "fatGoal": "Zsír (g)",
+    "fiberGoal": "Rost (g)",
+    "cancel": "Mégse",
+    "saveGoals": "Célok Mentése",
+    "goalsUpdated": "Táplálkozási célok frissítve!",
+    "goalsFailed": "Nem sikerült menteni a célokat. Kérjük, próbálja újra.",
+    "mealLogged": "Étkezés sikeresen naplózva!",
+    "mealLogFailed": "Nem sikerült naplózni az étkezést. Kérjük, próbálja újra.",
+    "mealDeleted": "Étkezés eltávolítva",
+    "mealDeleteFailed": "Nem sikerült törölni az étkezést. Kérjük, próbálja újra.",
+    "loadedFromLocal": "Célok betöltve a helyi tárolóból",
+    "loading": "Betöltés...",
+    "mealTypes": {
+      "breakfast": "reggeli",
+      "lunch": "ebéd",
+      "dinner": "vacsora",
+      "snack": "snack"
+    }
+  },
+  "shoppingList": {
+    "title": "Bevásárlólista",
+    "subtitle": "Okos bevásárlólisták adag optimalizálással {{servings}} adaghoz",
+    "actions": {
+      "optimize": "Adagok Optimalizálása",
+      "clearCompleted": "Befejezettek Törlése",
+      "export": "Exportálás",
+      "optimizePortions": "Adagok Optimalizálása",
+      "groupByCategory": "Csoportosítás Kategória Szerint",
+      "ungroup": "Csoportbontás",
+      "clearChecked": "Bejelöltek Törlése",
+      "addToList": "Hozzáadás a Listához"
+    },
+    "empty": {
+      "title": "Nincs elem a bevásárlólistán",
+      "description": "Kezdje el az elemek hozzáadását az okos bevásárlólista építéséhez"
+    },
+    "add": {
+      "title": "Hozzáadás a Bevásárlólistához",
+      "subtitle": "Adja meg az új elem adatait",
+      "namePlaceholder": "Pl. Paradicsom",
+      "cancel": "Mégse",
+      "addItem": "Elem Hozzáadása",
+      "button": "Hozzáadás"
+    },
+
+    "stats": {
+      "totalItems": "Összes Elem",
+      "checked": "Bejelölve",
+      "inStock": "Készleten"
+    },
+    "categories": {
+      "recipes": "Receptek",
+      "produce": "Gyümölcsök és Zöldségek",
+      "dairy": "Tejtermékek és Tojás",
+      "meat": "Hús és Tenger Gyümölcsei",
+      "grains": "Gabonák és Kenyér",
+      "pantry": "Kamra",
+      "frozen": "Fagyasztott Élelmiszerek",
+      "beverages": "Italok",
+      "other": "Egyéb"
+    },
+    "addItem": "Elem Hozzáadása",
+    "itemName": "Elem neve (Ctrl+A)",
+    "quantity": "Mennyiség",
+    "adjustServings": "Adagok Módosítása",
+    "servings": {
+      "title": "Adagok Számának Módosítása",
+      "subtitle": "Állítsa be a kívánt adagok számát a mennyiségek skálázásához"
+    },
+    "smartTips": "Okos Tippek",
+    "tips": {
+      "optimize": "Adagok optimalizálása szabványos csomagméretekhez",
+      "inventory": "A készletben lévő elemek kiemelve",
+      "servings": "Módosítsa az adagokat a mennyiségek skálázásához",
+      "export": "Exportálja a listát megosztáshoz vagy nyomtatáshoz",
+      "title": "Hogyan használjam az okos bevásárlólistát?"
+    },
+    "emptyState": {
+      "title": "A bevásárlólista üres",
+      "subtitle": "Adjon hozzá elemeket az okos bevásárlólista építéséhez"
+    },
+    "messages": {
+      "portionsOptimized": "Adagok optimalizálva szabványos csomagméretekhez!",
+      "checkedRemoved": "Bejelölt elemek eltávolítva",
+      "noCompletedItems": "Nincs befejezett elem a törléshez",
+      "removedCompleted": "{{count}} befejezett elem eltávolítva",
+      "addedItem": "\"{{name}}\" hozzáadva a bevásárlólistához"
+    },
+    "ingredients": "hozzávaló",
+    "inStockLabel": "Készleten",
+    "inStockQty": "Készleten: {{qty}} {{unit}}"
+  },
+  "units": {
+    "unit": "egység",
+    "grams": "gramm",
+    "kilograms": "kilogramm",
+    "milliliters": "milliliter",
+    "liters": "liter",
+    "pieces": "darab",
+    "cups": "csésze",
+    "tablespoons": "evőkanál",
+    "teaspoons": "teáskanál",
+    "ounces": "uncia",
+    "pounds": "font"
+  },
+  "publicRecipes": {
+    "title": "Receptek Felfedezése",
+    "subtitle": "{{count}} nyilvános recept elérhető",
+    "subtitle_plural": "{{count}} nyilvános recept elérhető",
+    "myRecipes": "Saját Receptek",
+    "search": "Receptek keresése név, konyha, szerző szerint...",
+    "filters": {
+      "all": "Minden Recept",
+      "easy": "Könnyű",
+      "medium": "Közepes",
+      "hard": "Nehéz",
+      "showFilters": "Szűrők Megjelenítése",
+      "hideFilters": "Szűrők Elrejtése",
+      "sortBy": "Rendezés",
+      "mostRecent": "🕐 Legfrissebb",
+      "highestRated": "⭐ Legjobb Értékelésű",
+      "lowestCalories": "🔥 Legkevesebb Kalória",
+      "nameAZ": "📝 Név (A-Z)",
+      "maxCalories": "Max Kalória: {{value}}",
+      "clearFilters": "Szűrők Törlése"
+    },
+    "emptyState": {
+      "noRecipesFound": "Nincs Találat",
+      "noPublicRecipes": "Még Nincsenek Nyilvános Receptek",
+      "tryAdjusting": "Próbálja módosítani a keresést vagy a szűrőket több recept kereséséhez.",
+      "beTheFirst": "Legyen az első, aki megoszt egy receptet a közösséggel!"
+    },
+    "actions": {
+      "viewRecipe": "Recept Megtekintése",
+      "addToShoppingList": "Hozzáadás a Bevásárlólistához",
+      "rateRecipe": "Értékelje Ezt a Receptet",
+      "close": "Bezárás"
+    },
+    "recipeDetails": {
+      "nutrition": "Táplálkozási Információk",
+      "calories": "Kalóriák",
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír",
+      "ingredients": "Hozzávalók",
+      "instructions": "Utasítások"
+    },
+    "messages": {
+      "recipeAdded": "\"{{name}}\" hozzáadva a bevásárlólistához emlékeztetőként!",
+      "recipeAddedFull": "\"{{name}}\" hozzáadva {{count}} hozzávalóval a bevásárlólistához!",
+      "recipeAddedPartial": "\"{{name}}\" hozzáadva a bevásárlólistához! {{inStock}} / {{total}} hozzávaló már készleten ✓",
+      "recipeRated": "Recept sikeresen értékelve!",
+      "ratingFailed": "Nem sikerült értékelni a receptet. Kérjük, próbálja újra.",
+      "recipesRefreshed": "Receptek frissítve!",
+      "loadFailed": "Nem sikerült betölteni a recepteket"
+    },
+    "rating": "értékelés",
+    "rating_plural": "értékelés"
+  },
+  "breadcrumbs": {
+    "home": "Kezdőlap",
+    "inventory": "Készlet",
+    "recipes": "Receptek",
+    "recipeRecommendations": "Recept Ajánlások",
+    "myRecipes": "Saját Receptek",
+    "mealPlanning": "Étkezés Tervezés",
+    "shoppingList": "Bevásárlólista",
+    "profile": "Profil",
+    "admin": "Admin Panel",
+    "nutrition": "Táplálkozás Nyomon Követése",
+    "healthInsights": "Egészség Betekintés"
+  },
+  "myRecipes": {
+    "title": "Saját Receptek",
+    "subtitle": "Tekintse meg és kezelje mentett receptjeit",
+    "createNew": "Új Recept Létrehozása",
+    "openingRecommendations": "Recept Ajánlások megnyitása...",
+    "recipesRefreshed": "Receptek frissítve!",
+    "filters": {
+      "all": "Összes",
+      "favorites": "Kedvencek",
+      "recent": "Legutóbbiak"
+    },
+    "sort": {
+      "sortBy": "Rendezés",
+      "name": "Név szerint",
+      "calories": "Kalória szerint"
+    },
+    "emptyState": {
+      "title": "Még Nincsenek Receptek",
+      "description": "Kezdje el saját receptek létrehozását vagy mentse az AI által generált ajánlásokat személyes szakácskönyvébe!",
+      "createFirst": "Hozza Létre Első Receptjét"
+    },
+    "actions": {
+      "viewRecipe": "Recept Megtekintése",
+      "addToShoppingList": "Hozzáadás a Bevásárlólistához",
+      "delete": "Törlés",
+      "makePublic": "Nyilvánossá Tétel",
+      "makePrivate": "Priváttá Tétel"
+    },
+    "details": {
+      "author": "Szerző",
+      "unknown": "Ismeretlen",
+      "createdAt": "Létrehozva",
+      "rating": "Értékelés",
+      "public": "Nyilvános",
+      "private": "Privát",
+      "ingredients": "Hozzávalók",
+      "instructions": "Utasítások",
+      "nutrition": "Táplálkozási Információk",
+      "close": "Bezárás"
+    },
+    "messages": {
+      "deleteConfirm": "Recept Törlése?",
+      "deleteMessage": "Biztosan törölni szeretné ezt a receptet? Ez a művelet nem vonható vissza.",
+      "confirmDelete": "Törlés",
+      "cancel": "Mégse",
+      "deleteSuccess": "Recept sikeresen törölve",
+      "deleteFailed": "Nem sikerült törölni a receptet",
+      "visibilityPublic": "A recept mostantól nyilvános",
+      "visibilityPrivate": "A recept mostantól privát",
+      "visibilityFailed": "Nem sikerült frissíteni a recept láthatóságát",
+      "addedToShoppingList": "\"{{name}}\" hozzáadva a bevásárlólistához emlékeztetőként!",
+      "addedWithIngredients": "\"{{name}}\" hozzáadva {{count}} hozzávalóval a bevásárlólistához!",
+      "addedWithStock": "\"{{name}}\" hozzáadva a bevásárlólistához! {{inStock}} / {{total}} hozzávaló már készleten ✓",
+      "loadFailed": "Nem sikerült betölteni a recepteket. Kérjük, próbálja újra."
+    }
   }
 }

@@ -182,51 +182,51 @@ export default function DashboardPage() {
   // Get time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return t("dashboard.goodMorning");
+    if (hour < 18) return t("dashboard.goodAfternoon");
+    return t("dashboard.goodEvening");
   };
 
   const features = [
     {
       icon: Apple,
-      title: "Smart Inventory",
-      description: "Track ingredients and expiry dates with AI",
+      title: t("dashboard.features.smartInventory.title"),
+      description: t("dashboard.features.smartInventory.description"),
       color: "#4CAF50",
       bgColor: "bg-green-100",
     },
     {
       icon: ChefHat,
-      title: "AI Recipe Generator",
-      description: "Get personalized recipes based on what you have",
+      title: t("dashboard.features.aiRecipeGenerator.title"),
+      description: t("dashboard.features.aiRecipeGenerator.description"),
       color: "#FF7043",
       bgColor: "bg-orange-100",
     },
     {
       icon: ShoppingCart,
-      title: "Grocery Planning",
-      description: "Smart shopping lists with portion optimization",
+      title: t("dashboard.features.groceryPlanning.title"),
+      description: t("dashboard.features.groceryPlanning.description"),
       color: "#29B6F6",
       bgColor: "bg-blue-100",
     },
     {
       icon: Calendar,
-      title: "Meal Planning",
-      description: "Plan your weekly meals effortlessly",
+      title: t("dashboard.features.mealPlanning.title"),
+      description: t("dashboard.features.mealPlanning.description"),
       color: "#4CAF50",
       bgColor: "bg-green-100",
     },
     {
       icon: TrendingUp,
-      title: "Nutrition Tracking",
-      description: "Monitor calories and macros automatically",
+      title: t("dashboard.features.nutritionTracking.title"),
+      description: t("dashboard.features.nutritionTracking.description"),
       color: "#FF7043",
       bgColor: "bg-orange-100",
     },
     {
       icon: Heart,
-      title: "Health Insights",
-      description: "AI-powered nutrition coaching",
+      title: t("dashboard.features.healthInsights.title"),
+      description: t("dashboard.features.healthInsights.description"),
       color: "#29B6F6",
       bgColor: "bg-blue-100",
     },
@@ -290,24 +290,23 @@ export default function DashboardPage() {
             ! 👋
           </h2>
           <p className="text-base md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
-            Your AI-powered nutrition assistant is ready to help you plan meals,
-            manage inventory, and achieve your health goals.
+            {t("dashboard.welcomeMessage")}
           </p>
           {/* Keyboard shortcuts hint */}
           <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-            💡 Tip: Use{" "}
+            💡 {t("dashboard.keyboardShortcutsHint")}
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
               Ctrl+I
             </kbd>{" "}
-            for Inventory,{" "}
+            {t("dashboard.for")} {t("dashboard.inventory")},{" "}
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
               Ctrl+R
             </kbd>{" "}
-            for Recipes,{" "}
+            {t("dashboard.for")} {t("dashboard.recipes")},{" "}
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded border border-gray-300 dark:border-gray-700">
               Ctrl+S
             </kbd>{" "}
-            for Shopping List
+            {t("dashboard.for")} {t("dashboard.shoppingList")}
           </div>
         </div>
 
@@ -370,10 +369,10 @@ export default function DashboardPage() {
                 className="text-[#4A4A4A] dark:text-gray-100 text-xl md:text-2xl"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
-                Getting Started
+                {t("dashboard.quickStats")}
               </CardTitle>
               <CardDescription className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-                Complete these steps to maximize your experience
+                {t("dashboard.quickStatsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -416,7 +415,7 @@ export default function DashboardPage() {
                     className="p-0 h-auto text-[#4CAF50] dark:text-green-400 hover:text-[#45a049] font-semibold"
                     onClick={() => navigate("/inventory")}
                   >
-                    Add ingredients →
+                    {t("dashboard.addIngredients")} →
                   </Button>
                 </div>
                 <div
@@ -450,14 +449,14 @@ export default function DashboardPage() {
                     </div>
                   )}
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
-                    Saved Recipes
+                    {t("dashboard.savedRecipes")}
                   </p>
                   <Button
                     variant="link"
                     className="p-0 h-auto text-[#FF7043] dark:text-orange-400 hover:text-[#f4511e] font-semibold"
                     onClick={() => navigate("/my-recipes")}
                   >
-                    Explore recipes →
+                    {t("dashboard.exploreRecipes")} →
                   </Button>
                 </div>
                 <div className="stat-card p-4 md:p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
@@ -488,14 +487,14 @@ export default function DashboardPage() {
                     </div>
                   )}
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium">
-                    Active Meal Plans
+                    {t("dashboard.activeMealPlans")}
                   </p>
                   <Button
                     variant="link"
                     className="p-0 h-auto text-[#29B6F6] dark:text-blue-400 hover:text-[#0288d1] font-semibold"
                     onClick={() => navigate("/meal-planning")}
                   >
-                    Plan meals →
+                    {t("dashboard.planMeals")} →
                   </Button>
                 </div>
               </div>

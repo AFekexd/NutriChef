@@ -235,7 +235,7 @@ model MealPlanInventoryItem {
   mealPlanInventoryItemId String        @id @default(uuid()) @db.Uuid
   mealPlan                MealPlan      @relation(fields: [mealPlanId], references: [mealPlanId], onDelete: Cascade)
   mealPlanId              String        @db.Uuid
-  inventoryItem           InventoryItem @relation(fields: [inventoryItemId], references: [inventoryItemId])
+  inventoryItem           InventoryItem @relation(fields: [inventoryItemId], references: [inventoryItemId], onDelete: Cascade)
   inventoryItemId         String        @db.Uuid
   quantityUsed            Float         @default(1)
   createdAt               DateTime      @default(now())
@@ -246,7 +246,7 @@ model ConsumptionLog {
   consumptionLogId String        @id @default(uuid()) @db.Uuid
   user             User          @relation(fields: [userId], references: [userId])
   userId           String        @db.Uuid
-  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [inventoryItemId])
+  inventoryItem   InventoryItem  @relation(fields: [inventoryItemId], references: [inventoryItemId], onDelete: Cascade)
   inventoryItemId String        @db.Uuid
   quantityConsumed Float
   dateTime        DateTime
@@ -364,4 +364,68 @@ model RecipeRecommendationsCache {
   
   @@index([userId, ingredientsHash])
   @@index([expiresAt])
+}
+
+// Admin Activity Logs
+model AdminLog {
+  adminLogId    String      @id @default(uuid()) @db.Uuid
+  adminUserId   String      @db.Uuid // Admin who performed the action
+  action        String      // "user_suspend", "user_ban", "user_delete", "recipe_delete", etc.
+  targetType    String      // "user", "recipe", "inventory", "upload"
+  targetId      String?     @db.Uuid // ID of the affected entity
+  targetEmail   String?     // Email of affected user (for display purposes)
+  targetName    String?     // Name of affected entity
+  details       Json?       // Additional details about the action
+  ipAddress     String?
+  userAgent     String?
+  timestamp     DateTime    @default(now())
+  
+  @@index([adminUserId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([targetType])
+}
+
+// User Moderation Actions
+model UserModerationAction {
+  moderationActionId String      @id @default(uuid()) @db.Uuid
+  userId            String      @db.Uuid // User being moderated
+  actionType        String      // "warning", "timeout", "ban", "unban"
+  reason            String?
+  duration          Int?        // Duration in hours for timeout
+  expiresAt         DateTime?   // When timeout/ban expires (null for permanent)
+  isActive          Boolean     @default(true)
+  adminUserId       String      @db.Uuid // Admin who performed the action
+  adminNote         String?     // Internal admin note
+  timestamp         DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([actionType])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@index([timestamp])
+}
+
+// API Activity Logs - All user API calls
+model ApiLog {
+  apiLogId      String      @id @default(uuid()) @db.Uuid
+  userId        String?     @db.Uuid // Null for unauthenticated requests
+  userEmail     String?     // For display purposes
+  userName      String?     // For display purposes
+  method        String      // GET, POST, PUT, DELETE, etc.
+  path          String      // API endpoint path
+  statusCode    Int         // HTTP status code (200, 404, 500, etc.)
+  responseTime  Int?        // Response time in milliseconds
+  ipAddress     String?
+  userAgent     String?
+  requestBody   Json?       // Request payload (sensitive data should be filtered)
+  responseBody  Json?       // Response payload (optional, for debugging)
+  errorMessage  String?     // Error message if request failed
+  timestamp     DateTime    @default(now())
+  
+  @@index([userId])
+  @@index([timestamp])
+  @@index([method])
+  @@index([path])
+  @@index([statusCode])
 }

@@ -25,6 +25,13 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { PhotoUpload } from "../components/inventory/PhotoUpload";
 import { AIDetectionReview } from "../components/inventory/AIDetectionReview";
 import { EnhancedManualItemForm } from "../components/inventory/EnhancedManualItemForm";
@@ -350,13 +357,113 @@ export function InventoryPage() {
         setError(null);
         try {
           await apiService.deleteInventoryItem(itemId);
-          setSuccessMessage(
+
+          // Update local state without reloading
+          setAllItems((prevItems) =>
+            prevItems.filter((item) => item.inventoryItemId !== itemId)
+          );
+          setExpiringItems((prevItems) =>
+            prevItems.filter((item) => item.inventoryItemId !== itemId)
+          );
+
+          // Update analytics
+          if (analytics) {
+            setAnalytics({
+              ...analytics,
+              totalItems: analytics.totalItems - 1,
+            });
+          }
+
+          toast.success(
             t("inventory.itemDeleted") || "Item deleted successfully!"
           );
-          await loadInventoryData();
-          setTimeout(() => setSuccessMessage(null), 3000);
         } catch (err: any) {
           setError(err.response?.data?.error || "Failed to delete item");
+          toast.error(err.response?.data?.error || "Failed to delete item");
+        }
+      },
+    });
+  };
+
+  const handleDeleteExpiredItems = async () => {
+    const expiredItems = allItems.filter((item) => {
+      if (!item.expiryDate) return false;
+      const expiryDate = new Date(item.expiryDate);
+      return expiryDate < new Date();
+    });
+
+    if (expiredItems.length === 0) {
+      toast.info("No expired items found");
+      return;
+    }
+
+    confirmDialog({
+      title: "Delete Expired Items?",
+      message: `Are you sure you want to delete ${
+        expiredItems.length
+      } expired ${
+        expiredItems.length === 1 ? "item" : "items"
+      }? This action cannot be undone.`,
+      confirmText: "Delete All",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setError(null);
+        let deletedCount = 0;
+        let failedCount = 0;
+
+        try {
+          // Delete all expired items
+          for (const item of expiredItems) {
+            try {
+              await apiService.deleteInventoryItem(item.inventoryItemId);
+              deletedCount++;
+            } catch (err) {
+              failedCount++;
+              console.error(
+                `Failed to delete item ${item.inventoryItemId}:`,
+                err
+              );
+            }
+          }
+
+          // Update local state
+          const expiredIds = expiredItems.map((item) => item.inventoryItemId);
+          setAllItems((prevItems) =>
+            prevItems.filter(
+              (item) => !expiredIds.includes(item.inventoryItemId)
+            )
+          );
+          setExpiringItems((prevItems) =>
+            prevItems.filter(
+              (item) => !expiredIds.includes(item.inventoryItemId)
+            )
+          );
+
+          // Update analytics
+          if (analytics) {
+            setAnalytics({
+              ...analytics,
+              totalItems: analytics.totalItems - deletedCount,
+            });
+          }
+
+          if (deletedCount > 0) {
+            toast.success(
+              `Successfully deleted ${deletedCount} expired ${
+                deletedCount === 1 ? "item" : "items"
+              }${failedCount > 0 ? ` (${failedCount} failed)` : ""}`
+            );
+          }
+          if (failedCount > 0 && deletedCount === 0) {
+            toast.error(`Failed to delete ${failedCount} items`);
+          }
+        } catch (err: any) {
+          setError(
+            err.response?.data?.error || "Failed to delete expired items"
+          );
+          toast.error(
+            err.response?.data?.error || "Failed to delete expired items"
+          );
         }
       },
     });
@@ -403,6 +510,19 @@ export function InventoryPage() {
         return <Archive className="w-4 h-4" />;
       default:
         return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const getLocationLabel = (location: string | undefined) => {
+    switch (location) {
+      case "fridge":
+        return t("inventory.locations.fridge") || "Fridge";
+      case "freezer":
+        return t("inventory.locations.freezer") || "Freezer";
+      case "pantry":
+        return t("inventory.locations.pantry") || "Pantry";
+      default:
+        return t("inventory.locations.other") || "Other";
     }
   };
 
@@ -482,7 +602,7 @@ export function InventoryPage() {
               {t("inventory.title")}
             </h1>
             <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-2">
-              Track your ingredients with AI-powered detection
+              {t("inventory.subtitle")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 md:gap-3">
@@ -492,6 +612,20 @@ export function InventoryPage() {
               className="border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950"
             >
               + {t("inventory.manualAdd")}
+            </Button>
+            <Button
+              onClick={handleDeleteExpiredItems}
+              variant="outline"
+              disabled={
+                allItems.filter(
+                  (item) =>
+                    item.expiryDate && new Date(item.expiryDate) < new Date()
+                ).length === 0
+              }
+              className="border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t("inventory.deleteExpired")}
             </Button>
             <Button
               onClick={handleExportCSV}
@@ -562,7 +696,7 @@ export function InventoryPage() {
               icon: Calendar,
               title: t("dashboard.expiringItems"),
               value: analytics?.expiringItems || 0,
-              subtitle: "Next 7 days",
+              subtitle: `${t("dashboard.inNext7Days")}`,
               bgColor: "bg-orange-100 dark:bg-orange-950/50",
               borderColor: "border-orange-100 dark:border-orange-800",
               iconColor: "text-orange-600 dark:text-orange-400",
@@ -615,8 +749,10 @@ export function InventoryPage() {
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-2xl font-bold">AI Powered</p>
-              <p className="text-sm text-blue-100 mt-1">Automatic Detection</p>
+              <p className="text-2xl font-bold">{t("inventory.aiPowered")}</p>
+              <p className="text-sm text-blue-100 mt-1">
+                {t("inventory.automaticDetection")}
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -692,29 +828,77 @@ export function InventoryPage() {
           </div>
 
           <div className="flex gap-2">
-            <select
+            <Select
               value={locationFilter}
-              onChange={(e) =>
-                setLocationFilter(e.target.value as LocationFilter)
+              onValueChange={(value) =>
+                setLocationFilter(value as LocationFilter)
               }
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="all">{t("inventory.all")}</option>
-              <option value="fridge">🧊 {t("inventory.fridge")}</option>
-              <option value="pantry">📦 {t("inventory.pantry")}</option>
-              <option value="freezer">❄️ {t("inventory.freezer")}</option>
-            </select>
+              <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <SelectValue placeholder={t("inventory.all")} />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                <SelectItem
+                  value="all"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  {t("inventory.all")}
+                </SelectItem>
+                <SelectItem
+                  value="fridge"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  🧊 {t("inventory.fridge")}
+                </SelectItem>
+                <SelectItem
+                  value="pantry"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  📦 {t("inventory.pantry")}
+                </SelectItem>
+                <SelectItem
+                  value="freezer"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  ❄️ {t("inventory.freezer")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
-            <select
+            <Select
               value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              onValueChange={(value) => setStockFilter(value as StockFilter)}
             >
-              <option value="all">🔍 All Stock</option>
-              <option value="low">⚠️ Low Stock</option>
-              <option value="normal">✅ Normal Stock</option>
-              <option value="expiring">⏰ Expiring Soon</option>
-            </select>
+              <SelectTrigger className="w-[180px] bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <SelectValue placeholder={t("inventory.all")} />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+                <SelectItem
+                  value="all"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  🔍 {t("inventory.all")}
+                </SelectItem>
+                <SelectItem
+                  value="low"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  ⚠️ {t("inventory.low")}
+                </SelectItem>
+                <SelectItem
+                  value="normal"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  ✅ {t("inventory.normal")}
+                </SelectItem>
+                <SelectItem
+                  value="expiring"
+                  className="text-gray-900 dark:text-gray-100"
+                >
+                  ⏰ {t("inventory.expiring")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
             <div className="flex border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
               <button
@@ -774,10 +958,10 @@ export function InventoryPage() {
                 <div key={item.inventoryItemId} className="item-card">
                   <Card className="p-4 hover:shadow-lg transition-all duration-200 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 dark:text-white">
                         {getLocationIcon(item.location)}
                         <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
-                          {item.location}
+                          {getLocationLabel(item.location)}
                         </span>
                       </div>
                       {item.aiDetected ? (
@@ -955,7 +1139,9 @@ export function InventoryPage() {
         {/* Results Summary */}
         {filteredItems.length > 0 && (
           <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            Showing {filteredItems.length} of {allItems.length} items
+            {t("inventory.showingResults", {
+              count: filteredItems.length,
+            })}
           </div>
         )}
       </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Utensils,
   TrendingUp,
@@ -58,6 +59,7 @@ interface MacroStats {
 }
 
 export function NutritionTrackingPage() {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -104,7 +106,7 @@ export function NutritionTrackingPage() {
       if (saved) {
         try {
           setGoals(JSON.parse(saved));
-          toast.info("Loaded goals from local storage");
+          toast.info(t("nutrition.messages.goalsLoadedFromLocal"));
         } catch (parseError) {
           console.error("Error parsing localStorage goals:", parseError);
         }
@@ -168,7 +170,7 @@ export function NutritionTrackingPage() {
       await apiService.updateNutritionGoals(newGoals);
       setGoals(newGoals);
       setShowGoalModal(false);
-      toast.success("Nutrition goals updated!");
+      toast.success(t("nutrition.messages.goalsUpdated"));
       // Also save to localStorage as backup
       localStorage.setItem(
         "nutrichef_nutrition_goals",
@@ -176,7 +178,7 @@ export function NutritionTrackingPage() {
       );
     } catch (error) {
       console.error("Error saving goals:", error);
-      toast.error("Failed to save goals. Please try again.");
+      toast.error(t("nutrition.messages.goalsUpdateFailed"));
     }
   };
 
@@ -263,10 +265,10 @@ export function NutritionTrackingPage() {
 
       setDailyIntake(newIntake);
       setShowLogMealModal(false);
-      toast.success("Meal logged successfully!");
+      toast.success(t("nutrition.messages.mealLogged"));
     } catch (error) {
       console.error("Error logging meal:", error);
-      toast.error("Failed to log meal. Please try again.");
+      toast.error(t("nutrition.messages.mealLogFailed"));
     }
   };
 
@@ -289,10 +291,10 @@ export function NutritionTrackingPage() {
       };
 
       setDailyIntake(newIntake);
-      toast.success("Meal removed");
+      toast.success(t("nutrition.messages.mealDeleted"));
     } catch (error) {
       console.error("Error deleting meal:", error);
-      toast.error("Failed to delete meal. Please try again.");
+      toast.error(t("nutrition.messages.mealDeleteFailed"));
     }
   };
 
@@ -337,10 +339,10 @@ export function NutritionTrackingPage() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                Nutrition Tracking
+                {t("nutrition.title")}
               </h1>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Monitor your daily calories and macros
+                {t("nutrition.subtitle")}
               </p>
             </div>
           </div>
@@ -350,16 +352,22 @@ export function NutritionTrackingPage() {
               className="px-3 py-2 sm:px-4 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hover-lift flex items-center gap-2"
             >
               <Calculator className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Calculate My Goals</span>
-              <span className="sm:hidden">Calculate</span>
+              <span className="hidden sm:inline">
+                {t("nutrition.actions.calculateGoals")}
+              </span>
+              <span className="sm:hidden">
+                {t("nutrition.actions.calculate")}
+              </span>
             </button>
             <button
               onClick={() => setShowGoalModal(true)}
               className="px-3 py-2 sm:px-4 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hover-lift flex items-center gap-2"
             >
               <Target className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Set Goals</span>
-              <span className="sm:hidden">Goals</span>
+              <span className="hidden sm:inline">
+                {t("nutrition.actions.setGoals")}
+              </span>
+              <span className="sm:hidden">{t("nutrition.actions.goals")}</span>
             </button>
           </div>
         </div>
@@ -395,11 +403,15 @@ export function NutritionTrackingPage() {
                 <div className="flex items-center gap-3">
                   <Flame className="w-8 h-8" />
                   <div>
-                    <h2 className="text-lg font-semibold">Daily Calories</h2>
+                    <h2 className="text-lg font-semibold">
+                      {t("nutrition.macros.dailyCalories")}
+                    </h2>
                     <p className="text-sm opacity-90">
                       {calorieStats.remaining > 0
-                        ? `${formatNumber(calorieStats.remaining)} remaining`
-                        : "Goal reached!"}
+                        ? t("nutrition.macros.remaining", {
+                            count: calorieStats.remaining,
+                          })
+                        : t("nutrition.macros.goalReached")}
                     </p>
                   </div>
                 </div>
@@ -408,7 +420,8 @@ export function NutritionTrackingPage() {
                     {formatNumber(dailyIntake.calories)}
                   </div>
                   <div className="text-sm opacity-90">
-                    of {formatNumber(goals.dailyCalories)}
+                    {t("nutrition.macros.of")}{" "}
+                    {formatNumber(goals.dailyCalories)}
                   </div>
                 </div>
               </div>
@@ -421,7 +434,9 @@ export function NutritionTrackingPage() {
                 />
               </div>
               <div className="mt-2 text-right text-sm opacity-90">
-                {calorieStats.percentage}% of goal
+                {t("nutrition.macros.percentOfGoal", {
+                  percent: calorieStats.percentage,
+                })}
               </div>
             </div>
 
@@ -432,14 +447,14 @@ export function NutritionTrackingPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Drumstick className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
                   <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Protein
+                    {t("nutrition.macros.protein")}
                   </span>
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.protein)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Goal: {goals.protein}g
+                  {t("nutrition.macros.goal")}: {goals.protein}g
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                   <div
@@ -465,14 +480,14 @@ export function NutritionTrackingPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Wheat className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                   <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Carbs
+                    {t("nutrition.macros.carbs")}
                   </span>
                 </div>
                 <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.carbs)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Goal: {goals.carbs}g
+                  {t("nutrition.macros.goal")}: {goals.carbs}g
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                   <div
@@ -498,14 +513,14 @@ export function NutritionTrackingPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Droplet className="w-5 h-5 text-blue-500" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Fat
+                    {t("nutrition.macros.fat")}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.fat)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Goal: {goals.fat}g
+                  {t("nutrition.macros.goal")}: {goals.fat}g
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                   <div
@@ -529,14 +544,14 @@ export function NutritionTrackingPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Apple className="w-5 h-5 text-green-500" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Fiber
+                    {t("nutrition.macros.fiber")}
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                   {formatNumber(dailyIntake.fiber)}g
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Goal: {goals.fiber}g
+                  {t("nutrition.macros.goal")}: {goals.fiber}g
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                   <div
@@ -562,13 +577,13 @@ export function NutritionTrackingPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Today's Meals
+                  {t("nutrition.meals.title")}
                 </h3>
                 <button
                   onClick={addQuickMeal}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm hover-lift"
                 >
-                  + Log Meal
+                  {t("nutrition.meals.logMeal")}
                 </button>
               </div>
 
@@ -576,9 +591,9 @@ export function NutritionTrackingPage() {
                 {dailyIntake.meals.length === 0 ? (
                   <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                     <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No meals logged yet today</p>
+                    <p>{t("nutrition.meals.noMealsLogged")}</p>
                     <p className="text-sm mt-1">
-                      Click "Log Meal" to get started
+                      {t("nutrition.meals.logMealPrompt")}
                     </p>
                   </div>
                 ) : (
@@ -598,7 +613,7 @@ export function NutritionTrackingPage() {
                                 {meal.name}
                               </h4>
                               <Badge variant="default" size="sm">
-                                {meal.mealType}
+                                {t(`nutrition.mealTypes.${meal.mealType}`)}
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
@@ -607,19 +622,19 @@ export function NutritionTrackingPage() {
                             <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
                               <span className="flex items-center gap-1">
                                 <Drumstick className="w-3 h-3 text-red-500" />
-                                {meal.protein}g protein
+                                {meal.protein}g {t("nutrition.macros.protein")}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Wheat className="w-3 h-3 text-yellow-500" />
-                                {meal.carbs}g carbs
+                                {meal.carbs}g {t("nutrition.macros.carbs")}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Droplet className="w-3 h-3 text-blue-500" />
-                                {meal.fat}g fat
+                                {meal.fat}g {t("nutrition.macros.fat")}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Apple className="w-3 h-3 text-green-500" />
-                                {meal.fiber}g fiber
+                                {meal.fiber}g {t("nutrition.macros.fiber")}
                               </span>
                             </div>
                           </div>
@@ -628,7 +643,7 @@ export function NutritionTrackingPage() {
                           onClick={() => deleteMeal(meal.id)}
                           className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm"
                         >
-                          Remove
+                          {t("nutrition.meals.remove")}
                         </button>
                       </div>
                     </div>
@@ -641,11 +656,12 @@ export function NutritionTrackingPage() {
             <div className="mt-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg p-6 text-white">
               <div className="flex items-center gap-3 mb-2">
                 <TrendingUp className="w-6 h-6" />
-                <h3 className="text-lg font-semibold">Weekly Insights</h3>
+                <h3 className="text-lg font-semibold">
+                  {t("nutrition.weeklyInsights.title")}
+                </h3>
               </div>
               <p className="text-sm opacity-90">
-                Track your progress over time with detailed analytics and
-                trends. Coming soon!
+                {t("nutrition.weeklyInsights.description")}
               </p>
             </div>
           </>
@@ -657,12 +673,12 @@ export function NutritionTrackingPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Set Nutrition Goals
+              {t("nutrition.goals.setGoals")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Daily Calories
+                  {t("nutrition.macros.dailyCalories")}
                 </label>
                 <input
                   type="number"
@@ -678,7 +694,7 @@ export function NutritionTrackingPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Protein (g)
+                  {t("nutrition.macros.protein")} (g)
                 </label>
                 <input
                   type="number"
@@ -691,7 +707,7 @@ export function NutritionTrackingPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Carbs (g)
+                  {t("nutrition.macros.carbs")} (g)
                 </label>
                 <input
                   type="number"
@@ -704,7 +720,7 @@ export function NutritionTrackingPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fat (g)
+                  {t("nutrition.macros.fat")} (g)
                 </label>
                 <input
                   type="number"
@@ -717,7 +733,7 @@ export function NutritionTrackingPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fiber (g)
+                  {t("nutrition.macros.fiber")} (g)
                 </label>
                 <input
                   type="number"
@@ -734,13 +750,13 @@ export function NutritionTrackingPage() {
                 onClick={() => setShowGoalModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                Cancel
+                {t("nutrition.goals.cancel")}
               </button>
               <button
                 onClick={() => saveGoals(goals)}
                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hover-lift"
               >
-                Save Goals
+                {t("nutrition.goals.saveGoals")}
               </button>
             </div>
           </div>

@@ -23,6 +23,11 @@ const SettingsMenu: React.FC = () => {
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           title={t("language.toggle")}
         >
+          {/*Current Language on the top right of the button*/}
+          <span className="absolute bottom-5 left-5 text-xs text-gray-500 dark:text-gray-400 italic">
+            {i18n.language}
+          </span>
+
           <Languages className="h-5 w-5 text-gray-600 dark:text-gray-300" />
         </button>
         <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">

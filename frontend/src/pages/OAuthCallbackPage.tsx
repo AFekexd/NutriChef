@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "../store";
 import { setCredentials } from "../store/slices/authSlice";
 import { Loader2 } from "lucide-react";
@@ -7,6 +8,7 @@ import { Loader2 } from "lucide-react";
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -60,7 +62,7 @@ export default function OAuthCallbackPage() {
       <div className="text-center">
         <Loader2 className="h-12 w-12 animate-spin text-[#4CAF50] mx-auto mb-4" />
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Completing authentication...
+          {t("auth.oauth.completing")}
         </p>
       </div>
     </div>

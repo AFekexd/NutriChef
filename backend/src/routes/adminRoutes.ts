@@ -298,4 +298,295 @@ router.post(
   adminController.resetUserAIRateLimit
 );
 
+/**
+ * @swagger
+ * /api/admin/logs:
+ *   get:
+ *     summary: Get admin activity logs
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: action
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: targetType
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: adminUserId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *     responses:
+ *       200:
+ *         description: Admin activity logs
+ */
+router.get("/logs", adminController.getActivityLogs);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/moderation:
+ *   get:
+ *     summary: Get user's moderation history
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User moderation data
+ */
+router.get("/users/:userId/moderation", adminController.getUserModeration);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/warn:
+ *   post:
+ *     summary: Send warning to user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *               adminNote:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Warning sent
+ */
+router.post("/users/:userId/warn", adminController.sendWarningToUser);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/timeout:
+ *   post:
+ *     summary: Timeout user (temporary suspension)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - duration
+ *             properties:
+ *               reason:
+ *                 type: string
+ *               duration:
+ *                 type: integer
+ *                 description: Duration in hours
+ *               adminNote:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User timed out
+ */
+router.post("/users/:userId/timeout", adminController.timeoutUser);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/ban:
+ *   post:
+ *     summary: Ban user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *               duration:
+ *                 type: integer
+ *                 description: Duration in hours (null for permanent ban)
+ *               adminNote:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User banned
+ */
+router.post("/users/:userId/ban", adminController.banUser);
+
+/**
+ * @swagger
+ * /api/admin/users/{userId}/unban:
+ *   post:
+ *     summary: Unban/lift timeout from user
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User unbanned
+ */
+router.post("/users/:userId/unban", adminController.unbanUser);
+
+/**
+ * @swagger
+ * /api/admin/api-logs:
+ *   get:
+ *     summary: Get API activity logs (all users)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: method
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: path
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: statusCode
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: searchTerm
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: API activity logs
+ */
+router.get("/api-logs", adminController.getApiActivityLogs);
+
+/**
+ * @swagger
+ * /api/admin/api-logs/stats:
+ *   get:
+ *     summary: Get API activity statistics
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *     responses:
+ *       200:
+ *         description: API activity statistics
+ */
+router.get("/api-logs/stats", adminController.getApiActivityStats);
+
+/**
+ * @swagger
+ * /api/admin/api-logs/cleanup:
+ *   post:
+ *     summary: Clean up old API logs
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               daysToKeep:
+ *                 type: integer
+ *                 default: 30
+ *     responses:
+ *       200:
+ *         description: Cleanup completed
+ */
+router.post("/api-logs/cleanup", adminController.cleanupApiLogs);
+
 export default router;

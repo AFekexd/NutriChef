@@ -113,7 +113,7 @@ class VisionAIService {
 
       // Use gemini-1.5-flash for vision + text generation
       const model = geminiClient.getGenerativeModel({
-        model: "gemini-flash-latest",
+        model: "gemini-flash-lite",
       });
 
       // Read image as base64

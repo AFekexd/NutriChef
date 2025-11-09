@@ -697,6 +697,176 @@ class ApiService {
     return response.data;
   }
 
+  // Admin logging and moderation endpoints
+  async getAdminLogs(params?: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    targetType?: string;
+    adminUserId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{
+    logs: Array<{
+      adminLogId: string;
+      adminUserId: string;
+      action: string;
+      targetType: string;
+      targetId?: string;
+      targetEmail?: string;
+      targetName?: string;
+      details?: any;
+      ipAddress?: string;
+      userAgent?: string;
+      timestamp: string;
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/logs", { params });
+    return response.data;
+  }
+
+  async getUserModeration(userId: string): Promise<{
+    activeActions: Array<any>;
+    history: Array<any>;
+  }> {
+    const response = await this.api.get(
+      `/api/admin/users/${userId}/moderation`
+    );
+    return response.data;
+  }
+
+  async sendWarningToUser(
+    userId: string,
+    reason?: string,
+    adminNote?: string
+  ): Promise<{ message: string; moderationAction: any }> {
+    const response = await this.api.post(`/api/admin/users/${userId}/warn`, {
+      reason,
+      adminNote,
+    });
+    return response.data;
+  }
+
+  async timeoutUser(
+    userId: string,
+    duration: number,
+    reason?: string,
+    adminNote?: string
+  ): Promise<{ message: string; moderationAction: any }> {
+    const response = await this.api.post(`/api/admin/users/${userId}/timeout`, {
+      duration,
+      reason,
+      adminNote,
+    });
+    return response.data;
+  }
+
+  async banUser(
+    userId: string,
+    reason?: string,
+    duration?: number,
+    adminNote?: string
+  ): Promise<{ message: string; moderationAction: any }> {
+    const response = await this.api.post(`/api/admin/users/${userId}/ban`, {
+      reason,
+      duration,
+      adminNote,
+    });
+    return response.data;
+  }
+
+  async unbanUser(userId: string): Promise<{ message: string }> {
+    const response = await this.api.post(`/api/admin/users/${userId}/unban`);
+    return response.data;
+  }
+
+  // API Activity Logs endpoints
+  async getApiActivityLogs(params?: {
+    page?: number;
+    limit?: number;
+    userId?: string;
+    method?: string;
+    path?: string;
+    statusCode?: number;
+    startDate?: string;
+    endDate?: string;
+    searchTerm?: string;
+  }): Promise<{
+    logs: Array<{
+      apiLogId: string;
+      userId?: string;
+      userEmail?: string;
+      userName?: string;
+      method: string;
+      path: string;
+      statusCode: number;
+      responseTime?: number;
+      ipAddress?: string;
+      userAgent?: string;
+      requestBody?: any;
+      responseBody?: any;
+      errorMessage?: string;
+      timestamp: string;
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const response = await this.api.get("/api/admin/api-logs", { params });
+    return response.data;
+  }
+
+  async getApiActivityStats(params?: {
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{
+    totalRequests: number;
+    successfulRequests: number;
+    failedRequests: number;
+    avgResponseTime: number;
+    successRate: number;
+    topEndpoints: Array<{
+      method: string;
+      path: string;
+      count: number;
+    }>;
+    topUsers: Array<{
+      userId: string;
+      userEmail: string;
+      userName: string;
+      count: number;
+    }>;
+    errorDistribution: Array<{
+      statusCode: number;
+      count: number;
+    }>;
+  }> {
+    const response = await this.api.get("/api/admin/api-logs/stats", {
+      params,
+    });
+    return response.data;
+  }
+
+  async cleanupApiLogs(daysToKeep: number = 30): Promise<{
+    message: string;
+    deletedCount: number;
+  }> {
+    const response = await this.api.post("/api/admin/api-logs/cleanup", {
+      daysToKeep,
+    });
+    return response.data;
+  }
+
   // Meal Planning endpoints
   async getMealPlans(
     startDate?: string,

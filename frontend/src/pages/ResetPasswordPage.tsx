@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { toast } from "sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState("");
@@ -16,25 +18,25 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const tokenParam = searchParams.get("token");
     if (!tokenParam) {
-      toast.error("Invalid or missing reset token");
+      toast.error(t("auth.invalidResetToken"));
       navigate("/forgot-password");
     } else {
       setToken(tokenParam);
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, t]);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return "Password must be at least 8 characters long";
+      return t("auth.atLeast8Chars");
     }
     if (!/(?=.*[a-z])/.test(password)) {
-      return "Password must contain at least one lowercase letter";
+      return t("auth.oneLowercase");
     }
     if (!/(?=.*[A-Z])/.test(password)) {
-      return "Password must contain at least one uppercase letter";
+      return t("auth.oneUppercase");
     }
     if (!/(?=.*\d)/.test(password)) {
-      return "Password must contain at least one number";
+      return t("auth.oneNumber");
     }
     return null;
   };
@@ -44,7 +46,7 @@ export default function ResetPasswordPage() {
 
     // Validate password match
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error(t("auth.passwordsDoNotMatch"));
       return;
     }
 
@@ -66,9 +68,7 @@ export default function ResetPasswordPage() {
         }
       );
 
-      toast.success(
-        response.data.message || "Password reset successfully! Please log in."
-      );
+      toast.success(response.data.message || t("auth.resetSuccess"));
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -76,9 +76,7 @@ export default function ResetPasswordPage() {
       }, 2000);
     } catch (error: any) {
       console.error("Password reset error:", error);
-      const errorMessage =
-        error.response?.data?.error ||
-        "Failed to reset password. The link may be expired or invalid.";
+      const errorMessage = error.response?.data?.error || t("auth.resetFailed");
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -97,12 +95,12 @@ export default function ResetPasswordPage() {
 
   const strength = passwordStrength(newPassword);
   const strengthLabels = [
-    "Weak",
-    "Weak",
-    "Fair",
-    "Good",
-    "Strong",
-    "Very Strong",
+    t("auth.passwordStrength.weak"),
+    t("auth.passwordStrength.weak"),
+    t("auth.passwordStrength.fair"),
+    t("auth.passwordStrength.good"),
+    t("auth.passwordStrength.strong"),
+    t("auth.passwordStrength.veryStrong"),
   ];
   const strengthColors = [
     "bg-red-500",
@@ -133,9 +131,9 @@ export default function ResetPasswordPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Reset Your Password
+            {t("auth.resetPasswordTitle")}
           </h1>
-          <p className="text-gray-600">Enter your new password below</p>
+          <p className="text-gray-600">{t("auth.resetPasswordSubtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -144,7 +142,7 @@ export default function ResetPasswordPage() {
               htmlFor="newPassword"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              New Password
+              {t("auth.newPassword")}
             </label>
             <input
               type="password"
@@ -152,7 +150,7 @@ export default function ResetPasswordPage() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter new password"
+              placeholder={t("auth.enterNewPassword")}
               required
               disabled={isLoading}
             />
@@ -178,7 +176,7 @@ export default function ResetPasswordPage() {
               htmlFor="confirmPassword"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Confirm Password
+              {t("auth.confirmPassword")}
             </label>
             <input
               type="password"
@@ -186,37 +184,37 @@ export default function ResetPasswordPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Confirm new password"
+              placeholder={t("auth.confirmNewPassword")}
               required
               disabled={isLoading}
             />
             {confirmPassword && newPassword !== confirmPassword && (
               <p className="mt-1 text-sm text-red-600">
-                Passwords do not match
+                {t("auth.passwordsDoNotMatch")}
               </p>
             )}
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h3 className="text-sm font-medium text-blue-900 mb-2">
-              Password Requirements:
+              {t("auth.passwordRequirements")}
             </h3>
             <ul className="text-sm text-blue-700 space-y-1">
               <li className="flex items-center gap-2">
                 <span>{newPassword.length >= 8 ? "✓" : "○"}</span>
-                At least 8 characters
+                {t("auth.atLeast8Chars")}
               </li>
               <li className="flex items-center gap-2">
                 <span>{/[a-z]/.test(newPassword) ? "✓" : "○"}</span>
-                One lowercase letter
+                {t("auth.oneLowercase")}
               </li>
               <li className="flex items-center gap-2">
                 <span>{/[A-Z]/.test(newPassword) ? "✓" : "○"}</span>
-                One uppercase letter
+                {t("auth.oneUppercase")}
               </li>
               <li className="flex items-center gap-2">
                 <span>{/\d/.test(newPassword) ? "✓" : "○"}</span>
-                One number
+                {t("auth.oneNumber")}
               </li>
             </ul>
           </div>
@@ -253,10 +251,10 @@ export default function ResetPasswordPage() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Resetting Password...
+                {t("auth.resettingPassword")}
               </>
             ) : (
-              "Reset Password"
+              t("auth.resetPasswordButton")
             )}
           </button>
         </form>
@@ -266,7 +264,7 @@ export default function ResetPasswordPage() {
             to="/login"
             className="text-sm text-primary-600 hover:text-primary-700 font-medium"
           >
-            ← Back to Login
+            {t("auth.backToLogin")}
           </Link>
         </div>
       </div>

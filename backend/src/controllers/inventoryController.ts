@@ -170,6 +170,7 @@ export const deleteInventoryItem = async (req: Request, res: Response) => {
     });
 
     if (item) {
+      // Delete the inventory item (cascade will handle related records)
       await prisma.inventoryItem.delete({
         where: { inventoryItemId: id },
       });
@@ -180,6 +181,7 @@ export const deleteInventoryItem = async (req: Request, res: Response) => {
 
     res.status(204).send();
   } catch (error) {
+    console.error("Error deleting inventory item:", error);
     res.status(500).json({ error: "Failed to delete inventory item" });
   }
 };

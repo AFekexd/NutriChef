@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { gsap } from "gsap";
 import { toast } from "sonner";
 import {
@@ -23,10 +24,20 @@ import { shoppingListService } from "../services/shoppingListService";
 import { confirmDialog } from "../utils/confirmDialog";
 import type { MealPlan, Recipe, InventoryItem } from "../types";
 
-const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
-const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 export function MealPlanningPage() {
+  const { t } = useTranslation();
+
+  const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
+  const DAYS_OF_WEEK = [
+    t("mealPlanning.days.sun"),
+    t("mealPlanning.days.mon"),
+    t("mealPlanning.days.tue"),
+    t("mealPlanning.days.wed"),
+    t("mealPlanning.days.thu"),
+    t("mealPlanning.days.fri"),
+    t("mealPlanning.days.sat"),
+  ];
+
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -92,12 +103,12 @@ export function MealPlanningPage() {
           case "arrowleft":
             e.preventDefault();
             previousWeek();
-            toast.info("Previous week");
+            toast.info(t("mealPlanning.weekNavigation.previousWeek"));
             break;
           case "arrowright":
             e.preventDefault();
             nextWeek();
-            toast.info("Next week");
+            toast.info(t("mealPlanning.weekNavigation.nextWeek"));
             break;
           case "t":
             e.preventDefault();
@@ -105,7 +116,7 @@ export function MealPlanningPage() {
             const day = today.getDay();
             const diff = today.getDate() - day;
             setCurrentWeekStart(new Date(today.setDate(diff)));
-            toast.info("Jumped to current week");
+            toast.info(t("mealPlanning.weekNavigation.jumpedToCurrentWeek"));
             break;
         }
       } else if (e.key === "Escape") {
@@ -337,29 +348,28 @@ export function MealPlanningPage() {
       setShowAddMeal(false);
       setSelectedRecipe("");
       setSelectedInventoryItems([]);
-      toast.success("Meal added to plan successfully!");
+      toast.success(t("mealPlanning.messages.mealAdded"));
     } catch (error) {
       console.error("Error creating meal plan:", error);
-      toast.error("Failed to add meal to plan. Please try again.");
+      toast.error(t("mealPlanning.messages.mealAddFailed"));
     }
   };
 
   // Delete meal
   const handleDeleteMeal = async (mealPlanId: string) => {
     confirmDialog({
-      title: "Delete Meal Plan?",
-      message:
-        "Are you sure you want to delete this meal plan? This action cannot be undone.",
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      title: t("mealPlanning.messages.deleteMealPlan"),
+      message: t("mealPlanning.messages.deleteMealPlanMessage"),
+      confirmText: t("mealPlanning.messages.confirmDelete"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.deleteMealPlan(mealPlanId);
           await fetchMealPlans();
-          toast.success("Meal plan deleted successfully");
+          toast.success(t("mealPlanning.messages.mealDeleted"));
         } catch (error) {
           console.error("Error deleting meal plan:", error);
-          toast.error("Failed to delete meal plan");
+          toast.error(t("mealPlanning.messages.mealDeleteFailed"));
         }
       },
     });
@@ -401,15 +411,21 @@ export function MealPlanningPage() {
     });
 
     const addedCount = shoppingListService.addMultipleItems(itemsToAdd);
-    toast.success(
-      `Added ${addedCount} new items to shopping list!${
-        itemsToAdd.length - addedCount > 0
-          ? ` (${
-              itemsToAdd.length - addedCount
-            } items were already in the list)`
-          : ""
-      }`
-    );
+    const alreadyInList = itemsToAdd.length - addedCount;
+
+    if (alreadyInList > 0) {
+      toast.success(
+        `${t("mealPlanning.messages.addedToShoppingList", {
+          count: addedCount,
+        })} (${t("mealPlanning.messages.itemsAlreadyInList", {
+          count: alreadyInList,
+        })})`
+      );
+    } else {
+      toast.success(
+        t("mealPlanning.messages.addedToShoppingList", { count: addedCount })
+      );
+    }
   };
 
   // Animations
@@ -464,10 +480,10 @@ export function MealPlanningPage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Meal Planning
+                {t("mealPlanning.title")}
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Plan your weekly meals effortlessly
+                {t("mealPlanning.subtitle")}
               </p>
             </div>
           </div>
@@ -480,7 +496,7 @@ export function MealPlanningPage() {
               className="bg-gradient-to-r from-blue-600 to-green-600 dark:from-blue-500 dark:to-green-500 text-white hover:from-blue-700 hover:to-green-700"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Add to Shopping List
+              {t("mealPlanning.actions.addToShoppingList")}
             </Button>
 
             {/* Week Navigation */}
@@ -499,7 +515,7 @@ export function MealPlanningPage() {
                 onClick={currentWeek}
                 className="dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700/20"
               >
-                This Week
+                {t("mealPlanning.weekNavigation.thisWeek")}
               </Button>
               <Button
                 variant="outline"
@@ -522,7 +538,7 @@ export function MealPlanningPage() {
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-orange-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Total Calories
+                {t("mealPlanning.stats.totalCalories")}
               </p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -534,7 +550,7 @@ export function MealPlanningPage() {
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-blue-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Avg/Day
+                {t("mealPlanning.stats.avgCalories")}
               </p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -546,7 +562,7 @@ export function MealPlanningPage() {
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-red-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Protein
+                {t("mealPlanning.stats.protein")}
               </p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -558,7 +574,7 @@ export function MealPlanningPage() {
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-yellow-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Carbs
+                {t("mealPlanning.stats.carbs")}
               </p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -570,7 +586,7 @@ export function MealPlanningPage() {
             <div className="flex items-center gap-2 mb-2">
               <div className="w-4 h-4 rounded-full bg-purple-500" />
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                Fat
+                {t("mealPlanning.stats.fat")}
               </p>
             </div>
             <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -586,7 +602,7 @@ export function MealPlanningPage() {
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-800">
                   <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 w-32">
-                    Meal
+                    {t("mealPlanning.labels.meal")}
                   </th>
                   {weekDates.map((date, index) => {
                     const dateKey = date.toISOString().split("T")[0];
@@ -642,7 +658,7 @@ export function MealPlanningPage() {
                     className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <td className="p-4 font-medium text-gray-900 dark:text-gray-100 capitalize">
-                      {mealType}
+                      {t(`mealPlanning.mealTypes.${mealType}`)}
                     </td>
                     {weekDates.map((date, dateIndex) => {
                       const meal = getMealsForSlot(date, mealType);
@@ -719,12 +735,12 @@ export function MealPlanningPage() {
                               className={`w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors group ${
                                 meal ? "h-10" : "h-16"
                               }`}
-                              title="Add meal"
+                              title={t("mealPlanning.actions.addMeal")}
                             >
                               <Plus className="w-4 h-4 text-gray-400 dark:text-gray-600 group-hover:text-green-600 dark:group-hover:text-green-500" />
                               {meal && (
                                 <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-500">
-                                  Add more
+                                  {t("mealPlanning.actions.addMore")}
                                 </span>
                               )}
                             </button>
@@ -746,7 +762,7 @@ export function MealPlanningPage() {
           <Card className="w-full max-w-md p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                Add to Meal Plan
+                {t("mealPlanning.modal.title")}
               </h3>
               <button
                 onClick={() => setShowAddMeal(false)}
@@ -756,7 +772,9 @@ export function MealPlanningPage() {
               </button>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {selectedDate?.toLocaleDateString()} - {selectedMealType}
+              {selectedDate?.toLocaleDateString()} -{" "}
+              {selectedMealType &&
+                t(`mealPlanning.mealTypes.${selectedMealType}`)}
             </p>
 
             {/* Mode Toggle */}
@@ -771,7 +789,7 @@ export function MealPlanningPage() {
                 }`}
               >
                 <ChefHat className="w-4 h-4 mr-2" />
-                Recipe
+                {t("mealPlanning.modal.recipeMode")}
               </Button>
               <Button
                 onClick={() => setAddMode("ingredient")}
@@ -783,7 +801,7 @@ export function MealPlanningPage() {
                 }`}
               >
                 <Apple className="w-4 h-4 mr-2" />
-                Ingredients
+                {t("mealPlanning.modal.ingredientsMode")}
               </Button>
             </div>
 
@@ -791,11 +809,11 @@ export function MealPlanningPage() {
             {addMode === "recipe" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Recipe
+                  {t("mealPlanning.modal.selectRecipe")}
                 </label>
                 {recipes.length === 0 ? (
                   <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
-                    No recipes available. Please add some recipes first.
+                    {t("mealPlanning.modal.noRecipes")}
                   </div>
                 ) : (
                   <select
@@ -803,7 +821,9 @@ export function MealPlanningPage() {
                     onChange={(e) => setSelectedRecipe(e.target.value)}
                     className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
-                    <option value="">Choose a recipe...</option>
+                    <option value="">
+                      {t("mealPlanning.modal.chooseRecipe")}
+                    </option>
                     {recipes.map((recipe) => (
                       <option key={recipe.recipeId} value={recipe.recipeId}>
                         {recipe.title} ({recipe.calories} cal)
@@ -818,12 +838,11 @@ export function MealPlanningPage() {
             {addMode === "ingredient" && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Ingredients from Inventory
+                  {t("mealPlanning.modal.selectIngredients")}
                 </label>
                 {inventoryItems.length === 0 ? (
                   <div className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm">
-                    No inventory items available. Please add items to your
-                    inventory first.
+                    {t("mealPlanning.modal.noInventoryItems")}
                   </div>
                 ) : (
                   <div className="max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
@@ -868,7 +887,9 @@ export function MealPlanningPage() {
                 )}
                 {selectedInventoryItems.length > 0 && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                    {selectedInventoryItems.length} item(s) selected
+                    {t("mealPlanning.modal.itemsSelected", {
+                      count: selectedInventoryItems.length,
+                    })}
                   </p>
                 )}
               </div>
@@ -884,7 +905,7 @@ export function MealPlanningPage() {
                 }}
                 className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
-                Cancel
+                {t("mealPlanning.modal.cancel")}
               </Button>
               <Button
                 onClick={handleSaveMeal}
@@ -898,12 +919,12 @@ export function MealPlanningPage() {
                 {addMode === "recipe" ? (
                   <>
                     <ChefHat className="w-4 h-4 mr-2" />
-                    Add Recipe
+                    {t("mealPlanning.modal.addRecipe")}
                   </>
                 ) : (
                   <>
                     <Apple className="w-4 h-4 mr-2" />
-                    Add Ingredients
+                    {t("mealPlanning.modal.addIngredients")}
                   </>
                 )}
               </Button>
