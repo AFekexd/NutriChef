@@ -185,7 +185,7 @@ export function BottomNavigation() {
               {/* Food Section */}
               <div className="border-t border-gray-200 dark:border-gray-700 p-2">
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
-                  Food
+                  {t("nav.foodAndMeals")}
                 </div>
                 <button
                   onClick={() => {
@@ -199,7 +199,7 @@ export function BottomNavigation() {
                   }`}
                 >
                   <ChefHat className="w-5 h-5" />
-                  <span className="font-medium">All Recipes</span>
+                  <span className="font-medium">{t("nav.allRecipes")}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -213,7 +213,7 @@ export function BottomNavigation() {
                   }`}
                 >
                   <ChefHat className="w-5 h-5" />
-                  <span className="font-medium">My Recipes</span>
+                  <span className="font-medium">{t("nav.myRecipes")}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -227,7 +227,9 @@ export function BottomNavigation() {
                   }`}
                 >
                   <Salad className="w-5 h-5" />
-                  <span className="font-medium">Recommendations</span>
+                  <span className="font-medium">
+                    {t("nav.recipeRecommendations")}
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -248,7 +250,7 @@ export function BottomNavigation() {
               {/* Health Section */}
               <div className="border-t border-gray-200 dark:border-gray-700 p-2">
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-4 py-2">
-                  Health
+                  {t("nav.health")}
                 </div>
                 <button
                   onClick={() => {
@@ -396,7 +398,7 @@ export function BottomNavigation() {
             }`}
           >
             <Store className="w-6 h-6" />
-            <span className="text-xs font-medium">Inventory</span>
+            <span className="text-xs font-medium">{t("nav.inventory")}</span>
           </button>
 
           {/* Center Action Button */}
@@ -436,7 +438,7 @@ export function BottomNavigation() {
             }`}
           >
             <Salad className="w-6 h-6" />
-            <span className="text-xs font-medium">Food</span>
+            <span className="text-xs font-medium">{t("nav.foodAndMeals")}</span>
           </button>
 
           <button

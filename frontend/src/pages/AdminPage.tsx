@@ -87,8 +87,6 @@ export function AdminPage() {
 
   useEffect(() => {
     // Reset page when tab changes
-    setCurrentPage(1);
-
     if (activeTab === "users") loadUsers();
     else if (activeTab === "inventory") loadInventory();
     else if (activeTab === "recipes") loadRecipes();
@@ -100,7 +98,7 @@ export function AdminPage() {
       setApiLogs([]); // Clear old logs
       loadApiLogs();
     }
-  }, [activeTab]);
+  }, [activeTab, currentPage, searchTerm]);
 
   useEffect(() => {
     if (!isLoading && headerRef.current) {

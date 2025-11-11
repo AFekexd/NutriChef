@@ -758,6 +758,9 @@ export const requestPasswordReset = async (
     // Generate secure reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
+    // Hash the token before storing it in the database
+    const hashedToken = await bcrypt.hash(resetToken, SALT_ROUNDS);
+
     // Token expires in 1 hour
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
@@ -775,11 +778,11 @@ export const requestPasswordReset = async (
       },
     });
 
-    // Create new reset token
+    // Create new reset token with hashed value
     await prisma.passwordResetToken.create({
       data: {
         userId: user.userId,
-        token: resetToken,
+        token: hashedToken,
         expiresAt,
       },
     });
@@ -833,26 +836,29 @@ export const resetPassword = async (
       return;
     }
 
-    // Find valid reset token
-    const resetTokenRecord = await prisma.passwordResetToken.findUnique({
-      where: { token },
+    // Find all valid reset tokens (not used and not expired)
+    const resetTokenRecords = await prisma.passwordResetToken.findMany({
+      where: {
+        isUsed: false,
+        expiresAt: {
+          gte: new Date(),
+        },
+      },
       include: { user: true },
     });
 
+    // Compare the provided token against all hashed tokens
+    let resetTokenRecord = null;
+    for (const record of resetTokenRecords) {
+      const isMatch = await bcrypt.compare(token, record.token);
+      if (isMatch) {
+        resetTokenRecord = record;
+        break;
+      }
+    }
+
     if (!resetTokenRecord) {
       res.status(400).json({ error: "Invalid or expired reset token" });
-      return;
-    }
-
-    // Check if token is already used
-    if (resetTokenRecord.isUsed) {
-      res.status(400).json({ error: "Reset token has already been used" });
-      return;
-    }
-
-    // Check if token is expired
-    if (resetTokenRecord.expiresAt < new Date()) {
-      res.status(400).json({ error: "Reset token has expired" });
       return;
     }
 

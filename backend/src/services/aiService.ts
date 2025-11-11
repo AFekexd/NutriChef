@@ -4,10 +4,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import crypto from "crypto";
 
 // Encryption key for API keys (should be in environment variables)
-const ENCRYPTION_KEY =
-  process.env.API_KEY_ENCRYPTION_SECRET || "your-32-character-secret-key!!";
-const CLIENT_ENCRYPTION_KEY =
-  process.env.CLIENT_ENCRYPTION_KEY || "your-client-encryption-key-32chars";
+const ENCRYPTION_KEY = process.env.API_KEY_ENCRYPTION_SECRET;
+const CLIENT_ENCRYPTION_KEY = process.env.CLIENT_ENCRYPTION_KEY;
 const ALGORITHM = "aes-256-cbc";
 
 // OpenAI Configuration

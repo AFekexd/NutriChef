@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Calculator, Info } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -32,6 +33,8 @@ export function MetricsCalculatorModal({
   onClose,
   onSave,
 }: MetricsCalculatorModalProps) {
+  const { t } = useTranslation();
+
   // User metrics state
   const [age, setAge] = useState<number>(30);
   const [gender, setGender] = useState<"male" | "female">("male");
@@ -168,10 +171,10 @@ export function MetricsCalculatorModal({
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <Calculator className="h-6 w-6 text-blue-600" />
-              Calculate Your Nutrition Goals
+              {t("nutrition.metricsCalculator.title")}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Get personalized macro recommendations based on your body metrics
+              {t("nutrition.metricsCalculator.subtitle")}
             </p>
           </div>
           <button
@@ -189,7 +192,7 @@ export function MetricsCalculatorModal({
               {/* Age */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Age (years)
+                  {t("nutrition.metricsCalculator.ageLabel")}
                 </label>
                 <input
                   type="number"
@@ -204,7 +207,7 @@ export function MetricsCalculatorModal({
               {/* Gender */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Gender
+                  {t("nutrition.metricsCalculator.genderLabel")}
                 </label>
                 <div className="flex gap-4">
                   <button
@@ -215,7 +218,7 @@ export function MetricsCalculatorModal({
                         : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 text-gray-900 dark:text-gray-300"
                     }`}
                   >
-                    Male
+                    {t("nutrition.metricsCalculator.male")}
                   </button>
                   <button
                     onClick={() => setGender("female")}
@@ -225,7 +228,7 @@ export function MetricsCalculatorModal({
                         : "border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 text-gray-900 dark:text-gray-300"
                     }`}
                   >
-                    Female
+                    {t("nutrition.metricsCalculator.female")}
                   </button>
                 </div>
               </div>
@@ -234,13 +237,14 @@ export function MetricsCalculatorModal({
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Weight
+                    {t("nutrition.metricsCalculator.weightLabel")}
                   </label>
                   <button
                     onClick={handleWeightUnitToggle}
                     className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Switch to {weightUnit === "kg" ? "lbs" : "kg"}
+                    {t("nutrition.metricsCalculator.switchTo")}{" "}
+                    {weightUnit === "kg" ? "lbs" : "kg"}
                   </button>
                 </div>
                 <div className="flex gap-2">
@@ -263,13 +267,14 @@ export function MetricsCalculatorModal({
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Height
+                    {t("nutrition.metricsCalculator.heightLabel")}
                   </label>
                   <button
                     onClick={handleHeightUnitToggle}
                     className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    Switch to {heightUnit === "cm" ? "ft/in" : "cm"}
+                    {t("nutrition.metricsCalculator.switchTo")}{" "}
+                    {heightUnit === "cm" ? "ft/in" : "cm"}
                   </button>
                 </div>
                 {heightUnit === "cm" ? (
@@ -326,7 +331,7 @@ export function MetricsCalculatorModal({
               {/* Activity Level */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Activity Level
+                  {t("nutrition.metricsCalculator.activityLevelLabel")}
                 </label>
                 <select
                   value={activityLevel}
@@ -337,11 +342,21 @@ export function MetricsCalculatorModal({
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="sedentary">Sedentary</option>
-                  <option value="light">Light Activity</option>
-                  <option value="moderate">Moderate Activity</option>
-                  <option value="active">Active</option>
-                  <option value="veryActive">Very Active</option>
+                  <option value="sedentary">
+                    {t("nutrition.metricsCalculator.activityLevels.sedentary")}
+                  </option>
+                  <option value="light">
+                    {t("nutrition.metricsCalculator.activityLevels.light")}
+                  </option>
+                  <option value="moderate">
+                    {t("nutrition.metricsCalculator.activityLevels.moderate")}
+                  </option>
+                  <option value="active">
+                    {t("nutrition.metricsCalculator.activityLevels.active")}
+                  </option>
+                  <option value="veryActive">
+                    {t("nutrition.metricsCalculator.activityLevels.veryActive")}
+                  </option>
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-start gap-1">
                   <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
@@ -352,7 +367,7 @@ export function MetricsCalculatorModal({
               {/* Goal */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Your Goal
+                  {t("nutrition.metricsCalculator.goalLabel")}
                 </label>
                 <select
                   value={goal}
@@ -361,13 +376,21 @@ export function MetricsCalculatorModal({
                   }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="lose">Lose Weight (Moderate)</option>
-                  <option value="loseFast">Lose Weight (Fast)</option>
-                  <option value="loseAggressive">
-                    Lose Weight (Aggressive)
+                  <option value="lose">
+                    {t("nutrition.metricsCalculator.goals.lose")}
                   </option>
-                  <option value="maintain">Maintain Weight</option>
-                  <option value="gain">Gain Muscle</option>
+                  <option value="loseFast">
+                    {t("nutrition.metricsCalculator.goals.loseFast")}
+                  </option>
+                  <option value="loseAggressive">
+                    {t("nutrition.metricsCalculator.goals.loseAggressive")}
+                  </option>
+                  <option value="maintain">
+                    {t("nutrition.metricsCalculator.goals.maintain")}
+                  </option>
+                  <option value="gain">
+                    {t("nutrition.metricsCalculator.goals.gain")}
+                  </option>
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-start gap-1">
                   <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
@@ -384,12 +407,12 @@ export function MetricsCalculatorModal({
                 {isCalculating ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Calculating...
+                    {t("nutrition.metricsCalculator.calculating")}
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
                     <Calculator className="h-5 w-5" />
-                    Calculate My Goals
+                    {t("nutrition.metricsCalculator.calculateButton")}
                   </span>
                 )}
               </Button>
@@ -402,40 +425,46 @@ export function MetricsCalculatorModal({
                   {/* BMR & TDEE Info */}
                   <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
                     <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-3">
-                      Your Metabolic Rate
+                      {t("nutrition.metricsCalculator.results.metabolicRate")}
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs text-blue-700 dark:text-blue-400">
-                          BMR (Basal Metabolic Rate)
+                          {t("nutrition.metricsCalculator.results.bmr")}
                         </p>
                         <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
                           {recommendations.bmr}
-                          <span className="text-sm font-normal ml-1">cal</span>
+                          <span className="text-sm font-normal ml-1">
+                            {t("nutrition.metricsCalculator.results.cal")}
+                          </span>
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-blue-700 dark:text-blue-400">
-                          TDEE (Total Daily Energy)
+                          {t("nutrition.metricsCalculator.results.tdee")}
                         </p>
                         <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
                           {recommendations.tdee}
-                          <span className="text-sm font-normal ml-1">cal</span>
+                          <span className="text-sm font-normal ml-1">
+                            {t("nutrition.metricsCalculator.results.cal")}
+                          </span>
                         </p>
                       </div>
                     </div>
                     <p className="text-xs text-blue-600 dark:text-blue-300 mt-2">
-                      Based on your {activityLevel} activity level and {goal}{" "}
-                      goal
+                      {t("nutrition.metricsCalculator.results.basedOn", {
+                        activityLevel,
+                        goal,
+                      })}
                     </p>
                   </div>
 
                   {/* Editable Goals */}
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                      Recommended Daily Targets
+                      {t("nutrition.metricsCalculator.results.dailyTargets")}
                       <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-2">
-                        (You can adjust these)
+                        {t("nutrition.metricsCalculator.results.adjustable")}
                       </span>
                     </h3>
 
@@ -443,7 +472,9 @@ export function MetricsCalculatorModal({
                       {/* Calories */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Daily Calories
+                          {t(
+                            "nutrition.metricsCalculator.results.dailyCalories"
+                          )}
                         </label>
                         <input
                           type="number"
@@ -461,7 +492,7 @@ export function MetricsCalculatorModal({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Protein (g)
+                            {t("nutrition.metricsCalculator.results.protein")}
                           </label>
                           <input
                             type="number"
@@ -476,7 +507,7 @@ export function MetricsCalculatorModal({
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Carbs (g)
+                            {t("nutrition.metricsCalculator.results.carbs")}
                           </label>
                           <input
                             type="number"
@@ -491,7 +522,7 @@ export function MetricsCalculatorModal({
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Fat (g)
+                            {t("nutrition.metricsCalculator.results.fat")}
                           </label>
                           <input
                             type="number"
@@ -506,7 +537,7 @@ export function MetricsCalculatorModal({
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Fiber (g)
+                            {t("nutrition.metricsCalculator.results.fiber")}
                           </label>
                           <input
                             type="number"
@@ -524,26 +555,36 @@ export function MetricsCalculatorModal({
                       {/* Macro Ratios */}
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
                         <p className="text-md text-gray-600 dark:text-gray-400 mb-2">
-                          Macro Distribution
+                          {t(
+                            "nutrition.metricsCalculator.results.macroDistribution"
+                          )}
                         </p>
                         <div className="flex  justify-evenly">
                           <Badge
                             variant="outline"
                             className="text-md text-white"
                           >
-                            Protein: {recommendations.macroRatios.protein}%
+                            {t(
+                              "nutrition.metricsCalculator.results.proteinRatio",
+                              { ratio: recommendations.macroRatios.protein }
+                            )}
                           </Badge>
                           <Badge
                             variant="outline"
                             className="text-md text-red-400"
                           >
-                            Carbs: {recommendations.macroRatios.carbs}%
+                            {t(
+                              "nutrition.metricsCalculator.results.carbsRatio",
+                              { ratio: recommendations.macroRatios.carbs }
+                            )}
                           </Badge>
                           <Badge
                             variant="outline"
                             className="text-md text-orange-400"
                           >
-                            Fat: {recommendations.macroRatios.fat}%
+                            {t("nutrition.metricsCalculator.results.fatRatio", {
+                              ratio: recommendations.macroRatios.fat,
+                            })}
                           </Badge>
                         </div>
                       </div>
@@ -557,7 +598,7 @@ export function MetricsCalculatorModal({
                       variant="outline"
                       className="flex-1"
                     >
-                      Back to Form
+                      {t("nutrition.metricsCalculator.results.backToForm")}
                     </Button>
                     <Button
                       onClick={handleSave}
@@ -567,10 +608,10 @@ export function MetricsCalculatorModal({
                       {isSaving ? (
                         <span className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Saving...
+                          {t("nutrition.metricsCalculator.results.saving")}
                         </span>
                       ) : (
-                        "Save These Goals"
+                        t("nutrition.metricsCalculator.results.saveButton")
                       )}
                     </Button>
                   </div>

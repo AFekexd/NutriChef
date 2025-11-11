@@ -4,8 +4,7 @@
  */
 
 // Get or generate encryption key from environment
-const ENCRYPTION_KEY =
-  import.meta.env.VITE_ENCRYPTION_KEY || "your-client-encryption-key-32chars";
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 
 /**
  * Derive a crypto key from the password/secret

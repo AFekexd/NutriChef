@@ -435,6 +435,59 @@ export const getAIApiKeyConfig = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Validate API key by making a small test request
+ */
+async function validateAPIKey(
+  apiKey: string,
+  provider: string
+): Promise<{ valid: boolean; error?: string }> {
+  try {
+    if (provider === "openai") {
+      const OpenAI = (await import("openai")).default;
+      const testClient = new OpenAI({ apiKey });
+
+      // Make a minimal test request (single token)
+      await testClient.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: "Hi" }],
+        max_tokens: 1,
+      });
+
+      return { valid: true };
+    } else if (provider === "gemini") {
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
+      const testClient = new GoogleGenerativeAI(apiKey);
+      const model = testClient.getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
+
+      // Make a minimal test request
+      await model.generateContent("Hi");
+
+      return { valid: true };
+    }
+
+    return { valid: false, error: "Unsupported provider" };
+  } catch (error: any) {
+    console.error("API key validation error:", error);
+
+    // Parse error messages
+    if (error.status === 401 || error.message?.includes("Invalid API key")) {
+      return { valid: false, error: "Invalid API key" };
+    } else if (error.status === 429) {
+      return { valid: false, error: "API key quota exceeded" };
+    } else if (error.message?.includes("API_KEY_INVALID")) {
+      return { valid: false, error: "Invalid API key format" };
+    }
+
+    return {
+      valid: false,
+      error: error.message || "Failed to validate API key",
+    };
+  }
+}
+
 // Save or update AI API key
 export const saveAIApiKey = async (req: Request, res: Response) => {
   try {
@@ -475,6 +528,20 @@ export const saveAIApiKey = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate the API key with a small test request
+    console.log(`🔍 Validating ${provider} API key...`);
+    const validation = await validateAPIKey(plainTextApiKey, provider);
+
+    if (!validation.valid) {
+      console.error(`❌ API key validation failed: ${validation.error}`);
+      return res.status(400).json({
+        error: `Invalid API key: ${validation.error}`,
+        validationFailed: true,
+      });
+    }
+
+    console.log(`✅ API key validated successfully for ${provider}`);
+
     // Encrypt the API key for server-side storage
     const encryptedKey = encryptApiKey(plainTextApiKey);
 
@@ -492,6 +559,7 @@ export const saveAIApiKey = async (req: Request, res: Response) => {
       message: "AI API key saved successfully",
       provider,
       hasApiKey: true,
+      validated: true,
     });
   } catch (error: any) {
     console.error("Save AI API key error:", error);

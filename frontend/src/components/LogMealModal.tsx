@@ -9,6 +9,7 @@ import {
   BookOpen,
   Search,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -30,13 +31,6 @@ interface LogMealModalProps {
   }) => void;
 }
 
-const MEAL_TYPES = [
-  { type: "breakfast" as const, emoji: "🌅", label: "Breakfast" },
-  { type: "lunch" as const, emoji: "☀️", label: "Lunch" },
-  { type: "dinner" as const, emoji: "🌙", label: "Dinner" },
-  { type: "snack" as const, emoji: "🍎", label: "Snack" },
-];
-
 // Calculate calories from macros: Protein & Carbs = 4 cal/g, Fat = 9 cal/g
 const calculateCaloriesFromMacros = (
   protein: number,
@@ -47,6 +41,31 @@ const calculateCaloriesFromMacros = (
 };
 
 export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
+  const { t } = useTranslation();
+
+  const MEAL_TYPES = [
+    {
+      type: "breakfast" as const,
+      emoji: "🌅",
+      label: t("nutrition.logMealModal.breakfast"),
+    },
+    {
+      type: "lunch" as const,
+      emoji: "☀️",
+      label: t("nutrition.logMealModal.lunch"),
+    },
+    {
+      type: "dinner" as const,
+      emoji: "🌙",
+      label: t("nutrition.logMealModal.dinner"),
+    },
+    {
+      type: "snack" as const,
+      emoji: "🍎",
+      label: t("nutrition.logMealModal.snack"),
+    },
+  ];
+
   const [inputMode, setInputMode] = useState<"manual" | "inventory" | "recipe">(
     "manual"
   );
@@ -323,9 +342,11 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
         {/* Header */}
         <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-bold text-white">Log Meal</h3>
+            <h3 className="text-2xl font-bold text-white">
+              {t("nutrition.logMealModal.title")}
+            </h3>
             <p className="text-green-100 text-sm mt-1">
-              Track your nutrition intake
+              {t("nutrition.subtitle")}
             </p>
           </div>
           <button
@@ -353,7 +374,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               )}
             >
               <Utensils className="w-4 h-4" />
-              Manual Entry
+              {t("nutrition.logMealModal.manualEntry")}
             </button>
             <button
               type="button"
@@ -366,7 +387,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               )}
             >
               <Package className="w-4 h-4" />
-              From Inventory
+              {t("nutrition.logMealModal.fromInventory")}
             </button>
             <button
               type="button"
@@ -379,7 +400,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               )}
             >
               <BookOpen className="w-4 h-4" />
-              From Recipes
+              {t("nutrition.logMealModal.fromRecipe")}
             </button>
           </div>
 
@@ -388,7 +409,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
             <div className="space-y-4">
               <div>
                 <Label className="mb-2 text-gray-700 dark:text-gray-300">
-                  Search Inventory Items
+                  {t("nutrition.logMealModal.selectFromInventory")}
                 </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -396,7 +417,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search ingredients..."
+                    placeholder={t("nutrition.logMealModal.searchIngredients")}
                     className="pl-10"
                   />
                 </div>
@@ -405,13 +426,13 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               <div className="max-h-[400px] overflow-y-auto space-y-2 custom-scrollbar">
                 {isLoadingData ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    Loading inventory items...
+                    {t("common.loading")}
                   </div>
                 ) : filteredInventory.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     {searchQuery
-                      ? "No items found"
-                      : "No inventory items available"}
+                      ? t("nutrition.logMealModal.noItemsFound")
+                      : t("nutrition.logMealModal.noInventoryItems")}
                   </div>
                 ) : (
                   filteredInventory.map((item) => (
@@ -475,7 +496,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
             <div className="space-y-4">
               <div>
                 <Label className="mb-2 text-gray-700 dark:text-gray-300">
-                  Search Saved Recipes
+                  {t("nutrition.logMealModal.selectFromRecipes")}
                 </Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -483,7 +504,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search recipes..."
+                    placeholder={t("nutrition.logMealModal.searchRecipes")}
                     className="pl-10"
                   />
                 </div>
@@ -492,13 +513,13 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               <div className="max-h-[400px] overflow-y-auto space-y-2 custom-scrollbar">
                 {isLoadingData ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    Loading recipes...
+                    {t("common.loading")}
                   </div>
                 ) : filteredRecipes.length === 0 ? (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     {searchQuery
-                      ? "No recipes found"
-                      : "No saved recipes available"}
+                      ? t("nutrition.logMealModal.noRecipesFound")
+                      : t("nutrition.logMealModal.noSavedRecipes")}
                   </div>
                 ) : (
                   filteredRecipes.map((recipe) => (
@@ -571,7 +592,8 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               {/* Meal Name */}
               <div>
                 <Label className="mb-2 text-gray-700 dark:text-gray-300">
-                  Meal Name <span className="text-red-500">*</span>
+                  {t("nutrition.logMealModal.mealName")}{" "}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="text"
@@ -579,7 +601,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  placeholder="e.g., Grilled Chicken Salad"
+                  placeholder={t("nutrition.logMealModal.mealNamePlaceholder")}
                   className={cn(
                     errors.name && "border-red-500 focus:ring-red-500"
                   )}
@@ -595,7 +617,8 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label className="text-gray-700 dark:text-gray-300">
-                    Calories <span className="text-red-500">*</span>
+                    {t("nutrition.logMealModal.calories")}{" "}
+                    <span className="text-red-500">*</span>
                   </Label>
                   <button
                     type="button"
@@ -608,7 +631,7 @@ export function LogMealModal({ isOpen, onClose, onSave }: LogMealModalProps) {
                     )}
                   >
                     <Calculator className="w-3 h-3" />
-                    {autoCalculate ? "Auto-calculating" : "Auto-calculate"}
+                    {t("nutrition.logMealModal.autoCalculate")}
                   </button>
                 </div>
                 <div className="flex items-center gap-3">

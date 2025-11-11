@@ -12,7 +12,14 @@
     "search": "Keresés",
     "logout": "Kijelentkezés",
     "login": "Bejelentkezés",
-    "register": "Regisztráció"
+    "register": "Regisztráció",
+    "close": "Bezárás",
+    "confirm": "Megerősítés",
+    "yes": "Igen",
+    "no": "Nem",
+    "somethingWentWrong": "Valami hiba történt",
+    "tryAgain": "Próbálja újra",
+    "kcal": "kcal"
   },
   "nav": {
     "dashboard": "Vezérlőpult",
@@ -37,6 +44,7 @@
   "auth": {
     "loginTitle": "Bejelentkezés a NutriChef-be",
     "registerTitle": "Fiók létrehozása",
+    "rememberMe": "Emlékezz rám",
     "email": "E-mail",
     "password": "Jelszó",
     "name": "Név",
@@ -77,6 +85,9 @@
     "resetSuccess": "Jelszó sikeresen visszaállítva! Kérjük, jelentkezzen be.",
     "resetFailed": "Nem sikerült visszaállítani a jelszót. A link lehet, hogy lejárt vagy érvénytelen.",
     "invalidResetToken": "Érvénytelen vagy hiányzó visszaállítási token",
+    "namePlaceholder": "Teljes Név",
+    "emailPlaceholder": "pelda@email.com",
+    "passwordPlaceholder": "••••••••",
     "oauth": {
       "completing": "Hitelesítés befejezése...",
       "error": "OAuth hiba",
@@ -87,6 +98,7 @@
   "dashboard": {
     "title": "Vezérlőpult",
     "welcome": "Üdvözöljük újra",
+    "inNext7Days": "a következő 7 napban",
     "overview": "Áttekintés",
     "totalItems": "Összes termék",
     "expiringItems": "Hamarosan lejár",
@@ -202,7 +214,19 @@
     "low": "Alacsony készlet",
     "normal": "Normál készlet",
     "expiring": "Hamarosan lejár",
-    "showingResults": "{{count}} eredmény megjelenítve"
+    "showingResults": "{{count}} eredmény megjelenítve",
+    "itemNamePlaceholder": "Pl. Paradicsom, Tej, Sajt",
+    "categoryPlaceholder": "Pl. Zöldségek, Tejtermékek, Fagyasztott",
+    "quantityLabel": "Mennyiség:",
+    "unitLabel": "Egység:",
+    "expiresInLabel": "Lejár:",
+    "locationLabel": "Helyszín:",
+    "noExpiry": "Nincs lejárat",
+    "confirmDelete": "Termék Törlése?",
+    "deleteMessage": "Biztosan törölni szeretné ezt a terméket?",
+    "confirmDeleteExpired": "Összes lejárt termék törlése?",
+    "noExpiredItems": "Nincs lejárt termék",
+    "noItemsToExport": "Nincs exportálandó termék"
   },
   "recipes": {
     "title": "Recept ajánlások",
@@ -238,7 +262,16 @@
     "fat": "Zsír",
     "matchPercentage": "{{percentage}}% egyezés",
     "emptyStateTitle": "Készen állsz valami csodálatos főzésére?",
-    "emptyStateDescription": "Állítsa be preferenciáit fent, és kattintson az 'Ajánlások kérése' gombra, hogy ízletes recepteket fedezzen fel az összetevői alapján!"
+    "emptyStateDescription": "Állítsa be preferenciáit fent, és kattintson az 'Ajánlások kérése' gombra, hogy ízletes recepteket fedezzen fel az összetevői alapján!",
+    "allergyWarning": "Allergia Figyelmeztetés",
+    "allergiesPlaceholder": "pl., hal, szója, diófélék, tejtermék, kagyló...",
+    "recipeName": "Recept Neve",
+    "recipeNamePlaceholder": "pl., Mediterrán Grillezett Csirke",
+    "cuisine": "Konyha",
+    "cuisinePlaceholder": "pl., Olasz, Ázsiai, Mediterrán",
+    "imageUrl": "Kép URL",
+    "imageUrlPlaceholder": "https://pelda.com/recept-kep.jpg",
+    "instructionsPlaceholder": "1. lépés: Készítse elő az összetevőket...&#10;2. lépés: Melegítse fel az olajat...&#10;3. lépés: Főzze meg..."
   },
   "theme": {
     "light": "Világos",
@@ -295,7 +328,25 @@
     "passwordChangeError": "Nem sikerült megváltoztatni a jelszót",
     "revokeSessionConfirm": "Biztosan vissza akarja vonni ezt a munkamenetet?",
     "sessionRevokedSuccess": "Munkamenet sikeresen visszavonva!",
-    "sessionRevokedError": "Nem sikerült visszavonni a munkamenetet"
+    "sessionRevokedError": "Nem sikerült visszavonni a munkamenetet",
+    "aiApiKey": "AI API Kulcs Konfiguráció",
+    "aiApiKeyDescription": "Használja a saját AI API kulcsát a korlátozások elkerülése érdekében",
+    "configured": "Beállítva",
+    "apiKeyConfigured": "API Kulcs Beállítva",
+    "usingProvider": "Szolgáltató használata",
+    "noRateLimits": "Nincsenek AI korlátozások",
+    "noTokenUsage": "Nem használja a weboldal API tokenjeit",
+    "removeApiKey": "API Kulcs Eltávolítása",
+    "selectProvider": "AI Szolgáltató Kiválasztása",
+    "apiKeyRequired": "API kulcs kötelező",
+    "validatingApiKey": "API kulcs érvényesítése...",
+    "apiKeySaved": "Az AI API kulcs érvényesítve és sikeresen mentve! Most már korlátozások nélkül használhatja az AI funkciókat.",
+    "apiKeyInvalid": "A megadott API kulcs érvénytelen vagy nem működik. Kérjük, ellenőrizze a kulcsot és próbálja újra.",
+    "apiKeySaveError": "Nem sikerült menteni az AI API kulcsot",
+    "deleteApiKeyConfirm": "API Kulcs Törlése?",
+    "deleteApiKeyMessage": "Biztosan el szeretné távolítani az AI API kulcsát? Újra korlátozások alá fog esni.",
+    "apiKeyDeleted": "AI API kulcs sikeresen törölve!",
+    "apiKeyDeleteError": "Nem sikerült törölni az AI API kulcsot"
   },
   "healthInsights": {
     "title": "Egészség Betekintés",
@@ -386,7 +437,21 @@
       "failedRequests": "Sikertelen Kérések"
     },
     "loading": "Betöltés...",
-    "noDataAvailable": "Nincs elérhető adat"
+    "noDataAvailable": "Nincs elérhető adat",
+    "searchUsers": "Felhasználók keresése név vagy e-mail alapján...",
+    "searchInventory": "Készlet elemek keresése...",
+    "searchRecipes": "Receptek keresése...",
+    "searchLogs": "Keresés...",
+    "pathFilterPlaceholder": "pl., /api/recipes",
+    "fullHistory": "Teljes Előzmények",
+    "deleteUserConfirm": "Felhasználói Fiók Törlése?",
+    "deleteUserMessage": "Ez véglegesen törli a felhasználói fiókot és e-mail értesítést küld nekik.",
+    "deleteUserButton": "Végleges Törlés",
+    "deleteInventoryConfirm": "Készlet Elem Törlése?",
+    "deleteInventoryMessage": "Biztosan törölni szeretné ezt a készlet elemet?",
+    "deleteRecipeConfirm": "Recept Törlése?",
+    "deleteRecipeMessage": "Biztosan törölni szeretné ezt a receptet?",
+    "deleteAccountPermanently": "Fiók végleges törlése (e-mailt küld)"
   },
   "mealPlanning": {
     "title": "Étkezés Tervezés",
@@ -399,6 +464,7 @@
     },
     "stats": {
       "totalCalories": "Összes Kalória",
+      "avgCalories": "Átlag Kalória",
       "avgPerDay": "Átlag/Nap",
       "protein": "Fehérje",
       "carbs": "Szénhidrát",
@@ -418,6 +484,8 @@
     "modal": {
       "title": "Hozzáadás az Étkezési Tervhez",
       "selectRecipe": "Recept Kiválasztása",
+      "recipeMode": "Recept Mód",
+      "ingredientsMode": "Összetevő Mód",
       "selectIngredients": "Hozzávalók Kiválasztása a Készletből",
       "chooseRecipe": "Válasszon egy receptet...",
       "noRecipes": "Nincsenek elérhető receptek. Kérjük, adjon hozzá recepteket először.",
@@ -458,18 +526,33 @@
     "goalReached": "Cél elérve!",
     "of": "/",
     "goal": "Cél",
+    "meal": {
+      "logMeal": "Étkezés Naplózása",
+      "title": "Étkezések Naplózása és Kezelése",
+      "noMealsLogged": "Még nincs naplózott étkezés",
+      "logMealPrompt": "Kattintson az \"Étkezés Naplózása\" gombra a kezdéshez",
+      "remove": "Eltávolítás"
+    },
     "macros": {
       "protein": "Fehérje",
       "carbs": "Szénhidrát",
+      "dailyCalories": "Napi Kalóriák",
+      "remaining": "Maradt",
+      "of": "/",
+      "percentOfGoal": "% a célból",
       "fat": "Zsír",
-      "fiber": "Rost"
+      "fiber": "Rost",
+      "goal": "Cél"
     },
     "todayMeals": "Mai Étkezések",
     "logMeal": "+ Étkezés Naplózása",
     "noMealsLogged": "Még nincs naplózott étkezés ma",
     "clickToStart": "Kattintson az \"Étkezés Naplózása\" gombra a kezdéshez",
     "remove": "Eltávolítás",
-    "weeklyInsights": "Heti Betekintések",
+    "weeklyInsights": {
+      "title": "Heti Táplálkozási Betekintések",
+      "description": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel. Hamarosan!"
+    },
     "weeklyInsightsSubtitle": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel. Hamarosan!",
     "setGoals": "Célok Beállítása",
     "calculateMyGoals": "Céljaim Kiszámítása",
@@ -496,11 +579,78 @@
       "lunch": "ebéd",
       "dinner": "vacsora",
       "snack": "snack"
+    },
+    "logMealModal": {
+      "title": "Étkezés Naplózása",
+      "mealType": "Étkezés Típusa",
+      "breakfast": "Reggeli",
+      "lunch": "Ebéd",
+      "dinner": "Vacsora",
+      "snack": "Snack",
+      "inputMode": "Beviteli Mód",
+      "manual": "Kézi",
+      "fromInventory": "Készletből",
+      "fromRecipe": "Receptből",
+      "mealName": "Étkezés Neve",
+      "mealNamePlaceholder": "pl., Grillezett Csirke Saláta",
+      "calories": "Kalória",
+      "protein": "Fehérje (g)",
+      "carbs": "Szénhidrát (g)",
+      "fat": "Zsír (g)",
+      "fiber": "Rost (g)",
+      "autoCalculate": "Kalóriák automatikus számítása makrókból",
+      "searchIngredients": "Összetevők keresése...",
+      "searchRecipes": "Receptek keresése...",
+      "noItemsFound": "Nincs találat",
+      "noInventoryItems": "Nincs elérhető készlet elem",
+      "noRecipesFound": "Nincs recept találat",
+      "noSavedRecipes": "Nincs mentett recept",
+      "selectFromInventory": "Kiválasztás a Készletből",
+      "selectFromRecipes": "Kiválasztás a Receptekből",
+      "manualEntry": "Kézi Bevitel"
+    },
+    "metricsCalculator": {
+      "title": "Táplálkozási Célok Kiszámítása",
+      "subtitle": "Személyre szabott ajánlások a mutatói alapján",
+      "age": "Kor",
+      "years": "év",
+      "gender": "Nem",
+      "male": "Férfi",
+      "female": "Nő",
+      "weight": "Súly",
+      "height": "Magasság",
+      "feet": "láb",
+      "inches": "hüvelyk",
+      "activityLevel": "Aktivitási Szint",
+      "sedentary": "Ülő életmód",
+      "sedentaryDesc": "Kevés vagy semmilyen edzés",
+      "light": "Könnyű",
+      "lightDesc": "Edzés 1-3 alkalommal/hét",
+      "moderate": "Közepes",
+      "moderateDesc": "Edzés 4-5 alkalommal/hét",
+      "active": "Aktív",
+      "activeDesc": "Napi edzés vagy intenzív edzés 3-4 alkalommal/hét",
+      "veryActive": "Nagyon Aktív",
+      "veryActiveDesc": "Intenzív edzés 6-7 alkalommal/hét",
+      "goal": "Cél",
+      "lose": "Fogyás",
+      "maintain": "Fenntartás",
+      "gain": "Gyarapodás",
+      "calculating": "Számítás...",
+      "results": "Személyre Szabott Ajánlásai",
+      "bmr": "BMR (Alapanyagcsere)",
+      "tdee": "TDEE (Teljes Napi Energiafogyasztás)",
+      "recommendedIntake": "Ajánlott Napi Bevitel",
+      "cal": "kal",
+      "adjustRecommendations": "Ajánlások Módosítása",
+      "saveTheseGoals": "Célok Mentése",
+      "saving": "Mentés..."
     }
   },
   "shoppingList": {
     "title": "Bevásárlólista",
     "subtitle": "Okos bevásárlólisták adag optimalizálással {{servings}} adaghoz",
+    "servings": "adagok",
     "actions": {
       "optimize": "Adagok Optimalizálása",
       "clearCompleted": "Befejezettek Törlése",
@@ -523,7 +673,6 @@
       "addItem": "Elem Hozzáadása",
       "button": "Hozzáadás"
     },
-
     "stats": {
       "totalItems": "Összes Elem",
       "checked": "Bejelölve",
@@ -544,7 +693,7 @@
     "itemName": "Elem neve (Ctrl+A)",
     "quantity": "Mennyiség",
     "adjustServings": "Adagok Módosítása",
-    "servings": {
+    "adjustServingsModal": {
       "title": "Adagok Számának Módosítása",
       "subtitle": "Állítsa be a kívánt adagok számát a mennyiségek skálázásához"
     },

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   X,
@@ -25,6 +26,7 @@ export function AIDetectionReview({
   onConfirm,
   onCancel,
 }: AIDetectionReviewProps) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<DetectedItem[]>(
     detectionResult.detectedItems
   );
@@ -38,9 +40,9 @@ export function AIDetectionReview({
   };
 
   const getConfidenceLabel = (confidence: number) => {
-    if (confidence >= 90) return "High";
-    if (confidence >= 70) return "Medium";
-    return "Low";
+    if (confidence >= 90) return t("inventory.aiDetection.confidence.high");
+    if (confidence >= 70) return t("inventory.aiDetection.confidence.medium");
+    return t("inventory.aiDetection.confidence.low");
   };
 
   const handleRemoveItem = (index: number) => {
@@ -84,13 +86,14 @@ export function AIDetectionReview({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
           <span>
-            <strong>{items.length}</strong> items detected
+            <strong>{items.length}</strong>{" "}
+            {t("inventory.aiDetection.itemsDetected")}
           </span>
           <span>•</span>
           <span>
-            Processed in{" "}
+            {t("inventory.aiDetection.processedIn")}{" "}
             <strong>{detectionResult.processingTime.toFixed(1)}s</strong>
           </span>
           <span>•</span>
@@ -105,7 +108,7 @@ export function AIDetectionReview({
         <div className="text-center py-12">
           <AlertCircle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            No items to add. Try uploading another photo.
+            {t("inventory.aiDetection.noItems")}
           </p>
         </div>
       ) : (
@@ -169,7 +172,9 @@ export function AIDetectionReview({
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-gray-500">Quantity:</span>
+                    <span className="text-gray-500">
+                      {t("inventory.quantityLabel")}
+                    </span>
                     <div className="flex items-center gap-1 mt-1">
                       <Button
                         variant="outline"
@@ -211,7 +216,9 @@ export function AIDetectionReview({
                   </div>
 
                   <div>
-                    <span className="text-gray-500">Unit:</span>
+                    <span className="text-gray-500">
+                      {t("inventory.unitLabel")}
+                    </span>
                     <Input
                       value={item.unit}
                       onChange={(e) =>
@@ -222,7 +229,9 @@ export function AIDetectionReview({
                   </div>
 
                   <div>
-                    <span className="text-gray-500">Expires in:</span>
+                    <span className="text-gray-500">
+                      {t("inventory.expiresInLabel")}
+                    </span>
                     <div className="flex items-center gap-1 mt-1">
                       <Input
                         type="number"
@@ -237,13 +246,15 @@ export function AIDetectionReview({
                         className="h-7"
                       />
                       <span className="text-xs text-gray-500 whitespace-nowrap">
-                        days
+                        {t("inventory.daysLabel")}
                       </span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-gray-500">Location:</span>
+                    <span className="text-gray-500">
+                      {t("inventory.locationLabel")}
+                    </span>
                     <select
                       value={item.location}
                       onChange={(e) =>
@@ -251,16 +262,22 @@ export function AIDetectionReview({
                       }
                       className="h-7 w-full mt-1 px-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
                     >
-                      <option value="fridge">Fridge</option>
-                      <option value="pantry">Pantry</option>
-                      <option value="freezer">Freezer</option>
+                      <option value="fridge">
+                        {t("inventory.locations.fridge")}
+                      </option>
+                      <option value="pantry">
+                        {t("inventory.locations.pantry")}
+                      </option>
+                      <option value="freezer">
+                        {t("inventory.locations.freezer")}
+                      </option>
                     </select>
                   </div>
                 </div>
 
                 {/* Category */}
                 <div className="text-xs text-gray-500 capitalize">
-                  Category: {item.category}
+                  {t("inventory.categoryLabel")} {item.category}
                 </div>
               </div>
             </Card>
@@ -276,7 +293,7 @@ export function AIDetectionReview({
           className="flex-1"
           disabled={isConfirming}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={handleConfirm}
@@ -286,13 +303,14 @@ export function AIDetectionReview({
           {isConfirming ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Adding to Inventory...
+              {t("inventory.aiDetection.addingToInventory")}
             </>
           ) : (
             <>
               <Check className="h-4 w-4 mr-2" />
-              Add {items.length} Item{items.length !== 1 ? "s" : ""} to
-              Inventory
+              {t("inventory.aiDetection.addItemsToInventory", {
+                count: items.length,
+              })}
             </>
           )}
         </Button>

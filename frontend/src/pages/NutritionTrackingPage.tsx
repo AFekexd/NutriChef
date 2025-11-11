@@ -577,13 +577,13 @@ export function NutritionTrackingPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("nutrition.meals.title")}
+                  {t("nutrition.meal.title")}
                 </h3>
                 <button
                   onClick={addQuickMeal}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm hover-lift"
                 >
-                  {t("nutrition.meals.logMeal")}
+                  {t("nutrition.meal.logMeal")}
                 </button>
               </div>
 
@@ -591,9 +591,9 @@ export function NutritionTrackingPage() {
                 {dailyIntake.meals.length === 0 ? (
                   <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                     <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>{t("nutrition.meals.noMealsLogged")}</p>
+                    <p>{t("nutrition.meal.noMealsLogged")}</p>
                     <p className="text-sm mt-1">
-                      {t("nutrition.meals.logMealPrompt")}
+                      {t("nutrition.meal.logMealPrompt")}
                     </p>
                   </div>
                 ) : (
@@ -643,7 +643,7 @@ export function NutritionTrackingPage() {
                           onClick={() => deleteMeal(meal.id)}
                           className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm"
                         >
-                          {t("nutrition.meals.remove")}
+                          {t("nutrition.meal.remove")}
                         </button>
                       </div>
                     </div>

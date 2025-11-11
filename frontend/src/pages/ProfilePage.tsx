@@ -357,21 +357,43 @@ export function ProfilePage() {
     setIsUpdatingApiKey(true);
 
     try {
+      // Show validation in progress
+      toast.info(t("profile.validatingApiKey") || "Validating API key...", {
+        duration: 2000,
+      });
+
       const result = await apiService.saveAIApiKey(aiApiKeyData);
       setHasApiKey(result.hasApiKey);
       setCurrentProvider(aiApiKeyData.provider);
       setSuccess(
         t("profile.apiKeySaved") ||
-          "AI API key saved successfully! You can now use AI features without rate limits."
+          "AI API key validated and saved successfully! You can now use AI features without rate limits."
       );
       setAiApiKeyData({ ...aiApiKeyData, apiKey: "" }); // Clear the input
       setTimeout(() => setSuccess(null), 5000);
+
+      // Show success toast as well
+      toast.success(t("profile.apiKeySaved") || "API key validated and saved!");
     } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
+      const errorMsg = err.response?.data?.error;
+      const isValidationError = err.response?.data?.validationFailed;
+
+      if (isValidationError) {
+        const message =
+          errorMsg ||
+          t("profile.apiKeyInvalid") ||
+          "The provided API key is invalid or doesn't work. Please check your key and try again.";
+        setError(message);
+        // Show toast error for immediate feedback
+        toast.error(message);
+      } else {
+        const message =
+          errorMsg ||
           t("profile.apiKeySaveError") ||
-          "Failed to save AI API key"
-      );
+          "Failed to save AI API key";
+        setError(message);
+        toast.error(message);
+      }
     } finally {
       setIsUpdatingApiKey(false);
     }

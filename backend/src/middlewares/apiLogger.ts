@@ -39,7 +39,11 @@ function filterSensitiveData(obj: any): any {
 
   const filtered: any = {};
   for (const key in obj) {
-    if (SENSITIVE_FIELDS.some((field) => key.toLowerCase().includes(field))) {
+    if (
+      SENSITIVE_FIELDS.some((field) =>
+        key.toLowerCase().includes(field.toLowerCase())
+      )
+    ) {
       filtered[key] = "[REDACTED]";
     } else if (typeof obj[key] === "object") {
       filtered[key] = filterSensitiveData(obj[key]);
