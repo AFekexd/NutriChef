@@ -596,6 +596,184 @@ export const deleteAIApiKey = async (req: Request, res: Response) => {
   }
 };
 
+// OpenRouter API Key Management
+// Get OpenRouter API key configuration (without exposing the actual key)
+export const getOpenRouterApiKeyConfig = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        openrouterApiKey: true,
+        openrouterUsage: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      hasApiKey: !!user.openrouterApiKey,
+      usage: user.openrouterUsage || null,
+    });
+  } catch (error: any) {
+    console.error("Get OpenRouter API key config error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to fetch OpenRouter API key configuration" });
+  }
+};
+
+// Save or update OpenRouter API key
+export const saveOpenRouterApiKey = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { apiKey, isClientEncrypted } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!apiKey) {
+      return res.status(400).json({ error: "API key is required" });
+    }
+
+    let plainTextApiKey = apiKey;
+
+    // If the API key was encrypted on the client side, decrypt it first
+    if (isClientEncrypted) {
+      try {
+        plainTextApiKey = decryptClientData(apiKey);
+        console.log("✅ Successfully decrypted client-encrypted OpenRouter API key");
+      } catch (decryptError) {
+        console.error(
+          "Failed to decrypt client-encrypted OpenRouter API key:",
+          decryptError
+        );
+        return res.status(400).json({
+          error: "Failed to decrypt API key. Please try again.",
+        });
+      }
+    }
+
+    // Validate the OpenRouter API key
+    const { validateOpenRouterKey, encryptOpenRouterKey, fetchOpenRouterUsage } =
+      await import("../services/openRouterService.js");
+
+    const validation = await validateOpenRouterKey(plainTextApiKey);
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: validation.error || "Invalid OpenRouter API key",
+      });
+    }
+
+    // Encrypt the API key for server-side storage
+    const encryptedKey = encryptOpenRouterKey(plainTextApiKey);
+
+    // Fetch initial usage data
+    const usage = await fetchOpenRouterUsage(plainTextApiKey);
+
+    // Update user with encrypted API key and usage data
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        openrouterApiKey: encryptedKey,
+        openrouterUsage: usage as any,
+      },
+    });
+
+    res.json({
+      message: "OpenRouter API key saved successfully",
+      hasApiKey: true,
+      usage,
+    });
+  } catch (error: any) {
+    console.error("Save OpenRouter API key error:", error);
+    res.status(500).json({ error: "Failed to save OpenRouter API key" });
+  }
+};
+
+// Delete OpenRouter API key
+export const deleteOpenRouterApiKey = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Remove OpenRouter API key from user
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        openrouterApiKey: null,
+        openrouterUsage: null as any,
+      },
+    });
+
+    res.json({
+      message: "OpenRouter API key deleted successfully",
+      hasApiKey: false,
+    });
+  } catch (error: any) {
+    console.error("Delete OpenRouter API key error:", error);
+    res.status(500).json({ error: "Failed to delete OpenRouter API key" });
+  }
+};
+
+// Refresh OpenRouter usage data
+export const refreshOpenRouterUsage = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { openrouterApiKey: true },
+    });
+
+    if (!user || !user.openrouterApiKey) {
+      return res.status(404).json({ error: "OpenRouter API key not found" });
+    }
+
+    // Decrypt the API key and fetch usage
+    const { decryptOpenRouterKey, fetchOpenRouterUsage } = await import(
+      "../services/openRouterService.js"
+    );
+    const plainTextApiKey = decryptOpenRouterKey(user.openrouterApiKey);
+    const usage = await fetchOpenRouterUsage(plainTextApiKey);
+
+    // Update usage data in database
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        openrouterUsage: usage as any,
+      },
+    });
+
+    res.json({
+      message: "Usage data refreshed successfully",
+      usage,
+    });
+  } catch (error: any) {
+    console.error("Refresh OpenRouter usage error:", error);
+    res.status(500).json({ error: "Failed to refresh usage data" });
+  }
+};
+
 export default {
   getUserProfile,
   updatePreferences,
@@ -608,4 +786,8 @@ export default {
   getAIApiKeyConfig,
   saveAIApiKey,
   deleteAIApiKey,
+  getOpenRouterApiKeyConfig,
+  saveOpenRouterApiKey,
+  deleteOpenRouterApiKey,
+  refreshOpenRouterUsage,
 };

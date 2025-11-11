@@ -35,8 +35,11 @@ model User {
   oauthAvatar   String?       // Profile picture URL from OAuth
   // AI API Key fields
   aiApiKey      String?       // Encrypted API key for user's own AI service
-  aiProvider    String?       // "openai", "gemini" - which AI service the key is for
+  aiProvider    String?       // "openai", "gemini", "openrouter" - which AI service the key is for
   useOwnApiKey  Boolean       @default(false) // Whether to use user's own API key
+  // OpenRouter specific fields
+  openrouterApiKey String?    // Encrypted OpenRouter API key
+  openrouterUsage  Json?      // {totalRequests, tokensUsed, lastUpdated, remainingBalance}
   inventoryItems InventoryItem[]
   groceryListItems GroceryListItem[]
   recipes       Recipe[]
