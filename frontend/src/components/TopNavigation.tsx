@@ -37,7 +37,7 @@ export function TopNavigation() {
   const { t } = useTranslation();
   const [rateLimitStatus, setRateLimitStatus] =
     useState<AIRateLimitStatus | null>(null);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const lastFetchTimeRef = useRef<number>(0);
   const isMountedRef = useRef(true);
 
   // Fetch AI rate limit status with debouncing (prevent rapid successive calls)
@@ -45,35 +45,35 @@ export function TopNavigation() {
     async (force = false) => {
       // Skip if user is not authenticated or component is unmounted
       if (!user || !isMountedRef.current) {
-        console.log(
-          "Skipping rate limit fetch (not authenticated or unmounted)"
-        );
+        return;
+      }
+
+      // Skip if on login/register pages
+      if (location.pathname === "/login" || location.pathname === "/register") {
         return;
       }
 
       const now = Date.now();
-      const timeSinceLastFetch = now - lastFetchTime;
+      const timeSinceLastFetch = now - lastFetchTimeRef.current;
 
       // Debounce: don't fetch if called within last 3 seconds (unless forced)
       if (!force && timeSinceLastFetch < 3000) {
-        console.log("Skipping rate limit fetch (debounced)");
         return;
       }
 
       try {
-        setLastFetchTime(now);
+        lastFetchTimeRef.current = now;
         const status = await apiService.getAIRateLimitStatus();
         // Only update state if component is still mounted
         if (isMountedRef.current) {
           setRateLimitStatus(status);
-          console.log("Rate limit status fetched:", status);
         }
       } catch (error) {
         // Silently fail - this is just a nice-to-have indicator
         console.error("Failed to fetch AI rate limit status:", error);
       }
     },
-    [lastFetchTime, user]
+    [user, location.pathname]
   );
 
   // Fetch on mount and periodically
@@ -139,11 +139,6 @@ export function TopNavigation() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  useEffect(() => {
-    console.log("Rate Limit Status:", rateLimitStatus);
-    console.log("Using Own API Key:", rateLimitStatus?.usingOwnApiKey);
-    console.log("Overall Rate Limit:", rateLimitStatus?.overall);
-  }, [rateLimitStatus]);
   return (
     <nav className="hidden md:block w-full fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-50 transition-colors">
       <div className="max-w-full px-2 lg:px-4 xl:px-6">
