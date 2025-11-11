@@ -37,41 +37,56 @@ export function TopNavigation() {
   const { t } = useTranslation();
   const [rateLimitStatus, setRateLimitStatus] =
     useState<AIRateLimitStatus | null>(null);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  // Fetch AI rate limit status
-  const fetchRateLimitStatus = useCallback(async () => {
-    try {
-      const status = await apiService.getAIRateLimitStatus();
-      setRateLimitStatus(status);
-      console.log("Rate limit status fetched:", status);
-    } catch (error) {
-      // Silently fail - this is just a nice-to-have indicator
-      console.error("Failed to fetch AI rate limit status:", error);
-    }
-  }, []);
+  // Fetch AI rate limit status with debouncing (prevent rapid successive calls)
+  const fetchRateLimitStatus = useCallback(
+    async (force = false) => {
+      // Skip if user is not authenticated
+      if (!user) {
+        console.log("Skipping rate limit fetch (not authenticated)");
+        return;
+      }
+
+      const now = Date.now();
+      const timeSinceLastFetch = now - lastFetchTime;
+
+      // Debounce: don't fetch if called within last 3 seconds (unless forced)
+      if (!force && timeSinceLastFetch < 3000) {
+        console.log("Skipping rate limit fetch (debounced)");
+        return;
+      }
+
+      try {
+        setLastFetchTime(now);
+        const status = await apiService.getAIRateLimitStatus();
+        setRateLimitStatus(status);
+        console.log("Rate limit status fetched:", status);
+      } catch (error) {
+        // Silently fail - this is just a nice-to-have indicator
+        console.error("Failed to fetch AI rate limit status:", error);
+      }
+    },
+    [lastFetchTime, user]
+  );
 
   // Fetch on mount and periodically
   useEffect(() => {
-    fetchRateLimitStatus();
+    fetchRateLimitStatus(true); // Force on mount
 
     // Refresh every 5 minutes
-    const interval = setInterval(fetchRateLimitStatus, 5 * 60 * 1000);
+    const interval = setInterval(
+      () => fetchRateLimitStatus(true),
+      5 * 60 * 1000
+    );
     return () => clearInterval(interval);
   }, [fetchRateLimitStatus]);
 
-  // Refresh when navigating away from profile page (where AI preferences are changed)
-  useEffect(() => {
-    // If coming from profile page, refresh rate limits
-    if (location.pathname !== "/profile") {
-      fetchRateLimitStatus();
-    }
-  }, [location.pathname, fetchRateLimitStatus]);
-
-  // Listen for AI preferences changes
+  // Listen for AI preferences changes (only from profile page)
   useEffect(() => {
     const handlePreferencesChanged = () => {
       console.log("AI preferences changed, refreshing rate limits...");
-      fetchRateLimitStatus();
+      fetchRateLimitStatus(true); // Force refresh on preference change
     };
 
     window.addEventListener("aiPreferencesChanged", handlePreferencesChanged);

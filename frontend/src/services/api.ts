@@ -383,7 +383,9 @@ class ApiService {
   }
 
   async getAIRateLimitStatus(): Promise<AIRateLimitStatus> {
-    const response = await this.api.get("/api/auth/ai-rate-limit-status");
+    const response = await this.api.get("/api/auth/ai-rate-limit-status", {
+      headers: { "X-Skip-Auth-Refresh": "true" },
+    });
     return response.data;
   }
 

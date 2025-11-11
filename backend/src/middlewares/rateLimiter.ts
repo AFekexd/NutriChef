@@ -2,6 +2,7 @@ import rateLimit from "express-rate-limit";
 
 /**
  * General API rate limiter - 100 requests per 15 minutes
+ * Excludes certain read-only endpoints that shouldn't be rate limited
  */
 export const apiLimiter = rateLimit({
   windowMs: 2 * 60 * 1000, // 2 minutes
@@ -9,6 +10,14 @@ export const apiLimiter = rateLimit({
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for AI rate limit status endpoint (read-only status check)
+    // This is polled frequently by the frontend and doesn't consume resources
+    if (req.path === "/auth/ai-rate-limit-status") {
+      return true;
+    }
+    return false;
+  },
 });
 
 /**
