@@ -78,6 +78,11 @@ export function TopNavigation() {
 
   // Fetch on mount and periodically
   useEffect(() => {
+    // Don't run on login/register pages
+    if (location.pathname === "/login" || location.pathname === "/register") {
+      return;
+    }
+
     isMountedRef.current = true;
     fetchRateLimitStatus(true); // Force on mount
 
@@ -90,10 +95,15 @@ export function TopNavigation() {
       isMountedRef.current = false;
       clearInterval(interval);
     };
-  }, [fetchRateLimitStatus]);
+  }, [fetchRateLimitStatus, location.pathname]);
 
   // Listen for AI preferences changes (only from profile page)
   useEffect(() => {
+    // Don't run on login/register pages
+    if (location.pathname === "/login" || location.pathname === "/register") {
+      return;
+    }
+
     const handlePreferencesChanged = () => {
       console.log("AI preferences changed, refreshing rate limits...");
       fetchRateLimitStatus(true); // Force refresh on preference change
@@ -106,7 +116,7 @@ export function TopNavigation() {
         handlePreferencesChanged
       );
     };
-  }, [fetchRateLimitStatus]);
+  }, [fetchRateLimitStatus, location.pathname]);
 
   // Hide top nav on login/register pages
   if (location.pathname === "/login" || location.pathname === "/register") {
