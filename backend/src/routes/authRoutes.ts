@@ -30,6 +30,10 @@ import {
   getAIApiKeyConfig,
   saveAIApiKey,
   deleteAIApiKey,
+  getOpenRouterApiKeyConfig,
+  saveOpenRouterApiKey,
+  deleteOpenRouterApiKey,
+  refreshOpenRouterUsage,
 } from "../controllers/userProfileController.js";
 
 const router = Router();
@@ -699,6 +703,107 @@ router.post("/ai-api-key", authenticate, saveAIApiKey);
  *         description: Server error
  */
 router.delete("/ai-api-key", authenticate, deleteAIApiKey);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-api-key:
+ *   get:
+ *     summary: Get OpenRouter API key configuration
+ *     tags: [Authentication]
+ *     description: Check if user has configured an OpenRouter API key and get usage data
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OpenRouter API key configuration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 hasApiKey:
+ *                   type: boolean
+ *                 usage:
+ *                   type: object
+ *                   nullable: true
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/openrouter-api-key", authenticate, getOpenRouterApiKeyConfig);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-api-key:
+ *   post:
+ *     summary: Save OpenRouter API key
+ *     tags: [Authentication]
+ *     description: Save and validate user's OpenRouter API key
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - apiKey
+ *             properties:
+ *               apiKey:
+ *                 type: string
+ *                 description: OpenRouter API key (will be encrypted)
+ *               isClientEncrypted:
+ *                 type: boolean
+ *                 description: Whether the key is already encrypted on client side
+ *     responses:
+ *       200:
+ *         description: API key saved successfully
+ *       400:
+ *         description: Invalid API key
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/openrouter-api-key", authenticate, saveOpenRouterApiKey);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-api-key:
+ *   delete:
+ *     summary: Delete OpenRouter API key
+ *     tags: [Authentication]
+ *     description: Remove user's OpenRouter API key from the system
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: API key deleted successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete("/openrouter-api-key", authenticate, deleteOpenRouterApiKey);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-api-key/refresh:
+ *   post:
+ *     summary: Refresh OpenRouter usage data
+ *     tags: [Authentication]
+ *     description: Fetch and update the latest usage statistics from OpenRouter
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Usage data refreshed successfully
+ *       404:
+ *         description: OpenRouter API key not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  "/openrouter-api-key/refresh",
+  authenticate,
+  refreshOpenRouterUsage
+);
 
 /**
  * @swagger

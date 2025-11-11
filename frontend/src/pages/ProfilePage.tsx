@@ -17,6 +17,8 @@ import {
   Camera,
   Key,
   Sparkles,
+  RefreshCw,
+  Activity,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -27,7 +29,12 @@ import { apiService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { confirmDialog } from "../utils/confirmDialog";
 import { toast } from "sonner";
-import type { User as UserType, Session, LoginHistoryItem } from "../types";
+import type {
+  User as UserType,
+  Session,
+  LoginHistoryItem,
+  OpenRouterUsage,
+} from "../types";
 
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -75,6 +82,16 @@ export function ProfilePage() {
   >();
   const [isUpdatingApiKey, setIsUpdatingApiKey] = useState(false);
 
+  // OpenRouter API Key form
+  const [openRouterApiKey, setOpenRouterApiKey] = useState("");
+  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
+  const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false);
+  const [openRouterUsage, setOpenRouterUsage] = useState<OpenRouterUsage | null>(
+    null
+  );
+  const [isUpdatingOpenRouterKey, setIsUpdatingOpenRouterKey] = useState(false);
+  const [isRefreshingUsage, setIsRefreshingUsage] = useState(false);
+
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -113,13 +130,19 @@ export function ProfilePage() {
   const loadProfileData = async () => {
     setIsLoading(true);
     try {
-      const [profileRes, sessionsRes, historyRes, aiKeyConfigRes] =
-        await Promise.all([
-          apiService.getProfile(),
-          apiService.getSessions(),
-          apiService.getLoginHistory(10, 0),
-          apiService.getAIApiKeyConfig(),
-        ]);
+      const [
+        profileRes,
+        sessionsRes,
+        historyRes,
+        aiKeyConfigRes,
+        openRouterConfigRes,
+      ] = await Promise.all([
+        apiService.getProfile(),
+        apiService.getSessions(),
+        apiService.getLoginHistory(10, 0),
+        apiService.getAIApiKeyConfig(),
+        apiService.getOpenRouterApiKeyConfig(),
+      ]);
 
       setUser(profileRes.user);
       setProfileData({
@@ -136,6 +159,8 @@ export function ProfilePage() {
           provider: aiKeyConfigRes.provider!,
         }));
       }
+      setHasOpenRouterKey(openRouterConfigRes.hasApiKey);
+      setOpenRouterUsage(openRouterConfigRes.usage || null);
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
@@ -403,6 +428,89 @@ export function ProfilePage() {
         }
       },
     });
+  };
+
+  const handleSaveOpenRouterKey = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!openRouterApiKey) {
+      setError(t("profile.apiKeyRequired") || "API key is required");
+      return;
+    }
+
+    setIsUpdatingOpenRouterKey(true);
+
+    try {
+      const result = await apiService.saveOpenRouterApiKey({
+        apiKey: openRouterApiKey,
+      });
+      setHasOpenRouterKey(result.hasApiKey);
+      setOpenRouterUsage(result.usage || null);
+      setSuccess(
+        t("profile.openrouterKeySaved") ||
+          "OpenRouter API key saved and validated successfully!"
+      );
+      setOpenRouterApiKey(""); // Clear the input
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error ||
+          t("profile.openrouterKeySaveError") ||
+          "Failed to save OpenRouter API key"
+      );
+    } finally {
+      setIsUpdatingOpenRouterKey(false);
+    }
+  };
+
+  const handleDeleteOpenRouterKey = async () => {
+    confirmDialog({
+      title: t("profile.deleteOpenRouterKeyConfirm") || "Delete OpenRouter API Key?",
+      message:
+        t("profile.deleteOpenRouterKeyMessage") ||
+        "Are you sure you want to remove your OpenRouter API key?",
+      confirmText: t("common.delete") || "Delete",
+      cancelText: t("common.cancel") || "Cancel",
+      onConfirm: async () => {
+        try {
+          await apiService.deleteOpenRouterApiKey();
+          setHasOpenRouterKey(false);
+          setOpenRouterUsage(null);
+          setOpenRouterApiKey("");
+          toast.success(
+            t("profile.openrouterKeyDeleted") ||
+              "OpenRouter API key deleted successfully!"
+          );
+        } catch (err: any) {
+          toast.error(
+            err.response?.data?.error ||
+              t("profile.openrouterKeyDeleteError") ||
+              "Failed to delete OpenRouter API key"
+          );
+        }
+      },
+    });
+  };
+
+  const handleRefreshOpenRouterUsage = async () => {
+    setIsRefreshingUsage(true);
+    try {
+      const result = await apiService.refreshOpenRouterUsage();
+      setOpenRouterUsage(result.usage);
+      toast.success(
+        t("profile.usageRefreshed") || "Usage data refreshed successfully!"
+      );
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.error ||
+          t("profile.usageRefreshError") ||
+          "Failed to refresh usage data"
+      );
+    } finally {
+      setIsRefreshingUsage(false);
+    }
   };
 
   const formatDate = (date: string) => {
@@ -953,6 +1061,184 @@ export function ProfilePage() {
                   {isUpdatingApiKey
                     ? t("profile.saving") || "Saving..."
                     : t("profile.saveApiKey") || "Save API Key"}
+                </Button>
+              </form>
+            )}
+          </Card>
+
+          {/* OpenRouter API Key Configuration */}
+          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 rounded-lg">
+                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {t("profile.openRouterApiKey") || "OpenRouter API Key"}
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("profile.openRouterApiKeyDescription") ||
+                    "Configure OpenRouter for AI model access with usage tracking"}
+                </p>
+              </div>
+              {hasOpenRouterKey && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                    {t("profile.configured") || "Configured"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {hasOpenRouterKey && openRouterUsage && (
+              <div className="mb-6">
+                <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        {t("profile.openRouterKeyConfigured") ||
+                          "OpenRouter API Key Configured"}
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                        ✓{" "}
+                        {t("profile.openRouterAccess") ||
+                          "Access to multiple AI models through OpenRouter"}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleDeleteOpenRouterKey}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {t("profile.removeApiKey") || "Remove"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Usage Statistics */}
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                      {t("profile.usageStatistics") || "Usage Statistics"}
+                    </h3>
+                    <Button
+                      onClick={handleRefreshOpenRouterUsage}
+                      disabled={isRefreshingUsage}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 mr-1 ${
+                          isRefreshingUsage ? "animate-spin" : ""
+                        }`}
+                      />
+                      {t("profile.refresh") || "Refresh"}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {t("profile.totalRequests") || "Total Requests"}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {openRouterUsage.totalRequests.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {t("profile.inputTokens") || "Input Tokens"}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {openRouterUsage.tokensUsed.input.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {t("profile.outputTokens") || "Output Tokens"}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {openRouterUsage.tokensUsed.output.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {openRouterUsage.remainingBalance !== undefined && (
+                    <div className="mt-4 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        {t("profile.remainingBalance") || "Remaining Balance"}
+                      </p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        ${openRouterUsage.remainingBalance.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    {t("profile.lastUpdated") || "Last updated"}:{" "}
+                    {new Date(openRouterUsage.lastUpdated).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!hasOpenRouterKey && (
+              <form onSubmit={handleSaveOpenRouterKey} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.openRouterKeyLabel") || "OpenRouter API Key"}
+                  </label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type={showOpenRouterKey ? "text" : "password"}
+                      value={openRouterApiKey}
+                      onChange={(e) => setOpenRouterApiKey(e.target.value)}
+                      className="pl-10 pr-10 font-mono text-sm"
+                      placeholder="sk-or-v1-..."
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showOpenRouterKey ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {t("profile.openRouterKeyHelp") ||
+                      "Your API key is encrypted and stored securely. Get your key from"}{" "}
+                    <a
+                      href="https://openrouter.ai/keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      OpenRouter Dashboard
+                    </a>
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isUpdatingOpenRouterKey}
+                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isUpdatingOpenRouterKey
+                    ? t("profile.saving") || "Saving..."
+                    : t("profile.saveAndValidate") || "Save & Validate Key"}
                 </Button>
               </form>
             )}

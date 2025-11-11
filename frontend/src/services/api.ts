@@ -17,6 +17,10 @@ import type {
   AIApiKeyConfig,
   SaveAIApiKeyRequest,
   AIApiKeyResponse,
+  OpenRouterApiKeyConfig,
+  SaveOpenRouterApiKeyRequest,
+  OpenRouterApiKeyResponse,
+  OpenRouterUsage,
 } from "../types";
 import type { AppStore } from "../store";
 import { updateTokens, logout } from "../store/slices/authSlice";
@@ -290,6 +294,40 @@ class ApiService {
 
   async deleteAIApiKey(): Promise<AIApiKeyResponse> {
     const response = await this.api.delete("/api/auth/ai-api-key");
+    return response.data;
+  }
+
+  // OpenRouter API Key endpoints
+  async getOpenRouterApiKeyConfig(): Promise<OpenRouterApiKeyConfig> {
+    const response = await this.api.get("/api/auth/openrouter-api-key");
+    return response.data;
+  }
+
+  async saveOpenRouterApiKey(
+    data: SaveOpenRouterApiKeyRequest
+  ): Promise<OpenRouterApiKeyResponse> {
+    // Encrypt the API key on the client side before sending
+    const encryptedApiKey = await encryptData(data.apiKey);
+
+    const response = await this.api.post("/api/auth/openrouter-api-key", {
+      apiKey: encryptedApiKey,
+      isClientEncrypted: true, // Flag to indicate client-side encryption
+    });
+    return response.data;
+  }
+
+  async deleteOpenRouterApiKey(): Promise<OpenRouterApiKeyResponse> {
+    const response = await this.api.delete("/api/auth/openrouter-api-key");
+    return response.data;
+  }
+
+  async refreshOpenRouterUsage(): Promise<{
+    message: string;
+    usage: OpenRouterUsage;
+  }> {
+    const response = await this.api.post(
+      "/api/auth/openrouter-api-key/refresh"
+    );
     return response.data;
   }
 

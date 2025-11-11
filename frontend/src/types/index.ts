@@ -76,6 +76,33 @@ export interface AIApiKeyResponse {
   hasApiKey: boolean;
 }
 
+// OpenRouter API Key types
+export interface OpenRouterUsage {
+  totalRequests: number;
+  tokensUsed: {
+    input: number;
+    output: number;
+  };
+  lastUpdated: string;
+  remainingBalance?: number;
+}
+
+export interface OpenRouterApiKeyConfig {
+  hasApiKey: boolean;
+  usage?: OpenRouterUsage | null;
+}
+
+export interface SaveOpenRouterApiKeyRequest {
+  apiKey: string;
+  isClientEncrypted?: boolean;
+}
+
+export interface OpenRouterApiKeyResponse {
+  message: string;
+  hasApiKey: boolean;
+  usage?: OpenRouterUsage;
+}
+
 // Recipe types
 export interface Recipe {
   recipeId: string;
