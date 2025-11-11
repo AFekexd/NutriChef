@@ -3,10 +3,20 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import crypto from "crypto";
 
-// Encryption key for API keys (should be in environment variables)
-const ENCRYPTION_KEY = process.env.API_KEY_ENCRYPTION_SECRET;
-const CLIENT_ENCRYPTION_KEY = process.env.CLIENT_ENCRYPTION_KEY;
+// Encryption key for API keys (must be provided via environment variables)
 const ALGORITHM = "aes-256-cbc";
+
+// Validate required env vars at module load time to avoid passing `undefined` to
+// crypto functions (which causes TypeScript and runtime errors).
+if (!process.env.API_KEY_ENCRYPTION_SECRET) {
+  throw new Error("Missing required env var: API_KEY_ENCRYPTION_SECRET");
+}
+if (!process.env.CLIENT_ENCRYPTION_KEY) {
+  throw new Error("Missing required env var: CLIENT_ENCRYPTION_KEY");
+}
+
+const ENCRYPTION_KEY: string = process.env.API_KEY_ENCRYPTION_SECRET;
+const CLIENT_ENCRYPTION_KEY: string = process.env.CLIENT_ENCRYPTION_KEY;
 
 // OpenAI Configuration
 export const openai = new OpenAI({
