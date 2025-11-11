@@ -649,7 +649,7 @@ export const deleteOpenRouterApiKey = async (req: Request, res: Response) => {
       where: { userId },
       data: {
         openrouterApiKey: null,
-        openrouterUsage: null,
+        openrouterUsage: null as any,
       },
     });
 
