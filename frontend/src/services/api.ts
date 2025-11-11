@@ -21,6 +21,13 @@ import type {
   SaveOpenRouterApiKeyRequest,
   OpenRouterApiKeyResponse,
   OpenRouterUsage,
+  OpenRouterModelsResponse,
+  OpenRouterModelConfig,
+  OpenRouterKeyInfoResponse,
+  AIPreferences,
+  AIPreferencesResponse,
+  SaveAIPreferencesRequest,
+  AIRateLimitStatus,
 } from "../types";
 import type { AppStore } from "../store";
 import { updateTokens, logout } from "../store/slices/authSlice";
@@ -328,6 +335,55 @@ class ApiService {
     const response = await this.api.post(
       "/api/auth/openrouter-api-key/refresh"
     );
+    return response.data;
+  }
+
+  async getOpenRouterModels(
+    searchQuery?: string
+  ): Promise<OpenRouterModelsResponse> {
+    const params = searchQuery ? { search: searchQuery } : {};
+    const response = await this.api.get("/api/auth/openrouter-models", {
+      params,
+    });
+    return response.data;
+  }
+
+  async getOpenRouterKeyInfo(): Promise<OpenRouterKeyInfoResponse> {
+    const response = await this.api.get("/api/auth/openrouter-key-info");
+    return response.data;
+  }
+
+  async getOpenRouterModel(): Promise<OpenRouterModelConfig> {
+    const response = await this.api.get("/api/auth/openrouter-model");
+    return response.data;
+  }
+
+  async saveOpenRouterModel(
+    modelId: string
+  ): Promise<{ message: string; modelId: string }> {
+    const response = await this.api.post("/api/auth/openrouter-model", {
+      modelId,
+    });
+    return response.data;
+  }
+
+  async getAIPreferences(): Promise<AIPreferencesResponse> {
+    const response = await this.api.get("/api/auth/ai-preferences");
+    return response.data;
+  }
+
+  async saveAIPreferences(
+    preferences: SaveAIPreferencesRequest
+  ): Promise<{ message: string; preferences: AIPreferences }> {
+    const response = await this.api.post(
+      "/api/auth/ai-preferences",
+      preferences
+    );
+    return response.data;
+  }
+
+  async getAIRateLimitStatus(): Promise<AIRateLimitStatus> {
+    const response = await this.api.get("/api/auth/ai-rate-limit-status");
     return response.data;
   }
 

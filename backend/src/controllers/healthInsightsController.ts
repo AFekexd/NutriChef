@@ -1,36 +1,44 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
-import {
-  BaseAIService,
-  AIProvider,
-  decryptApiKey,
-} from "../services/aiService.js";
+import { BaseAIService, AIProvider } from "../services/aiService.js";
+import { getAIServiceConfig } from "../services/aiServiceSelector.js";
 
 const prisma = new PrismaClient();
 
-// Helper function to get user's AI configuration
-async function getUserAIConfig(
-  userId: string
-): Promise<{ provider: AIProvider; apiKey?: string }> {
-  const user = await prisma.user.findUnique({
-    where: { userId },
-    select: { useOwnApiKey: true, aiApiKey: true, aiProvider: true },
-  });
+// Helper function to get user's AI configuration for text generation
+async function getUserAIConfig(userId: string): Promise<{
+  provider: AIProvider | "openrouter";
+  apiKey?: string;
+  model?: string;
+}> {
+  const config = await getAIServiceConfig(userId, "textGeneration");
 
-  if (user?.useOwnApiKey && user?.aiApiKey && user?.aiProvider) {
-    const decryptedKey = decryptApiKey(user.aiApiKey);
-    const provider =
-      user.aiProvider === "openai" ? AIProvider.OPENAI : AIProvider.GEMINI;
-    return { provider, apiKey: decryptedKey };
+  if (config.provider === "default") {
+    // Use default Gemini
+    return { provider: AIProvider.GEMINI };
+  } else if (config.provider === "openrouter") {
+    return {
+      provider: "openrouter",
+      apiKey: config.apiKey,
+      model: config.model,
+    };
+  } else {
+    // Use user's own API key (OpenAI or Gemini)
+    return {
+      provider:
+        config.provider === "openai" ? AIProvider.OPENAI : AIProvider.GEMINI,
+      apiKey: config.apiKey,
+    };
   }
-
-  // Default to Gemini if no custom key
-  return { provider: AIProvider.GEMINI };
 }
 
 class HealthInsightsService extends BaseAIService {
-  constructor(provider: AIProvider = AIProvider.GEMINI, customApiKey?: string) {
-    super(provider, customApiKey);
+  constructor(
+    provider: AIProvider | "openrouter" = AIProvider.GEMINI,
+    customApiKey?: string,
+    model?: string
+  ) {
+    super(provider, customApiKey, model);
   }
 
   async generatePersonalizedInsights(
@@ -398,7 +406,8 @@ export const getHealthInsights = async (req: Request, res: Response) => {
     // Generate AI insights with user's custom API key if available
     const insightsService = new HealthInsightsService(
       aiConfig.provider,
-      aiConfig.apiKey
+      aiConfig.apiKey,
+      aiConfig.model
     );
     const insights = await insightsService.generatePersonalizedInsights(
       userData,
@@ -496,7 +505,8 @@ export const getNutritionPlan = async (req: Request, res: Response) => {
     // Generate AI nutrition plan with user's custom API key if available
     const insightsService = new HealthInsightsService(
       aiConfig.provider,
-      aiConfig.apiKey
+      aiConfig.apiKey,
+      aiConfig.model
     );
     const plan = await insightsService.generateNutritionPlan(
       userData,

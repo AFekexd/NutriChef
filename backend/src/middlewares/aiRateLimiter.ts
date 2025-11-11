@@ -66,15 +66,38 @@ export function createAIRateLimiter(
       return;
     }
 
-    // Check if user has their own API key configured
+    // Check if user has their own API key configured and is using it
     prisma.user
       .findUnique({
         where: { userId },
-        select: { useOwnApiKey: true, aiApiKey: true },
+        select: {
+          useOwnApiKey: true,
+          aiApiKey: true,
+          openrouterApiKey: true,
+          aiPreferences: true,
+        },
       })
       .then((user) => {
-        // If user has their own API key, bypass rate limiting
-        if (user?.useOwnApiKey && user?.aiApiKey) {
+        // Parse AI preferences to check if user is actually using their own keys
+        const preferences = (user?.aiPreferences as any) || {};
+        const textGenPref = preferences.textGeneration || "default";
+        const imageAnalysisPref = preferences.imageAnalysis || "default";
+
+        // Determine if user is using custom API for this service
+        // - Health Insights and Recipe Recommendations use textGeneration
+        // - Inventory AI uses imageAnalysis
+        const serviceFeature =
+          service === "inventoryAI" ? imageAnalysisPref : textGenPref;
+
+        // User bypasses rate limits only if:
+        // 1. They have "own" API key and feature is set to "own", OR
+        // 2. They have OpenRouter key and feature is set to "openrouter"
+        const usingCustomKey =
+          (user?.useOwnApiKey && user?.aiApiKey && serviceFeature === "own") ||
+          (user?.openrouterApiKey && serviceFeature === "openrouter");
+
+        // If user has their own API key configured for this service, bypass rate limiting
+        if (usingCustomKey) {
           console.log(
             `✅ AI rate limit bypassed for user ${userId} on ${service} (using own API key)`
           );

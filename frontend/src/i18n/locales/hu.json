@@ -271,7 +271,53 @@
     "cuisinePlaceholder": "pl., Olasz, Ázsiai, Mediterrán",
     "imageUrl": "Kép URL",
     "imageUrlPlaceholder": "https://pelda.com/recept-kep.jpg",
-    "instructionsPlaceholder": "1. lépés: Készítse elő az összetevőket...&#10;2. lépés: Melegítse fel az olajat...&#10;3. lépés: Főzze meg..."
+    "instructionsPlaceholder": "1. lépés: Készítse elő az összetevőket...&#10;2. lépés: Melegítse fel az olajat...&#10;3. lépés: Főzze meg...",
+    "chooseMode": "Válasszon Recept Generálási Módot",
+    "useMyInventory": "Készletem Használata",
+    "useMyInventoryDesc": "Receptek generálása a készletben lévő összetevők alapján",
+    "customIngredients": "Egyéni Összetevők",
+    "customIngredientsDesc": "Adjon hozzá manuálisan bizonyos összetevőket, amelyeket használni szeretne",
+    "addYourIngredients": "Adja Hozzá Összetevőit",
+    "yourIngredients": "Az Ön Összetevői",
+    "noIngredientsAdded": "Még nincsenek hozzáadott összetevők. Adjon hozzá néhányat a kezdéshez!",
+    "allergiesAndAvoid": "Allergiák és Kerülendő Ételek",
+    "allergiesDescription": "Adja hozzá azokat az összetevőket, amelyekre allergiás vagy nem szereti őket. Az AI kizárja az ezeket tartalmazó recepteket.",
+    "quickAddCommon": "Gyakori elemek gyors hozzáadása:",
+    "currentlyAvoiding": "Jelenleg kerül",
+    "myRecipes": "Saját Receptek",
+    "createRecipe": "Recept Létrehozása",
+    "generatingRecommendations": "Ajánlások generálása...",
+    "aiPoweredSuggestions": "AI-alapú Javaslatok",
+    "personalizedMatch": "Személyre Szabott Egyezés %",
+    "nutritionalInfo": "Táplálkozási Információk",
+    "viewDetails": "Részletek Megtekintése",
+    "saveRecipe": "Recept Mentése",
+    "saved": "Mentve",
+    "saving": "Mentés...",
+    "addIngredients": "Összetevők Hozzáadása",
+    "createYourOwnRecipe": "Hozza Létre Saját Receptjét",
+    "shareYourMasterpiece": "Ossza meg kulináris remekművét táplálkozási részletekkel",
+    "basicInformation": "Alapinformációk",
+    "recipeTitle": "Recept Címe",
+    "recipeTitlePlaceholder": "pl., Mediterrán Grillezett Csirke",
+    "cuisineType": "Konyha Típusa",
+    "cuisineTypePlaceholder": "pl., Olasz, Ázsiai, Mediterrán",
+    "difficultyLevel": "Nehézségi Szint",
+    "servingsCount": "Adagok",
+    "prepTimeMinutes": "Előkészítési Idő (perc)",
+    "cookTimeMinutes": "Főzési Idő (perc)",
+    "imageUrlOptional": "Kép URL (Opcionális)",
+    "nutritionalInformation": "Táplálkozási Információk (adagonként)",
+    "caloriesPerServing": "Kalóriák",
+    "proteinGrams": "Fehérje (g)",
+    "carbsGrams": "Szénhidrát (g)",
+    "fatGrams": "Zsír (g)",
+    "cookingInstructions": "Főzési Utasítások",
+    "instructionsRequired": "Utasítások",
+    "instructionsHint": "Adjon meg részletes, lépésről lépésre haladó utasításokat a recepthez",
+    "createRecipeButton": "Recept Létrehozása",
+    "creating": "Létrehozás...",
+    "min": "perc"
   },
   "theme": {
     "light": "Világos",
@@ -286,6 +332,13 @@
   "profile": {
     "title": "Profil beállítások",
     "subtitle": "Kezelje fiókja beállításait és preferenciáit",
+    "personalInfo": "Személyes Adatok",
+    "security": "Biztonság",
+    "aiSettings": "AI Beállítások",
+    "activity": "Aktivitás",
+    "activityOverview": "Aktivitás áttekintése",
+    "activityDescription": "Kövesse nyomon használatát és tevékenységét",
+    "activityComingSoon": "Az aktivitás követés hamarosan elérhető",
     "profileInformation": "Profil információk",
     "updatePersonalDetails": "Személyes adatok frissítése",
     "name": "Név",
@@ -346,7 +399,24 @@
     "deleteApiKeyConfirm": "API Kulcs Törlése?",
     "deleteApiKeyMessage": "Biztosan el szeretné távolítani az AI API kulcsát? Újra korlátozások alá fog esni.",
     "apiKeyDeleted": "AI API kulcs sikeresen törölve!",
-    "apiKeyDeleteError": "Nem sikerült törölni az AI API kulcsot"
+    "apiKeyDeleteError": "Nem sikerült törölni az AI API kulcsot",
+    "apiKeyLabel": "AI API Kulcs",
+    "saveApiKey": "AI API Kulcs Mentése",
+    "apiKeyHelp": "Hogyan szerezzek AI API kulcsot?",
+    "openRouterApiKey": "OpenRouter API Kulcs",
+    "openRouterApiKeyDescription": "Használja az OpenRouter API kulcsát a testreszabott AI modellekhez és korlátozások elkerüléséhez",
+    "openRouterKeyConfigured": "OpenRouter API Kulcs Beállítva",
+    "usageStatistics": "Használati Statisztikák",
+    "refresh": "Frissítés",
+    "lastUpdated": "Utolsó frissítés",
+    "selectedModel": "Kiválasztott Modell",
+    "textGeneration": "Szöveg Generálás",
+    "textGenerationHelp": "Válassza ki a kívánt modellt a szöveg generálási feladatokhoz, mint például recept ajánlások és egészségügyi betekintések",
+    "imageAnalysis": "Kép Elemzés",
+    "imageAnalysisHelp": "Válassza ki a kívánt modellt a kép elemzési feladatokhoz, mint például az összetevő felismerés",
+    "aiPreferencesTip": "Ezek a beállítások felülírják az alapértelmezett AI konfigurációkat az Ön fiókjához",
+    "changeModel": "Modell Váltása",
+    "selectModel": "Modell Kiválasztása"
   },
   "healthInsights": {
     "title": "Egészség Betekintés",
@@ -645,6 +715,11 @@
       "adjustRecommendations": "Ajánlások Módosítása",
       "saveTheseGoals": "Célok Mentése",
       "saving": "Mentés..."
+    },
+    "actions": {
+      "logMeal": "Étkezés Naplózása",
+      "setGoals": "Célok Beállítása",
+      "calculateGoals": "Célok Kiszámítása"
     }
   },
   "shoppingList": {
@@ -798,7 +873,8 @@
     "profile": "Profil",
     "admin": "Admin Panel",
     "nutrition": "Táplálkozás Nyomon Követése",
-    "healthInsights": "Egészség Betekintés"
+    "healthInsights": "Egészség Betekintés",
+    "nutritionTracking": "Táplálkozás"
   },
   "myRecipes": {
     "title": "Saját Receptek",
@@ -855,5 +931,17 @@
       "addedWithStock": "\"{{name}}\" hozzáadva a bevásárlólistához! {{inStock}} / {{total}} hozzávaló már készleten ✓",
       "loadFailed": "Nem sikerült betölteni a recepteket. Kérjük, próbálja újra."
     }
+  },
+  "aiRateLimit": {
+    "title": "AI Használat (Szerver API)",
+    "usingOwnKey": "Saját API Kulcs Használata",
+    "used": "{{used}} / {{limit}} használva",
+    "resetIn": "Újraindítás {{hours}} órában",
+    "healthInsights": "Egészség Betekintések",
+    "recipeRecommendations": "Recept Ajánlások",
+    "inventoryAI": "Készlet AI",
+    "clickToViewDetails": "Kattintson a részletekért",
+    "configureOwnKey": "Állítsa be saját API kulcsát a Profil beállításokban, hogy megkerülje ezeket a korlátokat",
+    "noLimits": "Nincs korlátozás saját API kulcs használatakor"
   }
 }

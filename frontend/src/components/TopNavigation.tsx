@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Store,
   Salad,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -25,12 +26,62 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { useEffect, useState, useCallback } from "react";
+import { apiService } from "../services/api";
+import type { AIRateLimitStatus } from "../types";
 
 export function TopNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const { t } = useTranslation();
+  const [rateLimitStatus, setRateLimitStatus] =
+    useState<AIRateLimitStatus | null>(null);
+
+  // Fetch AI rate limit status
+  const fetchRateLimitStatus = useCallback(async () => {
+    try {
+      const status = await apiService.getAIRateLimitStatus();
+      setRateLimitStatus(status);
+      console.log("Rate limit status fetched:", status);
+    } catch (error) {
+      // Silently fail - this is just a nice-to-have indicator
+      console.error("Failed to fetch AI rate limit status:", error);
+    }
+  }, []);
+
+  // Fetch on mount and periodically
+  useEffect(() => {
+    fetchRateLimitStatus();
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchRateLimitStatus, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchRateLimitStatus]);
+
+  // Refresh when navigating away from profile page (where AI preferences are changed)
+  useEffect(() => {
+    // If coming from profile page, refresh rate limits
+    if (location.pathname !== "/profile") {
+      fetchRateLimitStatus();
+    }
+  }, [location.pathname, fetchRateLimitStatus]);
+
+  // Listen for AI preferences changes
+  useEffect(() => {
+    const handlePreferencesChanged = () => {
+      console.log("AI preferences changed, refreshing rate limits...");
+      fetchRateLimitStatus();
+    };
+
+    window.addEventListener("aiPreferencesChanged", handlePreferencesChanged);
+    return () => {
+      window.removeEventListener(
+        "aiPreferencesChanged",
+        handlePreferencesChanged
+      );
+    };
+  }, [fetchRateLimitStatus]);
 
   // Hide top nav on login/register pages
   if (location.pathname === "/login" || location.pathname === "/register") {
@@ -44,6 +95,11 @@ export function TopNavigation() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  useEffect(() => {
+    console.log("Rate Limit Status:", rateLimitStatus);
+    console.log("Using Own API Key:", rateLimitStatus?.usingOwnApiKey);
+    console.log("Overall Rate Limit:", rateLimitStatus?.overall);
+  }, [rateLimitStatus]);
   return (
     <nav className="hidden md:block w-full fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 z-50 transition-colors">
       <div className="max-w-full px-2 lg:px-4 xl:px-6">
@@ -215,6 +271,124 @@ export function TopNavigation() {
           {/* User Info, Settings, and Logout - Right */}
           <div className="flex items-center gap-1 lg:gap-2 xl:gap-3 justify-end">
             <TutorialButton text="" />
+
+            {/* AI Rate Limit Indicator */}
+            {rateLimitStatus &&
+              !rateLimitStatus.usingOwnApiKey &&
+              rateLimitStatus.overall && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={`flex items-center gap-1.5 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg transition-all border ${
+                      rateLimitStatus.overall.percentage >= 90
+                        ? "border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900"
+                        : rateLimitStatus.overall.percentage >= 70
+                        ? "border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                        : "border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900"
+                    }`}
+                    title={t("aiRateLimit.clickToViewDetails")}
+                  >
+                    <Zap className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs lg:text-sm font-medium hidden lg:inline">
+                      {rateLimitStatus.overall.percentage}%
+                    </span>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72 p-4">
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                        {t("aiRateLimit.title")}
+                      </h3>
+
+                      {/* Overall Progress */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {t("aiRateLimit.used", {
+                              used: rateLimitStatus.overall.used,
+                              limit: rateLimitStatus.overall.limit,
+                            })}
+                          </span>
+                          <span className="font-medium">
+                            {rateLimitStatus.overall.percentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                          <div
+                            className={`h-full transition-all rounded-full ${
+                              rateLimitStatus.overall.percentage >= 90
+                                ? "bg-gradient-to-r from-red-500 to-red-600"
+                                : rateLimitStatus.overall.percentage >= 70
+                                ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
+                                : "bg-gradient-to-r from-green-500 to-green-600"
+                            }`}
+                            style={{
+                              width: `${Math.min(
+                                rateLimitStatus.overall.percentage,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Individual Services */}
+                      {rateLimitStatus.rateLimits && (
+                        <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          {/* Health Insights */}
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {t("aiRateLimit.healthInsights")}
+                            </span>
+                            <span className="font-medium">
+                              {rateLimitStatus.rateLimits.healthInsights.used}/
+                              {rateLimitStatus.rateLimits.healthInsights.limit}
+                            </span>
+                          </div>
+
+                          {/* Recipe Recommendations */}
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {t("aiRateLimit.recipeRecommendations")}
+                            </span>
+                            <span className="font-medium">
+                              {
+                                rateLimitStatus.rateLimits.recipeRecommendations
+                                  .used
+                              }
+                              /
+                              {
+                                rateLimitStatus.rateLimits.recipeRecommendations
+                                  .limit
+                              }
+                            </span>
+                          </div>
+
+                          {/* Inventory AI */}
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {t("aiRateLimit.inventoryAI")}
+                            </span>
+                            <span className="font-medium">
+                              {rateLimitStatus.rateLimits.inventoryAI.used}/
+                              {rateLimitStatus.rateLimits.inventoryAI.limit}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Configure Own Key CTA */}
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                          onClick={() => navigate("/profile")}
+                          className="w-full text-xs text-blue-600 dark:text-blue-400 hover:underline text-center"
+                        >
+                          {t("aiRateLimit.configureOwnKey")}
+                        </button>
+                      </div>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
             <SettingsMenu />
             <button
               onClick={() => navigate("/profile")}

@@ -86,18 +86,66 @@ export function decryptClientData(encryptedBase64: string): string {
 
 // Base AI Service Class
 export class BaseAIService {
-  protected provider: AIProvider;
+  protected provider: AIProvider | "openrouter";
   protected model: string;
   protected customApiKey?: string;
   protected usingCustomKey: boolean = false;
+  protected maxTokens: number = 4000; // Increased default for complex responses
 
-  constructor(provider: AIProvider = AIProvider.OPENAI, customApiKey?: string) {
+  constructor(
+    provider: AIProvider | "openrouter" = AIProvider.OPENAI,
+    customApiKey?: string,
+    model?: string,
+    maxTokens?: number
+  ) {
     this.provider = provider;
     this.customApiKey = customApiKey;
     this.usingCustomKey = !!customApiKey;
+    if (maxTokens) {
+      this.maxTokens = maxTokens;
+    }
     // Use the same model as visionAI.ts for consistency
-    this.model =
-      provider === AIProvider.OPENAI ? "gpt-4" : "gemini-flash-latest";
+    if (model) {
+      this.model = model;
+    } else if (provider === "openrouter") {
+      this.model = "openai/gpt-4"; // Default OpenRouter model
+    } else {
+      this.model =
+        provider === AIProvider.OPENAI ? "gpt-4" : "gemini-flash-latest";
+    }
+  }
+
+  protected async callOpenRouter(
+    prompt: string,
+    systemMessage?: string
+  ): Promise<any> {
+    try {
+      if (!this.customApiKey) {
+        throw new Error("OpenRouter API key is required");
+      }
+
+      const { callOpenRouter } = await import("./aiServiceSelector.js");
+
+      const messages: Array<{ role: string; content: string }> = [
+        ...(systemMessage
+          ? [{ role: "system" as const, content: systemMessage }]
+          : []),
+        { role: "user" as const, content: prompt },
+      ];
+
+      const result = await callOpenRouter(
+        this.customApiKey,
+        this.model,
+        messages,
+        0.7,
+        this.maxTokens
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error("OpenRouter API Error:", error);
+      throw new Error(`OpenRouter Service Error: ${error.message}`);
+    }
   }
 
   protected async callOpenAI(
@@ -119,7 +167,7 @@ export class BaseAIService {
           { role: "user" as const, content: prompt },
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: this.maxTokens,
       });
 
       return {
@@ -172,14 +220,28 @@ export class BaseAIService {
   ): Promise<any> {
     const startTime = Date.now();
 
+    console.log(
+      `[AI Service] Using provider: ${this.provider}, model: ${this.model}`
+    );
+
     let result;
-    if (this.provider === AIProvider.OPENAI) {
+    if (this.provider === "openrouter") {
+      console.log("[AI Service] Calling OpenRouter...");
+      result = await this.callOpenRouter(prompt, systemMessage);
+    } else if (this.provider === AIProvider.OPENAI) {
+      console.log("[AI Service] Calling OpenAI...");
       result = await this.callOpenAI(prompt, systemMessage);
     } else {
+      console.log("[AI Service] Calling Gemini...");
       result = await this.callGemini(prompt, systemMessage);
     }
 
     const generationTime = (Date.now() - startTime) / 1000;
+    console.log(
+      `[AI Service] Generation completed in ${generationTime}s, content length: ${
+        result.content?.length || 0
+      }`
+    );
 
     return {
       ...result,
@@ -190,6 +252,11 @@ export class BaseAIService {
 
   protected parseJSONResponse(content: string): any {
     try {
+      if (!content || content.trim() === "") {
+        console.error("Empty content received from AI");
+        throw new Error("Empty response from AI service");
+      }
+
       // Remove markdown code blocks if present
       let cleaned = content.trim();
       if (cleaned.startsWith("```json")) {
@@ -198,10 +265,39 @@ export class BaseAIService {
         cleaned = cleaned.replace(/```\n?/, "").replace(/\n?```$/, "");
       }
 
-      return JSON.parse(cleaned);
-    } catch (error) {
+      // Check if JSON appears to be truncated (doesn't end with } or ])
+      const lastChar = cleaned.trim().slice(-1);
+      if (lastChar !== "}" && lastChar !== "]") {
+        console.warn("JSON appears to be truncated (doesn't end with } or ])");
+        console.error("Last 100 chars:", cleaned.slice(-100));
+        throw new Error(
+          "JSON response was truncated. This usually means the AI response hit the token limit. Try using a model with higher token limits or reduce the complexity of the request."
+        );
+      }
+
+      // Log the cleaned content for debugging
+      console.log(
+        "Parsing AI response (first 200 chars):",
+        cleaned.substring(0, 200)
+      );
+
+      const parsed = JSON.parse(cleaned);
+      return parsed;
+    } catch (error: any) {
       console.error("JSON Parse Error:", error);
-      throw new Error("Failed to parse AI response as JSON");
+      console.error(
+        "Content received (first 500 chars):",
+        content?.substring(0, 500)
+      );
+      console.error("Content received (last 200 chars):", content?.slice(-200));
+
+      // Provide helpful error message
+      if (error.message?.includes("truncated")) {
+        throw error; // Re-throw our custom truncation error
+      }
+      throw new Error(
+        `Failed to parse AI response as JSON: ${error.message}. The response may be incomplete or malformed.`
+      );
     }
   }
 }

@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { encryptApiKey, decryptClientData } from "../services/aiService.js";
+import { getRateLimitStatus } from "../middlewares/aiRateLimiter.js";
 
 const prisma = new PrismaClient();
 
@@ -653,7 +654,9 @@ export const saveOpenRouterApiKey = async (req: Request, res: Response) => {
     if (isClientEncrypted) {
       try {
         plainTextApiKey = decryptClientData(apiKey);
-        console.log("✅ Successfully decrypted client-encrypted OpenRouter API key");
+        console.log(
+          "✅ Successfully decrypted client-encrypted OpenRouter API key"
+        );
       } catch (decryptError) {
         console.error(
           "Failed to decrypt client-encrypted OpenRouter API key:",
@@ -666,8 +669,11 @@ export const saveOpenRouterApiKey = async (req: Request, res: Response) => {
     }
 
     // Validate the OpenRouter API key
-    const { validateOpenRouterKey, encryptOpenRouterKey, fetchOpenRouterUsage } =
-      await import("../services/openRouterService.js");
+    const {
+      validateOpenRouterKey,
+      encryptOpenRouterKey,
+      fetchOpenRouterUsage,
+    } = await import("../services/openRouterService.js");
 
     const validation = await validateOpenRouterKey(plainTextApiKey);
 
@@ -774,6 +780,313 @@ export const refreshOpenRouterUsage = async (req: Request, res: Response) => {
   }
 };
 
+// Get available OpenRouter models
+export const getOpenRouterModels = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const searchQuery = req.query.search as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Get user's API key to make authenticated request (optional)
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { openrouterApiKey: true },
+    });
+
+    let apiKey: string | undefined;
+    if (user?.openrouterApiKey) {
+      const { decryptOpenRouterKey } = await import(
+        "../services/openRouterService.js"
+      );
+      apiKey = decryptOpenRouterKey(user.openrouterApiKey);
+    }
+
+    // Fetch models from OpenRouter
+    const { fetchOpenRouterModels, searchModels } = await import(
+      "../services/openRouterService.js"
+    );
+
+    let models = await fetchOpenRouterModels(apiKey);
+
+    // Apply search filter if provided
+    if (searchQuery) {
+      models = searchModels(models, searchQuery);
+    }
+
+    res.json({
+      models,
+      total: models.length,
+    });
+  } catch (error: any) {
+    console.error("Get OpenRouter models error:", error);
+    res.status(500).json({ error: "Failed to fetch available models" });
+  }
+};
+
+// Get OpenRouter key information with usage stats
+export const getOpenRouterKeyInfo = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Get user's OpenRouter API key
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { openrouterApiKey: true },
+    });
+
+    if (!user?.openrouterApiKey) {
+      return res
+        .status(404)
+        .json({ error: "No OpenRouter API key configured" });
+    }
+
+    const { decryptOpenRouterKey, getOpenRouterKeyInfo } = await import(
+      "../services/openRouterService.js"
+    );
+
+    const apiKey = decryptOpenRouterKey(user.openrouterApiKey);
+    const keyInfo = await getOpenRouterKeyInfo(apiKey);
+
+    if (!keyInfo) {
+      return res.status(500).json({ error: "Failed to fetch key information" });
+    }
+
+    res.json({
+      keyInfo,
+      message: "OpenRouter key information retrieved successfully",
+    });
+  } catch (error: any) {
+    console.error("Get OpenRouter key info error:", error);
+    res.status(500).json({ error: "Failed to fetch key information" });
+  }
+};
+
+// Save selected OpenRouter model
+export const saveOpenRouterModel = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { modelId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!modelId) {
+      return res.status(400).json({ error: "Model ID is required" });
+    }
+
+    // Update user with selected model
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        openrouterModel: modelId,
+      },
+    });
+
+    res.json({
+      message: "OpenRouter model saved successfully",
+      modelId,
+    });
+  } catch (error: any) {
+    console.error("Save OpenRouter model error:", error);
+    res.status(500).json({ error: "Failed to save selected model" });
+  }
+};
+
+// Get selected OpenRouter model
+export const getOpenRouterModel = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { openrouterModel: true },
+    });
+
+    res.json({
+      modelId: user?.openrouterModel || null,
+    });
+  } catch (error: any) {
+    console.error("Get OpenRouter model error:", error);
+    res.status(500).json({ error: "Failed to fetch selected model" });
+  }
+};
+
+// Get AI preferences for different features
+export const getAIPreferences = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { aiPreferences: true },
+    });
+
+    // Default preferences if not set
+    const defaultPreferences = {
+      textGeneration: "default",
+      imageAnalysis: "default",
+    };
+
+    res.json({
+      preferences: (user?.aiPreferences as any) || defaultPreferences,
+    });
+  } catch (error: any) {
+    console.error("Get AI preferences error:", error);
+    res.status(500).json({ error: "Failed to fetch AI preferences" });
+  }
+};
+
+// Save AI preferences
+export const saveAIPreferences = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { textGeneration, imageAnalysis } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Validate preference values
+    const validOptions = ["default", "own", "openrouter"];
+    if (
+      (textGeneration && !validOptions.includes(textGeneration)) ||
+      (imageAnalysis && !validOptions.includes(imageAnalysis))
+    ) {
+      return res.status(400).json({
+        error:
+          "Invalid preference value. Must be 'default', 'own', or 'openrouter'",
+      });
+    }
+
+    // Get current preferences
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { aiPreferences: true },
+    });
+
+    const currentPreferences = (user?.aiPreferences as any) || {
+      textGeneration: "default",
+      imageAnalysis: "default",
+    };
+
+    // Update preferences
+    const updatedPreferences = {
+      ...currentPreferences,
+      ...(textGeneration && { textGeneration }),
+      ...(imageAnalysis && { imageAnalysis }),
+    };
+
+    await prisma.user.update({
+      where: { userId },
+      data: {
+        aiPreferences: updatedPreferences as any,
+      },
+    });
+
+    res.json({
+      message: "AI preferences updated successfully",
+      preferences: updatedPreferences,
+    });
+  } catch (error: any) {
+    console.error("Save AI preferences error:", error);
+    res.status(500).json({ error: "Failed to save AI preferences" });
+  }
+};
+
+/**
+ * Get current user's AI rate limit status (for server API key usage only)
+ */
+export const getAIRateLimitStatus = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    // Check if user has their own API key configured AND is using it
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        useOwnApiKey: true,
+        aiApiKey: true,
+        openrouterApiKey: true,
+        aiPreferences: true,
+      },
+    });
+
+    // Parse AI preferences to check if user is actually using their own keys
+    const preferences = (user?.aiPreferences as any) || {};
+    const textGenPref = preferences.textGeneration || "default";
+    const imageAnalysisPref = preferences.imageAnalysis || "default";
+
+    // User bypasses rate limits only if:
+    // 1. They have "own" API key and textGen or imageAnalysis is set to "own", OR
+    // 2. They have OpenRouter key and textGen or imageAnalysis is set to "openrouter"
+    const usingOwnKey =
+      (user?.useOwnApiKey &&
+        user?.aiApiKey &&
+        (textGenPref === "own" || imageAnalysisPref === "own")) ||
+      (user?.openrouterApiKey &&
+        (textGenPref === "openrouter" || imageAnalysisPref === "openrouter"));
+
+    if (usingOwnKey) {
+      res.json({
+        userId,
+        usingOwnApiKey: true,
+        rateLimits: null,
+        message: "Rate limits bypassed - using own API key",
+      });
+      return;
+    }
+
+    // Get rate limit status from the in-memory tracker
+    const status = getRateLimitStatus(userId);
+
+    // Calculate overall usage percentage
+    const totalUsed =
+      status.healthInsights.used +
+      status.recipeRecommendations.used +
+      status.inventoryAI.used;
+    const totalLimit =
+      status.healthInsights.limit +
+      status.recipeRecommendations.limit +
+      status.inventoryAI.limit;
+    const overallPercentage = Math.round((totalUsed / totalLimit) * 100);
+
+    res.json({
+      userId,
+      usingOwnApiKey: false,
+      rateLimits: status,
+      overall: {
+        used: totalUsed,
+        limit: totalLimit,
+        percentage: overallPercentage,
+      },
+    });
+  } catch (error: any) {
+    console.error("Error fetching AI rate limit status:", error);
+    res.status(500).json({ error: "Failed to fetch AI rate limit status" });
+  }
+};
+
 export default {
   getUserProfile,
   updatePreferences,
@@ -790,4 +1103,11 @@ export default {
   saveOpenRouterApiKey,
   deleteOpenRouterApiKey,
   refreshOpenRouterUsage,
+  getOpenRouterModels,
+  getOpenRouterKeyInfo,
+  saveOpenRouterModel,
+  getOpenRouterModel,
+  getAIPreferences,
+  saveAIPreferences,
+  getAIRateLimitStatus,
 };

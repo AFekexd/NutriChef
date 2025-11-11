@@ -34,6 +34,13 @@ import {
   saveOpenRouterApiKey,
   deleteOpenRouterApiKey,
   refreshOpenRouterUsage,
+  getOpenRouterModels,
+  getOpenRouterKeyInfo,
+  saveOpenRouterModel,
+  getOpenRouterModel,
+  getAIPreferences,
+  saveAIPreferences,
+  getAIRateLimitStatus,
 } from "../controllers/userProfileController.js";
 
 const router = Router();
@@ -804,6 +811,277 @@ router.post(
   authenticate,
   refreshOpenRouterUsage
 );
+
+/**
+ * @swagger
+ * /api/auth/openrouter-models:
+ *   get:
+ *     summary: Get available OpenRouter models
+ *     tags: [Authentication]
+ *     description: Fetch list of available models from OpenRouter API with optional search
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query to filter models by name, ID, or description
+ *     responses:
+ *       200:
+ *         description: List of available models
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 models:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total:
+ *                   type: integer
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/openrouter-models", authenticate, getOpenRouterModels);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-key-info:
+ *   get:
+ *     summary: Get OpenRouter key information
+ *     tags: [Authentication]
+ *     description: Get detailed information about the user's OpenRouter API key including usage stats and limits
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Key information retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 keyInfo:
+ *                   type: object
+ *                   properties:
+ *                     label:
+ *                       type: string
+ *                     limit:
+ *                       type: number
+ *                       nullable: true
+ *                     limit_remaining:
+ *                       type: number
+ *                       nullable: true
+ *                     usage:
+ *                       type: number
+ *                     usage_daily:
+ *                       type: number
+ *                     usage_weekly:
+ *                       type: number
+ *                     usage_monthly:
+ *                       type: number
+ *                     is_free_tier:
+ *                       type: boolean
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No OpenRouter API key configured
+ */
+router.get("/openrouter-key-info", authenticate, getOpenRouterKeyInfo);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-model:
+ *   get:
+ *     summary: Get selected OpenRouter model
+ *     tags: [Authentication]
+ *     description: Get the user's currently selected OpenRouter model
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Selected model ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 modelId:
+ *                   type: string
+ *                   nullable: true
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/openrouter-model", authenticate, getOpenRouterModel);
+
+/**
+ * @swagger
+ * /api/auth/openrouter-model:
+ *   post:
+ *     summary: Save selected OpenRouter model
+ *     tags: [Authentication]
+ *     description: Save user's preferred OpenRouter model
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - modelId
+ *             properties:
+ *               modelId:
+ *                 type: string
+ *                 description: The OpenRouter model ID to use
+ *                 example: "openai/gpt-4"
+ *     responses:
+ *       200:
+ *         description: Model saved successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/openrouter-model", authenticate, saveOpenRouterModel);
+
+/**
+ * @swagger
+ * /api/auth/ai-preferences:
+ *   get:
+ *     summary: Get AI service preferences
+ *     tags: [Authentication]
+ *     description: Get user's preferences for which AI service to use for different features
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: AI preferences retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 preferences:
+ *                   type: object
+ *                   properties:
+ *                     textGeneration:
+ *                       type: string
+ *                       enum: [default, own, openrouter]
+ *                     imageAnalysis:
+ *                       type: string
+ *                       enum: [default, own, openrouter]
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/ai-preferences", authenticate, getAIPreferences);
+
+/**
+ * @swagger
+ * /api/auth/ai-preferences:
+ *   post:
+ *     summary: Save AI service preferences
+ *     tags: [Authentication]
+ *     description: Set preferences for which AI service to use for different features
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               textGeneration:
+ *                 type: string
+ *                 enum: [default, own, openrouter]
+ *                 description: AI service for recipe generation and health insights
+ *               imageAnalysis:
+ *                 type: string
+ *                 enum: [default, own, openrouter]
+ *                 description: AI service for image analysis (inventory items)
+ *     responses:
+ *       200:
+ *         description: Preferences saved successfully
+ *       400:
+ *         description: Invalid preference values
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/ai-preferences", authenticate, saveAIPreferences);
+
+/**
+ * @swagger
+ * /api/auth/ai-rate-limit-status:
+ *   get:
+ *     summary: Get current user's AI rate limit status (server API key usage only)
+ *     tags: [Authentication]
+ *     description: Returns the current AI rate limit usage for users using the server's API keys. Users with their own API keys bypass these limits.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Rate limit status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: string
+ *                 usingOwnApiKey:
+ *                   type: boolean
+ *                   description: Whether user has configured their own API key
+ *                 rateLimits:
+ *                   type: object
+ *                   nullable: true
+ *                   properties:
+ *                     healthInsights:
+ *                       type: object
+ *                       properties:
+ *                         used:
+ *                           type: number
+ *                         limit:
+ *                           type: number
+ *                         resetTime:
+ *                           type: string
+ *                           nullable: true
+ *                     recipeRecommendations:
+ *                       type: object
+ *                       properties:
+ *                         used:
+ *                           type: number
+ *                         limit:
+ *                           type: number
+ *                         resetTime:
+ *                           type: string
+ *                           nullable: true
+ *                     inventoryAI:
+ *                       type: object
+ *                       properties:
+ *                         used:
+ *                           type: number
+ *                         limit:
+ *                           type: number
+ *                         resetTime:
+ *                           type: string
+ *                           nullable: true
+ *                 overall:
+ *                   type: object
+ *                   properties:
+ *                     used:
+ *                       type: number
+ *                     limit:
+ *                       type: number
+ *                     percentage:
+ *                       type: number
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/ai-rate-limit-status", authenticate, getAIRateLimitStatus);
 
 /**
  * @swagger

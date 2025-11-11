@@ -21,6 +21,9 @@ try {
 // Initialize Gemini as fallback
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+// OpenRouter configuration
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
 export interface DetectedItem {
   name: string;
   confidence: number;
@@ -35,16 +38,26 @@ export interface DetectionResult {
   items: DetectedItem[];
   imageUrl: string;
   processingTime: number;
-  aiService: "google_vision" | "gemini";
+  aiService: "google_vision" | "gemini" | "openrouter";
   totalItemsDetected: number;
 }
 
 class VisionAIService {
   private customApiKey?: string;
+  private provider: "default" | "gemini" | "openrouter" = "default";
+  private openRouterModel?: string;
 
   // Set custom API key for this service instance
   setCustomApiKey(apiKey: string | undefined) {
     this.customApiKey = apiKey;
+  }
+
+  // Set provider for vision detection
+  setProvider(provider: "default" | "gemini" | "openrouter", model?: string) {
+    this.provider = provider;
+    if (model) {
+      this.openRouterModel = model;
+    }
   }
 
   // Compress and optimize uploaded image
@@ -218,33 +231,203 @@ ${
     }
   }
 
-  // Main detection method (tries Gemini first, falls back to Vision)
+  // Detect with OpenRouter vision model
+  async detectWithOpenRouter(
+    imagePath: string,
+    language: string = "en",
+    apiKey: string,
+    model: string = "google/gemini-flash-1.5-8b"
+  ): Promise<DetectedItem[]> {
+    try {
+      console.log(`[OpenRouter Vision] Analyzing image with ${model}...`);
+
+      // Read and encode image as base64
+      const imageBuffer = await fs.readFile(imagePath);
+      const base64Image = imageBuffer.toString("base64");
+      const mimeType = imagePath.endsWith(".png") ? "image/png" : "image/jpeg";
+
+      // Create the prompt for ingredient detection
+      const languageInstructions =
+        language === "en"
+          ? "Respond in English."
+          : language === "es"
+          ? "Respond in Spanish."
+          : language === "fr"
+          ? "Respond in French."
+          : language === "de"
+          ? "Respond in German."
+          : language === "it"
+          ? "Respond in Italian."
+          : language === "pt"
+          ? "Respond in Portuguese."
+          : language === "ja"
+          ? "Respond in Japanese."
+          : language === "ko"
+          ? "Respond in Korean."
+          : language === "zh"
+          ? "Respond in Chinese."
+          : "Respond in English.";
+
+      const prompt = `You are a food detection AI. Analyze this image and detect all food items, ingredients, or beverages visible.
+
+For each item detected, provide:
+- name: The name of the item
+- confidence: Confidence level (0-100)
+- category: One of: fruit, vegetable, dairy, meat, grains, beverage, condiment, or other
+- quantity: Estimated quantity (if visible)
+- unit: Unit of measurement (whole, kg, liter, etc.)
+- estimatedExpiry: Estimated days until expiry (based on item type)
+- location: Suggested storage location (fridge, pantry, or freezer)
+
+${languageInstructions}
+
+Return ONLY a JSON array of objects, no additional text. Example:
+[{"name":"Milk","confidence":95,"category":"dairy","quantity":1,"unit":"liter","estimatedExpiry":7,"location":"fridge"}]`;
+
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": process.env.APP_URL || "http://localhost:5173",
+          "X-Title": "NutriChef - Inventory Detection",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: prompt,
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${mimeType};base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 2000,
+          temperature: 0.3,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `OpenRouter API error: ${response.status} - ${JSON.stringify(
+            errorData
+          )}`
+        );
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("No response from OpenRouter");
+      }
+
+      console.log("[OpenRouter Vision] Raw response:", content);
+
+      // Parse the response
+      const cleaned = content
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+
+      const items = JSON.parse(cleaned);
+
+      if (!Array.isArray(items)) {
+        throw new Error("Response is not an array");
+      }
+
+      return items.map((item: any) => ({
+        name: item.name || "Unknown",
+        confidence: item.confidence || 50,
+        category: item.category || "other",
+        quantity: item.quantity,
+        unit: item.unit,
+        estimatedExpiry: item.estimatedExpiry,
+        location: item.location || "fridge",
+      }));
+    } catch (error) {
+      console.error("Failed to analyze with OpenRouter vision:", error);
+      throw error;
+    }
+  }
+
+  // Main detection method (uses provider setting)
   async detectIngredients(
     imagePath: string,
     language: string = "en"
   ): Promise<DetectionResult> {
     const startTime = Date.now();
     let items: DetectedItem[] = [];
-    let aiService: "google_vision" | "gemini" = "gemini";
+    let aiService: "google_vision" | "gemini" | "openrouter" = "gemini";
 
     try {
-      // Try Gemini first (free and good)
-      items = await this.detectWithGemini(imagePath, language);
-      aiService = "gemini";
-    } catch (geminiError) {
-      console.log("Gemini failed, trying Google Vision...");
+      // Use provider-specific detection
+      if (
+        this.provider === "openrouter" &&
+        this.customApiKey &&
+        this.openRouterModel
+      ) {
+        items = await this.detectWithOpenRouter(
+          imagePath,
+          language,
+          this.customApiKey,
+          this.openRouterModel
+        );
+        aiService = "openrouter";
+      } else if (this.provider === "gemini" || this.provider === "default") {
+        // Try Gemini first (free and good)
+        items = await this.detectWithGemini(imagePath, language);
+        aiService = "gemini";
+      } else {
+        // Fallback to Google Vision if available
+        if (visionClient) {
+          items = await this.detectWithGoogleVision(imagePath);
+          aiService = "google_vision";
+        } else {
+          throw new Error("No vision AI service available");
+        }
+      }
+    } catch (primaryError) {
+      console.log(
+        `Primary AI service (${this.provider}) failed, trying fallback...`
+      );
 
-      // Fallback to Google Vision if available
-      if (visionClient) {
+      // Fallback logic
+      if (this.provider === "openrouter") {
+        // Fallback to Gemini
+        try {
+          items = await this.detectWithGemini(imagePath, language);
+          aiService = "gemini";
+        } catch (geminiError) {
+          // Final fallback to Google Vision
+          if (visionClient) {
+            items = await this.detectWithGoogleVision(imagePath);
+            aiService = "google_vision";
+          } else {
+            throw primaryError;
+          }
+        }
+      } else if (visionClient) {
+        // If Gemini failed, try Google Vision
         try {
           items = await this.detectWithGoogleVision(imagePath);
           aiService = "google_vision";
         } catch (visionError) {
-          console.error("Google Vision also failed:", visionError);
+          console.error("All AI services failed:", visionError);
           throw new Error("All AI services failed");
         }
       } else {
-        throw geminiError;
+        throw primaryError;
       }
     }
 

@@ -660,7 +660,7 @@ export function RecipeRecommendationPage() {
                 className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
               >
                 <BookOpen className="w-5 h-5 mr-2" />
-                My Recipes
+                {t("recipes.myRecipes")}
               </Button>
               <Button
                 onClick={() => {
@@ -670,7 +670,7 @@ export function RecipeRecommendationPage() {
                 className="bg-gradient-to-r from-green-600 to-blue-600 dark:from-green-500 dark:to-blue-500 text-white hover:from-green-700 hover:to-blue-700 dark:hover:from-green-600 dark:hover:to-blue-600 shadow-lg"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create Recipe
+                {t("recipes.createRecipe")}
               </Button>
             </div>
           </div>
@@ -690,7 +690,7 @@ export function RecipeRecommendationPage() {
             {/* Mode Selection - Two Clear Options */}
             <div className="mb-6">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
-                Choose Recipe Generation Mode
+                {t("recipes.chooseMode")}
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Inventory Mode */}
@@ -714,11 +714,10 @@ export function RecipeRecommendationPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">
-                        📦 Use My Inventory
+                        📦 {t("recipes.useMyInventory")}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Generate recipes based on ingredients you already have
-                        in your smart fridge
+                        {t("recipes.useMyInventoryDesc")}
                       </p>
                     </div>
                     {recipeMode === "inventory" && (
@@ -748,10 +747,10 @@ export function RecipeRecommendationPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1">
-                        ✏️ Custom Ingredients
+                        ✏️ {t("recipes.customIngredients")}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Manually add ingredients you want to cook with
+                        {t("recipes.customIngredientsDesc")}
                       </p>
                     </div>
                     {recipeMode === "custom" && (
@@ -803,7 +802,7 @@ export function RecipeRecommendationPage() {
               <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                   <Plus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  Add Your Ingredients
+                  {t("recipes.addYourIngredients")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -867,7 +866,7 @@ export function RecipeRecommendationPage() {
                 {manualIngredients.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Your Ingredients ({manualIngredients.length}):
+                      {t("recipes.yourIngredients")} ({manualIngredients.length}):
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {manualIngredients.map((ing, index) => (
@@ -898,7 +897,7 @@ export function RecipeRecommendationPage() {
                   <div className="text-center py-8 bg-blue-50 dark:bg-blue-900/10 rounded-lg border-2 border-dashed border-blue-200 dark:border-blue-800">
                     <Package className="w-12 h-12 mx-auto mb-2 text-blue-300 dark:text-blue-700" />
                     <p className="text-gray-600 dark:text-gray-400 text-sm">
-                      No ingredients added yet. Add some to get started!
+                      {t("recipes.noIngredientsAdded")}
                     </p>
                   </div>
                 )}
@@ -909,17 +908,16 @@ export function RecipeRecommendationPage() {
             <div className="border-t border-gray-200 dark:border-gray-800 pt-6 mt-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                Allergies & Foods to Avoid
+                {t("recipes.allergiesAndAvoid")}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Add ingredients you're allergic to or don't like. AI will
-                exclude recipes containing these items.
+                {t("recipes.allergiesDescription")}
               </p>
 
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
-                  placeholder="e.g., fish, soy, nuts, dairy, shellfish..."
+                  placeholder={t("recipes.allergiesPlaceholder")}
                   value={newAllergy}
                   onChange={(e) => setNewAllergy(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleAddAllergy()}
@@ -931,14 +929,14 @@ export function RecipeRecommendationPage() {
                   className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add
+                  {t("common.add")}
                 </Button>
               </div>
 
               {/* Common Allergies Quick Add */}
               <div className="mb-4">
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Quick add common items:
+                  {t("recipes.quickAddCommon")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -976,7 +974,7 @@ export function RecipeRecommendationPage() {
               {allergies.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Currently avoiding ({allergies.length}):
+                    {t("recipes.currentlyAvoiding")} ({allergies.length}):
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {allergies.map((allergy, index) => (
@@ -1234,17 +1232,17 @@ export function RecipeRecommendationPage() {
                         {savedRecipes.has(recipe.title) ? (
                           <>
                             <Check className="w-4 h-4 mr-2" />
-                            Saved
+                            {t("recipes.saved")}
                           </>
                         ) : isSaving ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
+                            {t("recipes.saving")}
                           </>
                         ) : (
                           <>
                             <Plus className="w-4 h-4 mr-2" />
-                            Save Recipe
+                            {t("recipes.saveRecipe")}
                           </>
                         )}
                       </Button>
@@ -1255,7 +1253,7 @@ export function RecipeRecommendationPage() {
                           className="w-full border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          Add Missing to List
+                          {t("recipes.addIngredients")}
                         </Button>
                       )}
                       <Button
@@ -1297,7 +1295,7 @@ export function RecipeRecommendationPage() {
                           selectedRecipe.matchPercentage
                         )}
                       >
-                        {selectedRecipe.matchPercentage}% Match
+                        {selectedRecipe.matchPercentage}% {t("shoppingList.stats.checked")}
                       </Badge>
                       <Badge
                         className={getDifficultyColor(
@@ -1470,17 +1468,17 @@ export function RecipeRecommendationPage() {
                     {savedRecipes.has(selectedRecipe.title) ? (
                       <>
                         <Check className="w-5 h-5 mr-2" />
-                        Recipe Saved
+                        {t("recipes.saved")}
                       </>
                     ) : isSaving ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Saving...
+                        {t("recipes.saving")}
                       </>
                     ) : (
                       <>
                         <Plus className="w-5 h-5 mr-2" />
-                        Save to My Recipes
+                        {t("recipes.saveRecipe")}
                       </>
                     )}
                   </Button>
@@ -1489,7 +1487,7 @@ export function RecipeRecommendationPage() {
                     variant="outline"
                     className="px-6 dark:border-gray-700"
                   >
-                    Close
+                    {t("common.close")}
                   </Button>
                 </div>
               </div>
@@ -1516,10 +1514,10 @@ export function RecipeRecommendationPage() {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2">
                       <ChefHat className="w-8 h-8 text-green-600 dark:text-green-400" />
-                      Create Your Own Recipe
+                      {t("recipes.createYourOwnRecipe")}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      Share your culinary masterpiece with nutritional details
+                      {t("recipes.shareYourMasterpiece")}
                     </p>
                   </div>
                   <button
@@ -1540,14 +1538,14 @@ export function RecipeRecommendationPage() {
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    Basic Information
+                    {t("recipes.basicInformation")}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Recipe Title */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Recipe Title <span className="text-red-500">*</span>
+                        {t("recipes.recipeTitle")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -1559,7 +1557,7 @@ export function RecipeRecommendationPage() {
                             title: e.target.value,
                           })
                         }
-                        placeholder="e.g., Mediterranean Grilled Chicken"
+                        placeholder={t("recipes.recipeTitlePlaceholder")}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
                       />
                     </div>
@@ -1567,7 +1565,7 @@ export function RecipeRecommendationPage() {
                     {/* Cuisine Type */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Cuisine Type
+                        {t("recipes.cuisineType")}
                       </label>
                       <input
                         type="text"
@@ -1578,7 +1576,7 @@ export function RecipeRecommendationPage() {
                             cuisineType: e.target.value,
                           })
                         }
-                        placeholder="e.g., Italian, Asian, Mediterranean"
+                        placeholder={t("recipes.cuisineTypePlaceholder")}
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
                       />
                     </div>
@@ -1586,7 +1584,7 @@ export function RecipeRecommendationPage() {
                     {/* Difficulty */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Difficulty <span className="text-red-500">*</span>
+                        {t("recipes.difficultyLevel")} <span className="text-red-500">*</span>
                       </label>
                       <select
                         required
@@ -1699,14 +1697,14 @@ export function RecipeRecommendationPage() {
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                    Nutritional Information (per serving)
+                    {t("recipes.nutritionalInformation")}
                   </h3>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Calories */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Calories <span className="text-red-500">*</span>
+                        {t("recipes.caloriesPerServing")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1726,7 +1724,7 @@ export function RecipeRecommendationPage() {
                     {/* Protein */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Protein (g) <span className="text-red-500">*</span>
+                        {t("recipes.proteinGrams")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1792,12 +1790,12 @@ export function RecipeRecommendationPage() {
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <Utensils className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    Cooking Instructions
+                    {t("recipes.cookingInstructions")}
                   </h3>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Instructions <span className="text-red-500">*</span>
+                      {t("recipes.instructionsRequired")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
@@ -1809,11 +1807,11 @@ export function RecipeRecommendationPage() {
                           instructions: e.target.value,
                         })
                       }
-                      placeholder="Step 1: Prepare ingredients...&#10;Step 2: Heat oil in a pan...&#10;Step 3: Cook until done..."
+                      placeholder={t("recipes.instructionsPlaceholder")}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent font-mono text-sm"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Provide detailed step-by-step instructions for the recipe
+                      {t("recipes.instructionsHint")}
                     </p>
                   </div>
                 </div>
@@ -1828,12 +1826,12 @@ export function RecipeRecommendationPage() {
                     {isCreating ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Creating Recipe...
+                        {t("recipes.creating")}
                       </>
                     ) : (
                       <>
                         <Save className="w-5 h-5 mr-2" />
-                        Create Recipe
+                        {t("recipes.createRecipeButton")}
                       </>
                     )}
                   </Button>
@@ -1846,7 +1844,7 @@ export function RecipeRecommendationPage() {
                     variant="outline"
                     className="px-8 dark:border-gray-700"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </form>

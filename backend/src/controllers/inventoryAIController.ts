@@ -5,7 +5,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import visionAI from "../services/visionAI.js";
-import { decryptApiKey } from "../services/aiService.js";
+import { getAIServiceConfig } from "../services/aiServiceSelector.js";
 
 const prisma = new PrismaClient();
 
@@ -81,17 +81,23 @@ export const uploadInventoryImage = async (req: Request, res: Response) => {
 
     const imagePath = file.path;
 
-    // Get user's AI configuration
-    const user = await prisma.user.findUnique({
-      where: { userId },
-      select: { useOwnApiKey: true, aiApiKey: true, aiProvider: true },
-    });
+    // Get user's AI configuration for image analysis
+    const aiConfig = await getAIServiceConfig(userId, "imageAnalysis");
 
-    // Set custom API key if user has one configured
-    if (user?.useOwnApiKey && user?.aiApiKey && user.aiProvider === "gemini") {
-      const decryptedKey = decryptApiKey(user.aiApiKey);
-      visionAI.setCustomApiKey(decryptedKey);
+    // Configure vision AI service based on user preferences
+    if (
+      aiConfig.provider === "openrouter" &&
+      aiConfig.apiKey &&
+      aiConfig.model
+    ) {
+      visionAI.setProvider("openrouter", aiConfig.model);
+      visionAI.setCustomApiKey(aiConfig.apiKey);
+    } else if (aiConfig.provider === "gemini" && aiConfig.apiKey) {
+      visionAI.setProvider("gemini");
+      visionAI.setCustomApiKey(aiConfig.apiKey);
     } else {
+      // Use default (system Gemini API key)
+      visionAI.setProvider("default");
       visionAI.setCustomApiKey(undefined);
     }
 

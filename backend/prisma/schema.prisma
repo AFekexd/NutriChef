@@ -40,6 +40,9 @@ model User {
   // OpenRouter specific fields
   openrouterApiKey String?    // Encrypted OpenRouter API key
   openrouterUsage  Json?      // {totalRequests, tokensUsed, lastUpdated, remainingBalance}
+  openrouterModel  String?    // Selected OpenRouter model ID (e.g., "openai/gpt-4")
+  // AI Service Preferences - which API to use for different features
+  aiPreferences Json?         // {textGeneration: "default"|"own"|"openrouter", imageAnalysis: "default"|"own"|"openrouter"}
   inventoryItems InventoryItem[]
   groceryListItems GroceryListItem[]
   recipes       Recipe[]

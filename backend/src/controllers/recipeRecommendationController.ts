@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { PrismaClient } from "../../generated/prisma/index.js";
 import { BaseAIService, AIProvider } from "../services/aiService.js";
+import { getAIServiceConfig } from "../services/aiServiceSelector.js";
 import crypto from "crypto";
 
 const prisma = new PrismaClient();
@@ -203,9 +204,14 @@ function formatPublicRecipesAsRecommendations(
 }
 
 class RecipeRecommendationService extends BaseAIService {
-  constructor() {
-    // Use Gemini as the AI provider (you can change this to OPENAI if you add the API key)
-    super(AIProvider.GEMINI);
+  constructor(
+    provider: AIProvider | "openrouter" = AIProvider.GEMINI,
+    customApiKey?: string,
+    model?: string
+  ) {
+    // Use Gemini as default, or user's configured provider
+    // Use 6000 tokens for recipe generation to avoid truncation
+    super(provider, customApiKey, model, 6000);
   }
 
   async generateRecommendations(
@@ -448,8 +454,33 @@ export const getRecommendations = async (req: Request, res: Response) => {
       });
     }
 
-    // Generate new AI recommendations
-    const recommendationService = new RecipeRecommendationService();
+    // Get user's AI service configuration
+    const aiConfig = await getAIServiceConfig(userId, "textGeneration");
+
+    // Map provider to correct type
+    let provider: AIProvider | "openrouter";
+    if (aiConfig.provider === "default") {
+      provider = AIProvider.GEMINI; // Use Gemini as default
+    } else if (aiConfig.provider === "openai") {
+      provider = AIProvider.OPENAI;
+    } else if (aiConfig.provider === "gemini") {
+      provider = AIProvider.GEMINI;
+    } else {
+      provider = "openrouter";
+    }
+
+    console.log("[Recipe Recommendations] Using AI config:", {
+      provider,
+      hasApiKey: !!aiConfig.apiKey,
+      model: aiConfig.model,
+    });
+
+    // Generate new AI recommendations with user's configured service
+    const recommendationService = new RecipeRecommendationService(
+      provider,
+      aiConfig.apiKey,
+      aiConfig.model
+    );
     const recommendations = await recommendationService.generateRecommendations(
       ingredientsToUse,
       servings,
@@ -508,6 +539,7 @@ export const getRecommendationsWithIngredients = async (
   res: Response
 ) => {
   try {
+    const userId = req.user?.userId;
     const {
       ingredients,
       servings = 2,
@@ -520,7 +552,40 @@ export const getRecommendationsWithIngredients = async (
       return res.status(400).json({ error: "Ingredients list is required" });
     }
 
-    const recommendationService = new RecipeRecommendationService();
+    // Get user's AI service configuration if authenticated
+    let provider: AIProvider | "openrouter" = AIProvider.GEMINI;
+    let apiKey: string | undefined;
+    let model: string | undefined;
+
+    if (userId) {
+      const aiConfig = await getAIServiceConfig(userId, "textGeneration");
+
+      // Map provider to correct type
+      if (aiConfig.provider === "default") {
+        provider = AIProvider.GEMINI;
+      } else if (aiConfig.provider === "openai") {
+        provider = AIProvider.OPENAI;
+      } else if (aiConfig.provider === "gemini") {
+        provider = AIProvider.GEMINI;
+      } else {
+        provider = "openrouter";
+      }
+
+      apiKey = aiConfig.apiKey;
+      model = aiConfig.model;
+
+      console.log("[Recipe Recommendations - Manual] Using AI config:", {
+        provider,
+        hasApiKey: !!apiKey,
+        model,
+      });
+    }
+
+    const recommendationService = new RecipeRecommendationService(
+      provider,
+      apiKey,
+      model
+    );
     const recommendations = await recommendationService.generateRecommendations(
       ingredients,
       servings,

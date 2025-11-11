@@ -396,8 +396,12 @@ export function MyRecipesPage() {
                       {recipe.user?.oauthAvatar ? (
                         <img
                           src={
-                            import.meta.env.VITE_API_BASE_URL ||
-                            "http://localhost:5000" + recipe.user.oauthAvatar
+                            recipe.user.oauthAvatar.startsWith("http")
+                              ? recipe.user.oauthAvatar
+                              : `${
+                                  import.meta.env.VITE_API_BASE_URL ||
+                                  "http://localhost:5000"
+                                }${recipe.user.oauthAvatar}`
                           }
                           alt={recipe.user.name}
                           className="w-5 h-5 rounded-full"

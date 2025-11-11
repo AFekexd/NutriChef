@@ -103,6 +103,103 @@ export interface OpenRouterApiKeyResponse {
   usage?: OpenRouterUsage;
 }
 
+export interface OpenRouterModel {
+  id: string;
+  name: string;
+  description?: string;
+  pricing: {
+    prompt: number;
+    completion: number;
+  };
+  context_length: number;
+  architecture?: {
+    modality?: string;
+    tokenizer?: string;
+    instruct_type?: string;
+  };
+  top_provider?: {
+    context_length?: number;
+    max_completion_tokens?: number;
+    is_moderated?: boolean;
+  };
+  per_request_limits?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+  };
+}
+
+export interface OpenRouterModelsResponse {
+  models: OpenRouterModel[];
+  total: number;
+}
+
+export interface OpenRouterModelConfig {
+  modelId: string | null;
+}
+
+export interface OpenRouterKeyInfo {
+  label: string;
+  limit: number | null; // Credit limit for the key, or null if unlimited
+  limit_reset: string | null; // Type of limit reset for the key, or null if never resets
+  limit_remaining: number | null; // Remaining credits for the key, or null if unlimited
+  include_byok_in_limit: boolean; // Whether to include external BYOK usage in the credit limit
+  usage: number; // Number of credits used (all time)
+  usage_daily: number; // Number of credits used (current UTC day)
+  usage_weekly: number; // Number of credits used (current UTC week, starting Monday)
+  usage_monthly: number; // Number of credits used (current UTC month)
+  byok_usage: number; // Same for external BYOK usage
+  byok_usage_daily: number;
+  byok_usage_weekly: number;
+  byok_usage_monthly: number;
+  is_free_tier: boolean; // Whether the user has paid for credits before
+}
+
+export interface OpenRouterKeyInfoResponse {
+  keyInfo: OpenRouterKeyInfo;
+  message: string;
+}
+
+export type AIServiceOption = "default" | "own" | "openrouter";
+
+export interface AIPreferences {
+  textGeneration: AIServiceOption;
+  imageAnalysis: AIServiceOption;
+}
+
+export interface AIPreferencesResponse {
+  preferences: AIPreferences;
+}
+
+export interface SaveAIPreferencesRequest {
+  textGeneration?: AIServiceOption;
+  imageAnalysis?: AIServiceOption;
+}
+
+// AI Rate Limit types
+export interface AIRateLimitService {
+  used: number;
+  limit: number;
+  resetTime: string | null;
+}
+
+export interface AIRateLimits {
+  healthInsights: AIRateLimitService;
+  recipeRecommendations: AIRateLimitService;
+  inventoryAI: AIRateLimitService;
+}
+
+export interface AIRateLimitStatus {
+  userId: string;
+  usingOwnApiKey: boolean;
+  rateLimits: AIRateLimits | null;
+  overall?: {
+    used: number;
+    limit: number;
+    percentage: number;
+  };
+  message?: string;
+}
+
 // Recipe types
 export interface Recipe {
   recipeId: string;

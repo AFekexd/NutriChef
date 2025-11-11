@@ -25,6 +25,7 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { OpenRouterModelSelector } from "../components/OpenRouterModelSelector";
 import { apiService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { confirmDialog } from "../utils/confirmDialog";
@@ -34,6 +35,7 @@ import type {
   Session,
   LoginHistoryItem,
   OpenRouterUsage,
+  OpenRouterKeyInfo,
 } from "../types";
 
 export function ProfilePage() {
@@ -86,11 +88,26 @@ export function ProfilePage() {
   const [openRouterApiKey, setOpenRouterApiKey] = useState("");
   const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
   const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false);
-  const [openRouterUsage, setOpenRouterUsage] = useState<OpenRouterUsage | null>(
-    null
-  );
+  const [openRouterUsage, setOpenRouterUsage] =
+    useState<OpenRouterUsage | null>(null);
+  const [openRouterKeyInfo, setOpenRouterKeyInfo] =
+    useState<OpenRouterKeyInfo | null>(null);
   const [isUpdatingOpenRouterKey, setIsUpdatingOpenRouterKey] = useState(false);
   const [isRefreshingUsage, setIsRefreshingUsage] = useState(false);
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+
+  // AI Preferences
+  const [aiPreferences, setAIPreferences] = useState({
+    textGeneration: "default" as "default" | "own" | "openrouter",
+    imageAnalysis: "default" as "default" | "own" | "openrouter",
+  });
+  const [isUpdatingPreferences, setIsUpdatingPreferences] = useState(false);
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<
+    "personal" | "security" | "ai" | "activity"
+  >("personal");
 
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
@@ -136,12 +153,16 @@ export function ProfilePage() {
         historyRes,
         aiKeyConfigRes,
         openRouterConfigRes,
+        openRouterModelRes,
+        aiPreferencesRes,
       ] = await Promise.all([
         apiService.getProfile(),
         apiService.getSessions(),
         apiService.getLoginHistory(10, 0),
         apiService.getAIApiKeyConfig(),
         apiService.getOpenRouterApiKeyConfig(),
+        apiService.getOpenRouterModel(),
+        apiService.getAIPreferences(),
       ]);
 
       setUser(profileRes.user);
@@ -161,6 +182,19 @@ export function ProfilePage() {
       }
       setHasOpenRouterKey(openRouterConfigRes.hasApiKey);
       setOpenRouterUsage(openRouterConfigRes.usage || null);
+      setSelectedModelId(openRouterModelRes.modelId);
+      setAIPreferences(aiPreferencesRes.preferences);
+
+      // Fetch detailed key info if OpenRouter key is configured
+      if (openRouterConfigRes.hasApiKey) {
+        try {
+          const keyInfoRes = await apiService.getOpenRouterKeyInfo();
+          setOpenRouterKeyInfo(keyInfoRes.keyInfo);
+        } catch (err) {
+          console.error("Failed to fetch OpenRouter key info:", err);
+          // Don't fail the whole load if key info fetch fails
+        }
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.error ||
@@ -489,7 +523,8 @@ export function ProfilePage() {
 
   const handleDeleteOpenRouterKey = async () => {
     confirmDialog({
-      title: t("profile.deleteOpenRouterKeyConfirm") || "Delete OpenRouter API Key?",
+      title:
+        t("profile.deleteOpenRouterKeyConfirm") || "Delete OpenRouter API Key?",
       message:
         t("profile.deleteOpenRouterKeyMessage") ||
         "Are you sure you want to remove your OpenRouter API key?",
@@ -521,6 +556,15 @@ export function ProfilePage() {
     try {
       const result = await apiService.refreshOpenRouterUsage();
       setOpenRouterUsage(result.usage);
+
+      // Also refresh detailed key info
+      try {
+        const keyInfoRes = await apiService.getOpenRouterKeyInfo();
+        setOpenRouterKeyInfo(keyInfoRes.keyInfo);
+      } catch (err) {
+        console.error("Failed to fetch key info:", err);
+      }
+
       toast.success(
         t("profile.usageRefreshed") || "Usage data refreshed successfully!"
       );
@@ -532,6 +576,41 @@ export function ProfilePage() {
       );
     } finally {
       setIsRefreshingUsage(false);
+    }
+  };
+
+  const handleUpdateAIPreference = async (
+    type: "textGeneration" | "imageAnalysis",
+    value: "default" | "own" | "openrouter"
+  ) => {
+    setIsUpdatingPreferences(true);
+    try {
+      const request =
+        type === "textGeneration"
+          ? { textGeneration: value }
+          : { imageAnalysis: value };
+
+      const result = await apiService.saveAIPreferences(request);
+      setAIPreferences(result.preferences);
+
+      // Dispatch custom event to notify other components (like TopNavigation) to refresh
+      // Add a small delay to ensure backend has updated before refreshing
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("aiPreferencesChanged"));
+      }, 100);
+
+      toast.success(
+        t("profile.preferencesUpdated") ||
+          "AI preferences updated successfully!"
+      );
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.error ||
+          t("profile.preferencesUpdateError") ||
+          "Failed to update AI preferences"
+      );
+    } finally {
+      setIsUpdatingPreferences(false);
     }
   };
 
@@ -622,789 +701,1291 @@ export function ProfilePage() {
           </Alert>
         )}
 
-        <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Profile Information */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="relative group">
-                <div className="p-3 bg-green-100 dark:bg-green-950/50 rounded-lg overflow-hidden">
-                  {_user?.oauthAvatar ? (
-                    <img
-                      src={
-                        _user.oauthAvatar.startsWith("http")
-                          ? _user.oauthAvatar
-                          : `${
-                              import.meta.env.VITE_API_BASE_URL ||
-                              "http://localhost:5000"
-                            }${_user.oauthAvatar}`
-                      }
-                      alt={_user.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-green-200 dark:border-green-700"
-                    />
-                  ) : (
-                    <User className="w-16 h-16 text-green-600 dark:text-green-400" />
-                  )}
-                </div>
-                {!_user?.oauthProvider && (
-                  <button
-                    onClick={handleAvatarClick}
-                    disabled={isUploadingAvatar}
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
-                    title={t("profile.changeAvatar") || "Change avatar"}
-                  >
-                    <Camera className="w-6 h-6 text-white" />
-                  </button>
-                )}
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.profileInformation") || "Profile Information"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.updatePersonalDetails") ||
-                    "Update your personal details"}
-                </p>
-                {_user?.oauthProvider && (
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                    {t("profile.connectedWith") || "Connected with"}{" "}
-                    {_user.oauthProvider.charAt(0).toUpperCase() +
-                      _user.oauthProvider.slice(1)}
-                  </p>
-                )}
-              </div>
-              {!_user?.oauthProvider && _user?.oauthAvatar && (
-                <Button
-                  onClick={handleDeleteAvatar}
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+        {/* Tabs Navigation */}
+        <div className="mb-6 border-b border-gray-200 dark:border-gray-800">
+          <nav className="flex gap-4 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("personal")}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "personal"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <User className="w-4 h-4 inline mr-2" />
+              {t("profile.personalInfo") || "Personal Info"}
+            </button>
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "security"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <Shield className="w-4 h-4 inline mr-2" />
+              {t("profile.security") || "Security"}
+            </button>
+            <button
+              onClick={() => setActiveTab("ai")}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "ai"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <Sparkles className="w-4 h-4 inline mr-2" />
+              {t("profile.aiSettings") || "AI Settings"}
+            </button>
+            <button
+              onClick={() => setActiveTab("activity")}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "activity"
+                  ? "border-green-500 text-green-600 dark:text-green-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <Activity className="w-4 h-4 inline mr-2" />
+              {t("profile.activity") || "Activity"}
+            </button>
+          </nav>
+        </div>
 
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/jpg,image/webp"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
-
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("profile.name") || "Name"}
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="text"
-                    value={profileData.name}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, name: e.target.value })
-                    }
-                    className="pl-10 dark:text-gray-300"
-                    placeholder={t("profile.namePlaceholder") || "Your name"}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("profile.email") || "Email"}
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) =>
-                      setProfileData({ ...profileData, email: e.target.value })
-                    }
-                    className="pl-10"
-                    placeholder={
-                      t("profile.emailPlaceholder") || "your@email.com"
-                    }
-                    required
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isUpdatingProfile}
-                className="w-full bg-gradient-to-r from-green-600 to-green-400 hover:from-green-700 hover:to-green-500"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isUpdatingProfile
-                  ? t("profile.saving") || "Saving..."
-                  : t("profile.saveChanges") || "Save Changes"}
-              </Button>
-            </form>
-          </Card>
-
-          {/* Change Password */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-blue-100 dark:bg-blue-950/50 rounded-lg">
-                <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.changePassword") || "Change Password"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.updatePasswordRegularly") ||
-                    "Update your password regularly"}
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("profile.currentPassword") || "Current Password"}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type={showPasswords.current ? "text" : "password"}
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        currentPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10 pr-10"
-                    placeholder={
-                      t("profile.currentPasswordPlaceholder") ||
-                      "Enter current password"
-                    }
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords({
-                        ...showPasswords,
-                        current: !showPasswords.current,
-                      })
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.current ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("profile.newPassword") || "New Password"}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type={showPasswords.new ? "text" : "password"}
-                    value={passwordData.newPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        newPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10 pr-10"
-                    placeholder={
-                      t("profile.newPasswordPlaceholder") ||
-                      "Enter new password"
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords({
-                        ...showPasswords,
-                        new: !showPasswords.new,
-                      })
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.new ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t("profile.confirmNewPassword") || "Confirm New Password"}
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type={showPasswords.confirm ? "text" : "password"}
-                    value={passwordData.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        confirmPassword: e.target.value,
-                      })
-                    }
-                    className="pl-10 pr-10"
-                    placeholder={
-                      t("profile.confirmPasswordPlaceholder") ||
-                      "Confirm new password"
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPasswords({
-                        ...showPasswords,
-                        confirm: !showPasswords.confirm,
-                      })
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPasswords.confirm ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isChangingPassword}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                {isChangingPassword
-                  ? t("profile.changing") || "Changing..."
-                  : t("profile.changePassword") || "Change Password"}
-              </Button>
-            </form>
-          </Card>
-
-          {/* AI API Key Configuration */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/50 dark:to-pink-950/50 rounded-lg">
-                <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.aiApiKey") || "AI API Key Configuration"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.aiApiKeyDescription") ||
-                    "Use your own AI API key to bypass rate limits"}
-                </p>
-              </div>
-              {hasApiKey && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                    {t("profile.configured") || "Configured"}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {hasApiKey && currentProvider && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-green-900 dark:text-green-100">
-                      {t("profile.apiKeyConfigured") || "API Key Configured"}
-                    </p>
-                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                      {t("profile.usingProvider") || "Using provider"}:{" "}
-                      <span className="font-semibold uppercase">
-                        {currentProvider}
-                      </span>
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-                      ✓ {t("profile.noRateLimits") || "No AI rate limits"}
-                      <br />✓{" "}
-                      {t("profile.noTokenUsage") ||
-                        "Not using website's API tokens"}
-                    </p>
-                    <Button
-                      onClick={handleDeleteApiKey}
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      {t("profile.removeApiKey") || "Remove API Key"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!hasApiKey && (
-              <form onSubmit={handleSaveApiKey} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t("profile.selectProvider") || "Select AI Provider"}
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAiApiKeyData({ ...aiApiKeyData, provider: "openai" })
-                      }
-                      className={`p-4 border-2 rounded-lg transition-all ${
-                        aiApiKeyData.provider === "openai"
-                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                          : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Key className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
-                          OpenAI
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          GPT-4, GPT-3.5
-                        </span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAiApiKeyData({ ...aiApiKeyData, provider: "gemini" })
-                      }
-                      className={`p-4 border-2 rounded-lg transition-all ${
-                        aiApiKeyData.provider === "gemini"
-                          ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
-                          : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Sparkles className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
-                          Google Gemini
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Gemini Pro
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t("profile.apiKeyLabel") || "API Key"}
-                  </label>
-                  <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type={showApiKey ? "text" : "password"}
-                      value={aiApiKeyData.apiKey}
-                      onChange={(e) =>
-                        setAiApiKeyData({
-                          ...aiApiKeyData,
-                          apiKey: e.target.value,
-                        })
-                      }
-                      className="pl-10 pr-10 font-mono text-sm"
-                      placeholder={
-                        aiApiKeyData.provider === "openai"
-                          ? "sk-..."
-                          : "AIza..."
-                      }
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showApiKey ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {t("profile.apiKeyHelp") ||
-                      "Your API key is encrypted and stored securely. Get your key from"}{" "}
-                    {aiApiKeyData.provider === "openai" ? (
-                      <a
-                        href="https://platform.openai.com/api-keys"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-purple-600 dark:text-purple-400 hover:underline"
-                      >
-                        OpenAI Platform
-                      </a>
-                    ) : (
-                      <a
-                        href="https://makersuite.google.com/app/apikey"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-purple-600 dark:text-purple-400 hover:underline"
-                      >
-                        Google AI Studio
-                      </a>
-                    )}
-                  </p>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isUpdatingApiKey}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isUpdatingApiKey
-                    ? t("profile.saving") || "Saving..."
-                    : t("profile.saveApiKey") || "Save API Key"}
-                </Button>
-              </form>
-            )}
-          </Card>
-
-          {/* OpenRouter API Key Configuration */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 rounded-lg">
-                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.openRouterApiKey") || "OpenRouter API Key"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.openRouterApiKeyDescription") ||
-                    "Configure OpenRouter for AI model access with usage tracking"}
-                </p>
-              </div>
-              {hasOpenRouterKey && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                    {t("profile.configured") || "Configured"}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {hasOpenRouterKey && openRouterUsage && (
-              <div className="mb-6">
-                <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-medium text-green-900 dark:text-green-100">
-                        {t("profile.openRouterKeyConfigured") ||
-                          "OpenRouter API Key Configured"}
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-                        ✓{" "}
-                        {t("profile.openRouterAccess") ||
-                          "Access to multiple AI models through OpenRouter"}
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleDeleteOpenRouterKey}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      {t("profile.removeApiKey") || "Remove"}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Usage Statistics */}
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                      {t("profile.usageStatistics") || "Usage Statistics"}
-                    </h3>
-                    <Button
-                      onClick={handleRefreshOpenRouterUsage}
-                      disabled={isRefreshingUsage}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <RefreshCw
-                        className={`w-4 h-4 mr-1 ${
-                          isRefreshingUsage ? "animate-spin" : ""
-                        }`}
+        {/* Personal Info Tab */}
+        {activeTab === "personal" && (
+          <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Profile Information */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="relative group">
+                  <div className="p-3 bg-green-100 dark:bg-green-950/50 rounded-lg overflow-hidden">
+                    {_user?.oauthAvatar ? (
+                      <img
+                        src={
+                          _user.oauthAvatar.startsWith("http")
+                            ? _user.oauthAvatar
+                            : `${
+                                import.meta.env.VITE_API_BASE_URL ||
+                                "http://localhost:5000"
+                              }${_user.oauthAvatar}`
+                        }
+                        alt={_user.name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-green-200 dark:border-green-700"
                       />
-                      {t("profile.refresh") || "Refresh"}
-                    </Button>
+                    ) : (
+                      <User className="w-16 h-16 text-green-600 dark:text-green-400" />
+                    )}
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        {t("profile.totalRequests") || "Total Requests"}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {openRouterUsage.totalRequests.toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        {t("profile.inputTokens") || "Input Tokens"}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {openRouterUsage.tokensUsed.input.toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        {t("profile.outputTokens") || "Output Tokens"}
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {openRouterUsage.tokensUsed.output.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {openRouterUsage.remainingBalance !== undefined && (
-                    <div className="mt-4 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        {t("profile.remainingBalance") || "Remaining Balance"}
-                      </p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        ${openRouterUsage.remainingBalance.toFixed(2)}
-                      </p>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                    {t("profile.lastUpdated") || "Last updated"}:{" "}
-                    {new Date(openRouterUsage.lastUpdated).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {!hasOpenRouterKey && (
-              <form onSubmit={handleSaveOpenRouterKey} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t("profile.openRouterKeyLabel") || "OpenRouter API Key"}
-                  </label>
-                  <div className="relative">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type={showOpenRouterKey ? "text" : "password"}
-                      value={openRouterApiKey}
-                      onChange={(e) => setOpenRouterApiKey(e.target.value)}
-                      className="pl-10 pr-10 font-mono text-sm"
-                      placeholder="sk-or-v1-..."
-                      required
-                    />
+                  {!_user?.oauthProvider && (
                     <button
-                      type="button"
-                      onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={handleAvatarClick}
+                      disabled={isUploadingAvatar}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg cursor-pointer"
+                      title={t("profile.changeAvatar") || "Change avatar"}
                     >
-                      {showOpenRouterKey ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      <Camera className="w-6 h-6 text-white" />
                     </button>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {t("profile.openRouterKeyHelp") ||
-                      "Your API key is encrypted and stored securely. Get your key from"}{" "}
-                    <a
-                      href="https://openrouter.ai/keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      OpenRouter Dashboard
-                    </a>
-                  </p>
+                  )}
                 </div>
-
-                <Button
-                  type="submit"
-                  disabled={isUpdatingOpenRouterKey}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isUpdatingOpenRouterKey
-                    ? t("profile.saving") || "Saving..."
-                    : t("profile.saveAndValidate") || "Save & Validate Key"}
-                </Button>
-              </form>
-            )}
-          </Card>
-
-          {/* Active Sessions */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-purple-100 dark:bg-purple-950/50 rounded-lg">
-                <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.activeSessions") || "Active Sessions"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.manageActiveSessions") ||
-                    "Manage your active login sessions"}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.sessionId}
-                  className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-950/50 rounded">
-                        <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                          {getDeviceInfo(session.userAgent)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {formatIPAddress(session.ipAddress)}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 ml-10">
-                      {t("profile.activeSince") || "Active since"}{" "}
-                      {formatDate(session.createdAt)}
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.profileInformation") || "Profile Information"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.updatePersonalDetails") ||
+                      "Update your personal details"}
+                  </p>
+                  {_user?.oauthProvider && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      {t("profile.connectedWith") || "Connected with"}{" "}
+                      {_user.oauthProvider.charAt(0).toUpperCase() +
+                        _user.oauthProvider.slice(1)}
                     </p>
-                  </div>
+                  )}
+                </div>
+                {!_user?.oauthProvider && _user?.oauthAvatar && (
                   <Button
+                    onClick={handleDeleteAvatar}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleRevokeSession(session.sessionId)}
-                    className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
                   >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    {t("profile.revoke") || "Revoke"}
+                    <Trash2 className="w-4 h-4" />
                   </Button>
+                )}
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.name") || "Name"}
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="text"
+                      value={profileData.name}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, name: e.target.value })
+                      }
+                      className="pl-10 dark:text-gray-300"
+                      placeholder={t("profile.namePlaceholder") || "Your name"}
+                      required
+                    />
+                  </div>
                 </div>
-              ))}
 
-              {sessions.length === 0 && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                  {t("profile.noActiveSessions") || "No active sessions"}
-                </p>
-              )}
-            </div>
-          </Card>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.email") || "Email"}
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) =>
+                        setProfileData({
+                          ...profileData,
+                          email: e.target.value,
+                        })
+                      }
+                      className="pl-10"
+                      placeholder={
+                        t("profile.emailPlaceholder") || "your@email.com"
+                      }
+                      required
+                    />
+                  </div>
+                </div>
 
-          {/* Login History */}
-          <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-orange-100 dark:bg-orange-950/50 rounded-lg">
-                <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                <Button
+                  type="submit"
+                  disabled={isUpdatingProfile}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-400 hover:from-green-700 hover:to-green-500"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {isUpdatingProfile
+                    ? t("profile.saving") || "Saving..."
+                    : t("profile.saveChanges") || "Save Changes"}
+                </Button>
+              </form>
+            </Card>
+
+            {/* Change Password */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-100 dark:bg-blue-950/50 rounded-lg">
+                  <Lock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.changePassword") || "Change Password"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.updatePasswordRegularly") ||
+                      "Update your password regularly"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("profile.loginHistory") || "Login History"}
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("profile.recentLoginActivity") ||
-                    "Recent login attempts and activity"}
-                </p>
-              </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-gray-200 dark:border-gray-800">
-                  <tr>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {t("profile.time") || "Time"}
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {t("profile.ipAddress") || "IP Address"}
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {t("profile.status") || "Status"}
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                      {t("profile.device") || "Device"}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loginHistory.map((item) => (
-                    <tr
-                      key={item.loginHistoryId}
-                      className="border-b border-gray-100 dark:border-gray-800 last:border-0"
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.currentPassword") || "Current Password"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type={showPasswords.current ? "text" : "password"}
+                      value={passwordData.currentPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          currentPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10 pr-10"
+                      placeholder={
+                        t("profile.currentPasswordPlaceholder") ||
+                        "Enter current password"
+                      }
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPasswords({
+                          ...showPasswords,
+                          current: !showPasswords.current,
+                        })
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
-                        {formatDate(item.timestamp)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
-                        {item.ipAddress}
-                      </td>
-                      <td className="py-3 px-4">
-                        {item.success ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400">
-                            <CheckCircle className="w-3 h-3" />
-                            {t("profile.success") || "Success"}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400">
-                            <AlertCircle className="w-3 h-3" />
-                            {t("profile.failed") || "Failed"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                        {item.userAgent || t("profile.unknown") || "Unknown"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      {showPasswords.current ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-              {loginHistory.length === 0 && (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                  {t("profile.noLoginHistory") || "No login history available"}
-                </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.newPassword") || "New Password"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type={showPasswords.new ? "text" : "password"}
+                      value={passwordData.newPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          newPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10 pr-10"
+                      placeholder={
+                        t("profile.newPasswordPlaceholder") ||
+                        "Enter new password"
+                      }
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPasswords({
+                          ...showPasswords,
+                          new: !showPasswords.new,
+                        })
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords.new ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("profile.confirmNewPassword") || "Confirm New Password"}
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type={showPasswords.confirm ? "text" : "password"}
+                      value={passwordData.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      className="pl-10 pr-10"
+                      placeholder={
+                        t("profile.confirmPasswordPlaceholder") ||
+                        "Confirm new password"
+                      }
+                      required
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPasswords({
+                          ...showPasswords,
+                          confirm: !showPasswords.confirm,
+                        })
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPasswords.confirm ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  {isChangingPassword
+                    ? t("profile.changing") || "Changing..."
+                    : t("profile.changePassword") || "Change Password"}
+                </Button>
+              </form>
+            </Card>
+          </div>
+        )}
+
+        {/* AI Settings Tab */}
+        {activeTab === "ai" && (
+          <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* AI API Key Configuration */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/50 dark:to-pink-950/50 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.aiApiKey") || "AI API Key Configuration"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.aiApiKeyDescription") ||
+                      "Use your own AI API key to bypass rate limits"}
+                  </p>
+                </div>
+                {hasApiKey && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                      {t("profile.configured") || "Configured"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {hasApiKey && currentProvider && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        {t("profile.apiKeyConfigured") || "API Key Configured"}
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        {t("profile.usingProvider") || "Using provider"}:{" "}
+                        <span className="font-semibold uppercase">
+                          {currentProvider}
+                        </span>
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                        ✓ {t("profile.noRateLimits") || "No AI rate limits"}
+                        <br />✓{" "}
+                        {t("profile.noTokenUsage") ||
+                          "Not using website's API tokens"}
+                      </p>
+                      <Button
+                        onClick={handleDeleteApiKey}
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        {t("profile.removeApiKey") || "Remove API Key"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
-            </div>
-          </Card>
-        </div>
+
+              {!hasApiKey && (
+                <form onSubmit={handleSaveApiKey} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t("profile.selectProvider") || "Select AI Provider"}
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAiApiKeyData({
+                            ...aiApiKeyData,
+                            provider: "openai",
+                          })
+                        }
+                        className={`p-4 border-2 rounded-lg transition-all ${
+                          aiApiKeyData.provider === "openai"
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                            : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <Key className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            OpenAI
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            GPT-4, GPT-3.5
+                          </span>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAiApiKeyData({
+                            ...aiApiKeyData,
+                            provider: "gemini",
+                          })
+                        }
+                        className={`p-4 border-2 rounded-lg transition-all ${
+                          aiApiKeyData.provider === "gemini"
+                            ? "border-purple-500 bg-purple-50 dark:bg-purple-950/50"
+                            : "border-gray-200 dark:border-gray-700 hover:border-purple-300"
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <Sparkles className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            Google Gemini
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            Gemini Pro
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t("profile.apiKeyLabel") || "API Key"}
+                    </label>
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Input
+                        type={showApiKey ? "text" : "password"}
+                        value={aiApiKeyData.apiKey}
+                        onChange={(e) =>
+                          setAiApiKeyData({
+                            ...aiApiKeyData,
+                            apiKey: e.target.value,
+                          })
+                        }
+                        className="pl-10 pr-10 font-mono text-sm"
+                        placeholder={
+                          aiApiKeyData.provider === "openai"
+                            ? "sk-..."
+                            : "AIza..."
+                        }
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showApiKey ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {t("profile.apiKeyHelp") ||
+                        "Your API key is encrypted and stored securely. Get your key from"}{" "}
+                      {aiApiKeyData.provider === "openai" ? (
+                        <a
+                          href="https://platform.openai.com/api-keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 dark:text-purple-400 hover:underline"
+                        >
+                          OpenAI Platform
+                        </a>
+                      ) : (
+                        <a
+                          href="https://makersuite.google.com/app/apikey"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 dark:text-purple-400 hover:underline"
+                        >
+                          Google AI Studio
+                        </a>
+                      )}
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isUpdatingApiKey}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isUpdatingApiKey
+                      ? t("profile.saving") || "Saving..."
+                      : t("profile.saveApiKey") || "Save API Key"}
+                  </Button>
+                </form>
+              )}
+            </Card>
+
+            {/* OpenRouter API Key Configuration */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 rounded-lg">
+                  <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.openRouterApiKey") || "OpenRouter API Key"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.openRouterApiKeyDescription") ||
+                      "Configure OpenRouter for AI model access with usage tracking"}
+                  </p>
+                </div>
+                {hasOpenRouterKey && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 rounded-full">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                      {t("profile.configured") || "Configured"}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {hasOpenRouterKey && openRouterUsage && (
+                <div className="mb-6">
+                  <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-medium text-green-900 dark:text-green-100">
+                          {t("profile.openRouterKeyConfigured") ||
+                            "OpenRouter API Key Configured"}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                          ✓{" "}
+                          {t("profile.openRouterAccess") ||
+                            "Access to multiple AI models through OpenRouter"}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleDeleteOpenRouterKey}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        {t("profile.removeApiKey") || "Remove"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Usage Statistics */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {t("profile.usageStatistics") || "Usage Statistics"}
+                      </h3>
+                      <Button
+                        onClick={handleRefreshOpenRouterUsage}
+                        disabled={isRefreshingUsage}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <RefreshCw
+                          className={`w-4 h-4 mr-1 ${
+                            isRefreshingUsage ? "animate-spin" : ""
+                          }`}
+                        />
+                        {t("profile.refresh") || "Refresh"}
+                      </Button>
+                    </div>
+
+                    {/* Credit Limit and Usage */}
+                    {openRouterKeyInfo && (
+                      <div className="mb-4 space-y-3">
+                        {/* Account Tier */}
+                        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 rounded border border-purple-200 dark:border-purple-800">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Account Type
+                          </span>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-semibold ${
+                              openRouterKeyInfo.is_free_tier
+                                ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                : "bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900"
+                            }`}
+                          >
+                            {openRouterKeyInfo.is_free_tier
+                              ? "Free Tier"
+                              : "Paid Plan"}
+                          </span>
+                        </div>
+
+                        {/* Credit Limit & Remaining */}
+                        {openRouterKeyInfo.limit !== null && (
+                          <div className="bg-white dark:bg-gray-900 p-4 rounded border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                Credit Limit
+                              </span>
+                              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                ${openRouterKeyInfo.limit.toFixed(2)}
+                              </span>
+                            </div>
+
+                            {openRouterKeyInfo.limit_remaining !== null && (
+                              <>
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    Remaining
+                                  </span>
+                                  <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    $
+                                    {openRouterKeyInfo.limit_remaining.toFixed(
+                                      4
+                                    )}
+                                  </span>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                  <div
+                                    className="bg-gradient-to-r from-green-500 to-blue-500 h-2.5 rounded-full transition-all duration-500"
+                                    style={{
+                                      width: `${Math.min(
+                                        (openRouterKeyInfo.limit_remaining /
+                                          openRouterKeyInfo.limit) *
+                                          100,
+                                        100
+                                      )}%`,
+                                    }}
+                                  ></div>
+                                </div>
+
+                                {openRouterKeyInfo.limit_reset && (
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    Resets: {openRouterKeyInfo.limit_reset}
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Usage Breakdown */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              Total Usage
+                            </p>
+                            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                              ${openRouterKeyInfo.usage.toFixed(4)}
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">
+                              Today
+                            </p>
+                            <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                              ${openRouterKeyInfo.usage_daily.toFixed(4)}
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-purple-200 dark:border-purple-800">
+                            <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">
+                              This Week
+                            </p>
+                            <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                              ${openRouterKeyInfo.usage_weekly.toFixed(4)}
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-orange-200 dark:border-orange-800">
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">
+                              This Month
+                            </p>
+                            <p className="text-lg font-bold text-orange-900 dark:text-orange-100">
+                              ${openRouterKeyInfo.usage_monthly.toFixed(4)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* BYOK Usage (if applicable) */}
+                        {openRouterKeyInfo.byok_usage > 0 && (
+                          <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 mb-2 font-medium">
+                              Bring Your Own Key Usage
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              <div>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  Total
+                                </p>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  ${openRouterKeyInfo.byok_usage.toFixed(4)}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  Daily
+                                </p>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  $
+                                  {openRouterKeyInfo.byok_usage_daily.toFixed(
+                                    4
+                                  )}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  Weekly
+                                </p>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  $
+                                  {openRouterKeyInfo.byok_usage_weekly.toFixed(
+                                    4
+                                  )}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-blue-600 dark:text-blue-400">
+                                  Monthly
+                                </p>
+                                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  $
+                                  {openRouterKeyInfo.byok_usage_monthly.toFixed(
+                                    4
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {openRouterKeyInfo.label && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Key Label: {openRouterKeyInfo.label}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Legacy Token Display (fallback if keyInfo not available) */}
+                    {!openRouterKeyInfo && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              {t("profile.totalRequests") || "Total Requests"}
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                              {openRouterUsage.totalRequests.toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              {t("profile.inputTokens") || "Input Tokens"}
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                              {openRouterUsage.tokensUsed.input.toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              {t("profile.outputTokens") || "Output Tokens"}
+                            </p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                              {openRouterUsage.tokensUsed.output.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {openRouterUsage.remainingBalance !== undefined && (
+                          <div className="mt-4 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                              {t("profile.remainingBalance") ||
+                                "Remaining Balance"}
+                            </p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                              ${openRouterUsage.remainingBalance.toFixed(2)}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                      {t("profile.lastUpdated") || "Last updated"}:{" "}
+                      {new Date(openRouterUsage.lastUpdated).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* Model Selection */}
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {t("profile.selectedModel") || "Selected Model"}
+                      </h3>
+                      <Button
+                        onClick={() => setShowModelSelector(true)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Activity className="w-4 h-4 mr-1" />
+                        {selectedModelId
+                          ? t("profile.changeModel")
+                          : t("profile.selectModel")}
+                      </Button>
+                    </div>
+                    {selectedModelId ? (
+                      <div className="bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          Current Model
+                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 font-mono">
+                          {selectedModelId}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No model selected. Click "Select Model" to choose one.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!hasOpenRouterKey && (
+                <form onSubmit={handleSaveOpenRouterKey} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t("profile.openRouterKeyLabel") || "OpenRouter API Key"}
+                    </label>
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Input
+                        type={showOpenRouterKey ? "text" : "password"}
+                        value={openRouterApiKey}
+                        onChange={(e) => setOpenRouterApiKey(e.target.value)}
+                        className="pl-10 pr-10 font-mono text-sm"
+                        placeholder="sk-or-v1-..."
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showOpenRouterKey ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {t("profile.openRouterKeyHelp") ||
+                        "Your API key is encrypted and stored securely. Get your key from"}{" "}
+                      <a
+                        href="https://openrouter.ai/keys"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        OpenRouter Dashboard
+                      </a>
+                    </p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isUpdatingOpenRouterKey}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isUpdatingOpenRouterKey
+                      ? t("profile.saving") || "Saving..."
+                      : t("profile.saveAndValidate") || "Save & Validate Key"}
+                  </Button>
+                </form>
+              )}
+            </Card>
+
+            {/* AI Service Preferences */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950/50 dark:to-pink-950/50 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.aiServicePreferences") ||
+                      "AI Service Preferences"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.aiServicePreferencesDescription") ||
+                      "Choose which AI service to use for different features"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Text Generation Preference */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t("profile.textGeneration") || "Text Generation"}
+                    <span className="block text-xs font-normal text-gray-500 dark:text-gray-400 mt-1">
+                      {t("profile.textGenerationHelp") ||
+                        "Used for recipe generation and health insights"}
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("textGeneration", "default")
+                      }
+                      disabled={isUpdatingPreferences}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.textGeneration === "default"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        System Default
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Use platform API
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("textGeneration", "own")
+                      }
+                      disabled={isUpdatingPreferences || !hasApiKey}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.textGeneration === "own"
+                          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      } ${!hasApiKey ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        Your API Key
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {hasApiKey
+                          ? currentProvider || "Configured"
+                          : "Not configured"}
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("textGeneration", "openrouter")
+                      }
+                      disabled={isUpdatingPreferences || !hasOpenRouterKey}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.textGeneration === "openrouter"
+                          ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      } ${
+                        !hasOpenRouterKey ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        OpenRouter
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {hasOpenRouterKey
+                          ? selectedModelId || "Configured"
+                          : "Not configured"}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Image Analysis Preference */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t("profile.imageAnalysis") || "Image Analysis"}
+                    <span className="block text-xs font-normal text-gray-500 dark:text-gray-400 mt-1">
+                      {t("profile.imageAnalysisHelp") ||
+                        "Used for inventory item detection from photos"}
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("imageAnalysis", "default")
+                      }
+                      disabled={isUpdatingPreferences}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.imageAnalysis === "default"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        System Default
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Use platform API
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("imageAnalysis", "own")
+                      }
+                      disabled={isUpdatingPreferences || !hasApiKey}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.imageAnalysis === "own"
+                          ? "border-green-500 bg-green-50 dark:bg-green-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      } ${!hasApiKey ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        Your API Key
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {hasApiKey
+                          ? currentProvider || "Configured"
+                          : "Not configured"}
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleUpdateAIPreference("imageAnalysis", "openrouter")
+                      }
+                      disabled={isUpdatingPreferences || !hasOpenRouterKey}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        aiPreferences.imageAnalysis === "openrouter"
+                          ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/20"
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      } ${
+                        !hasOpenRouterKey ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                        OpenRouter
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {hasOpenRouterKey
+                          ? selectedModelId || "Configured"
+                          : "Not configured"}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    💡{" "}
+                    {t("profile.aiPreferencesTip") ||
+                      "Configure your API keys above to enable additional AI service options. OpenRouter provides access to multiple models including GPT-4, Claude, and more."}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Security Tab */}
+        {activeTab === "security" && (
+          <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Active Sessions */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-purple-100 dark:bg-purple-950/50 rounded-lg">
+                  <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.activeSessions") || "Active Sessions"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.manageActiveSessions") ||
+                      "Manage your active login sessions"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session.sessionId}
+                    className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-purple-300 dark:hover:border-purple-700 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-950/50 rounded">
+                          <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {getDeviceInfo(session.userAgent)}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {formatIPAddress(session.ipAddress)}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 ml-10">
+                        {t("profile.activeSince") || "Active since"}{" "}
+                        {formatDate(session.createdAt)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRevokeSession(session.sessionId)}
+                      className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                    >
+                      <LogOut className="w-4 h-4 mr-1" />
+                      {t("profile.revoke") || "Revoke"}
+                    </Button>
+                  </div>
+                ))}
+
+                {sessions.length === 0 && (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    {t("profile.noActiveSessions") || "No active sessions"}
+                  </p>
+                )}
+              </div>
+            </Card>
+
+            {/* Login History */}
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-orange-100 dark:bg-orange-950/50 rounded-lg">
+                  <Clock className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.loginHistory") || "Login History"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.recentLoginActivity") ||
+                      "Recent login attempts and activity"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b border-gray-200 dark:border-gray-800">
+                    <tr>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("profile.time") || "Time"}
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("profile.ipAddress") || "IP Address"}
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("profile.status") || "Status"}
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {t("profile.device") || "Device"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loginHistory.map((item) => (
+                      <tr
+                        key={item.loginHistoryId}
+                        className="border-b border-gray-100 dark:border-gray-800 last:border-0"
+                      >
+                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                          {formatDate(item.timestamp)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                          {item.ipAddress}
+                        </td>
+                        <td className="py-3 px-4">
+                          {item.success ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400">
+                              <CheckCircle className="w-3 h-3" />
+                              {t("profile.success") || "Success"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-400">
+                              <AlertCircle className="w-3 h-3" />
+                              {t("profile.failed") || "Failed"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                          {item.userAgent || t("profile.unknown") || "Unknown"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {loginHistory.length === 0 && (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    {t("profile.noLoginHistory") ||
+                      "No login history available"}
+                  </p>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Activity Tab */}
+        {activeTab === "activity" && (
+          <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="profile-card p-6 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 rounded-lg">
+                  <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    {t("profile.activityOverview") || "Activity Overview"}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t("profile.activityDescription") ||
+                      "Track your usage and activity"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-center py-12">
+                <Activity className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">
+                  {t("profile.activityComingSoon") ||
+                    "Activity tracking coming soon"}
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
+
+      {/* OpenRouter Model Selector Modal */}
+      <OpenRouterModelSelector
+        open={showModelSelector}
+        onClose={() => setShowModelSelector(false)}
+        currentModelId={selectedModelId}
+        onModelSelected={(modelId) => {
+          setSelectedModelId(modelId);
+          toast.success("Model updated successfully");
+        }}
+      />
     </div>
   );
 }
