@@ -866,7 +866,8 @@ export function RecipeRecommendationPage() {
                 {manualIngredients.length > 0 ? (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("recipes.yourIngredients")} ({manualIngredients.length}):
+                      {t("recipes.yourIngredients")} ({manualIngredients.length}
+                      ):
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {manualIngredients.map((ing, index) => (
@@ -1295,7 +1296,8 @@ export function RecipeRecommendationPage() {
                           selectedRecipe.matchPercentage
                         )}
                       >
-                        {selectedRecipe.matchPercentage}% {t("shoppingList.stats.checked")}
+                        {selectedRecipe.matchPercentage}%{" "}
+                        {t("shoppingList.stats.checked")}
                       </Badge>
                       <Badge
                         className={getDifficultyColor(
@@ -1545,7 +1547,8 @@ export function RecipeRecommendationPage() {
                     {/* Recipe Title */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("recipes.recipeTitle")} <span className="text-red-500">*</span>
+                        {t("recipes.recipeTitle")}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -1584,7 +1587,8 @@ export function RecipeRecommendationPage() {
                     {/* Difficulty */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("recipes.difficultyLevel")} <span className="text-red-500">*</span>
+                        {t("recipes.difficultyLevel")}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <select
                         required
@@ -1704,7 +1708,8 @@ export function RecipeRecommendationPage() {
                     {/* Calories */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("recipes.caloriesPerServing")} <span className="text-red-500">*</span>
+                        {t("recipes.caloriesPerServing")}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1724,7 +1729,8 @@ export function RecipeRecommendationPage() {
                     {/* Protein */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("recipes.proteinGrams")} <span className="text-red-500">*</span>
+                        {t("recipes.proteinGrams")}{" "}
+                        <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -1795,7 +1801,8 @@ export function RecipeRecommendationPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("recipes.instructionsRequired")} <span className="text-red-500">*</span>
+                      {t("recipes.instructionsRequired")}{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       required
