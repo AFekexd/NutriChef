@@ -26,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { apiService } from "../services/api";
 import type { AIRateLimitStatus } from "../types";
 
@@ -38,13 +38,16 @@ export function TopNavigation() {
   const [rateLimitStatus, setRateLimitStatus] =
     useState<AIRateLimitStatus | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const isMountedRef = useRef(true);
 
   // Fetch AI rate limit status with debouncing (prevent rapid successive calls)
   const fetchRateLimitStatus = useCallback(
     async (force = false) => {
-      // Skip if user is not authenticated
-      if (!user) {
-        console.log("Skipping rate limit fetch (not authenticated)");
+      // Skip if user is not authenticated or component is unmounted
+      if (!user || !isMountedRef.current) {
+        console.log(
+          "Skipping rate limit fetch (not authenticated or unmounted)"
+        );
         return;
       }
 
@@ -60,8 +63,11 @@ export function TopNavigation() {
       try {
         setLastFetchTime(now);
         const status = await apiService.getAIRateLimitStatus();
-        setRateLimitStatus(status);
-        console.log("Rate limit status fetched:", status);
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setRateLimitStatus(status);
+          console.log("Rate limit status fetched:", status);
+        }
       } catch (error) {
         // Silently fail - this is just a nice-to-have indicator
         console.error("Failed to fetch AI rate limit status:", error);
@@ -72,6 +78,7 @@ export function TopNavigation() {
 
   // Fetch on mount and periodically
   useEffect(() => {
+    isMountedRef.current = true;
     fetchRateLimitStatus(true); // Force on mount
 
     // Refresh every 5 minutes
@@ -79,7 +86,10 @@ export function TopNavigation() {
       () => fetchRateLimitStatus(true),
       5 * 60 * 1000
     );
-    return () => clearInterval(interval);
+    return () => {
+      isMountedRef.current = false;
+      clearInterval(interval);
+    };
   }, [fetchRateLimitStatus]);
 
   // Listen for AI preferences changes (only from profile page)
@@ -104,8 +114,17 @@ export function TopNavigation() {
   }
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      // Mark component as unmounting to prevent state updates
+      isMountedRef.current = false;
+      await logout();
+      // Use replace to avoid back button issues
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still navigate to login even if logout fails
+      navigate("/login", { replace: true });
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;

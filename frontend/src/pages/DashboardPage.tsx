@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const welcomeRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -102,6 +103,8 @@ export default function DashboardPage() {
 
   // Fetch dashboard stats
   useEffect(() => {
+    isMountedRef.current = true;
+
     const fetchStats = async () => {
       try {
         setIsLoadingStats(true);
@@ -112,20 +115,31 @@ export default function DashboardPage() {
             apiService.getMealPlans(),
           ]);
 
-        setStats({
-          inventoryCount: inventory.length,
-          recipeCount: recipesResponse.recipes.length,
-          mealPlanCount: mealPlansResponse.mealPlans.length,
-        });
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setStats({
+            inventoryCount: inventory.length,
+            recipeCount: recipesResponse.recipes.length,
+            mealPlanCount: mealPlansResponse.mealPlans.length,
+          });
+        }
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
-        toast.error("Failed to load dashboard stats");
+        if (isMountedRef.current) {
+          toast.error("Failed to load dashboard stats");
+        }
       } finally {
-        setIsLoadingStats(false);
+        if (isMountedRef.current) {
+          setIsLoadingStats(false);
+        }
       }
     };
 
     fetchStats();
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -175,8 +189,17 @@ export default function DashboardPage() {
   }, [isLoadingStats]);
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    try {
+      // Mark component as unmounting to prevent state updates
+      isMountedRef.current = false;
+      await logout();
+      // Use replace to avoid back button issues
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still navigate to login even if logout fails
+      navigate("/login", { replace: true });
+    }
   };
 
   // Get time-based greeting
