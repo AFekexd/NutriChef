@@ -34,13 +34,15 @@ model User {
   oauthId       String?       // Provider-specific user ID
   oauthAvatar   String?       // Profile picture URL from OAuth
   // AI API Key fields
-  aiApiKey      String?       // Encrypted API key for user's own AI service
+  aiApiKey      String?       // Encrypted API key for user's own AI service (AES-256-GCM ciphertext + auth tag)
+  aiApiKeyIv    String?       // Initialization Vector for aiApiKey encryption (base64-encoded)
   aiProvider    String?       // "openai", "gemini", "openrouter" - which AI service the key is for
   useOwnApiKey  Boolean       @default(false) // Whether to use user's own API key
   // OpenRouter specific fields
-  openrouterApiKey String?    // Encrypted OpenRouter API key
-  openrouterUsage  Json?      // {totalRequests, tokensUsed, lastUpdated, remainingBalance}
-  openrouterModel  String?    // Selected OpenRouter model ID (e.g., "openai/gpt-4")
+  openrouterApiKey   String?  // Encrypted OpenRouter API key (AES-256-GCM ciphertext + auth tag)
+  openrouterApiKeyIv String?  // Initialization Vector for openrouterApiKey encryption (base64-encoded)
+  openrouterUsage    Json?    // {totalRequests, tokensUsed, lastUpdated, remainingBalance}
+  openrouterModel    String?  // Selected OpenRouter model ID (e.g., "openai/gpt-4")
   // AI Service Preferences - which API to use for different features
   aiPreferences Json?         // {textGeneration: "default"|"own"|"openrouter", imageAnalysis: "default"|"own"|"openrouter"}
   inventoryItems InventoryItem[]

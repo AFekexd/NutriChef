@@ -268,7 +268,12 @@ http://localhost:5000/api-docs
 - **Rate Limiting**: API visszaélés védelem
 - **Input Validálás**: Minden felhasználói input validálva
 - **CORS Konfiguráció**: Engedélyezett originek
+- **Dual-Layer Encryption**:
+  - **Client-Side**: AES-256-GCM titkosítás átvitel közben (CLIENT_ENCRYPTION_KEY)
+  - **Server-Side**: AES-256-GCM titkosítás adatbázisban (ENCRYPTION_MASTER_KEY)
 - **Environment Variables**: Érzékeny adatok védve
+
+> 📖 **Részletes titkosítási útmutató**: Lásd [ENCRYPTION_SETUP.md](ENCRYPTION_SETUP.md)
 
 ## 🌍 Nemzetköziesítés
 

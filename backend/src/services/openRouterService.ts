@@ -1,7 +1,11 @@
 // OpenRouter Service - API key validation and usage tracking
 import axios from "axios";
 import { OpenRouter } from "@openrouter/sdk";
-import { encryptApiKey, decryptApiKey } from "./aiService.js";
+import {
+  encryptKey,
+  decryptKey,
+  type EncryptedData,
+} from "../utils/encryption.js";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1";
 
@@ -228,15 +232,15 @@ export async function getOpenRouterKeyInfo(
 /**
  * Encrypt OpenRouter API key for storage
  */
-export function encryptOpenRouterKey(apiKey: string): string {
-  return encryptApiKey(apiKey);
+export function encryptOpenRouterKey(apiKey: string): EncryptedData {
+  return encryptKey(apiKey);
 }
 
 /**
  * Decrypt OpenRouter API key for usage
  */
-export function decryptOpenRouterKey(encryptedKey: string): string {
-  return decryptApiKey(encryptedKey);
+export function decryptOpenRouterKey(encryptedData: EncryptedData): string {
+  return decryptKey(encryptedData);
 }
 
 /**

@@ -32,8 +32,10 @@ export async function getAIServiceConfig(
       select: {
         aiPreferences: true,
         aiApiKey: true,
+        aiApiKeyIv: true,
         aiProvider: true,
         openrouterApiKey: true,
+        openrouterApiKeyIv: true,
         openrouterModel: true,
       },
     });
@@ -58,8 +60,11 @@ export async function getAIServiceConfig(
     switch (userPreference) {
       case "own":
         // Use user's own API key
-        if (user.aiApiKey && user.aiProvider) {
-          const decryptedKey = decryptApiKey(user.aiApiKey);
+        if (user.aiApiKey && user.aiApiKeyIv && user.aiProvider) {
+          const decryptedKey = decryptApiKey({
+            value: user.aiApiKey,
+            iv: user.aiApiKeyIv,
+          });
           return {
             provider: user.aiProvider as "openai" | "gemini",
             apiKey: decryptedKey,
@@ -77,8 +82,11 @@ export async function getAIServiceConfig(
 
       case "openrouter":
         // Use OpenRouter
-        if (user.openrouterApiKey) {
-          const decryptedKey = decryptOpenRouterKey(user.openrouterApiKey);
+        if (user.openrouterApiKey && user.openrouterApiKeyIv) {
+          const decryptedKey = decryptOpenRouterKey({
+            value: user.openrouterApiKey,
+            iv: user.openrouterApiKeyIv,
+          });
           return {
             provider: "openrouter",
             apiKey: decryptedKey,

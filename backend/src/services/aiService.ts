@@ -2,20 +2,21 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import crypto from "crypto";
-
-// Encryption key for API keys (must be provided via environment variables)
-const ALGORITHM = "aes-256-cbc";
+import {
+  encryptKey,
+  decryptKey,
+  type EncryptedData,
+} from "../utils/encryption.js";
 
 // Validate required env vars at module load time to avoid passing `undefined` to
 // crypto functions (which causes TypeScript and runtime errors).
-if (!process.env.API_KEY_ENCRYPTION_SECRET) {
-  throw new Error("Missing required env var: API_KEY_ENCRYPTION_SECRET");
+if (!process.env.ENCRYPTION_MASTER_KEY) {
+  throw new Error("Missing required env var: ENCRYPTION_MASTER_KEY");
 }
 if (!process.env.CLIENT_ENCRYPTION_KEY) {
   throw new Error("Missing required env var: CLIENT_ENCRYPTION_KEY");
 }
 
-const ENCRYPTION_KEY: string = process.env.API_KEY_ENCRYPTION_SECRET;
 const CLIENT_ENCRYPTION_KEY: string = process.env.CLIENT_ENCRYPTION_KEY;
 
 // OpenAI Configuration
@@ -33,46 +34,50 @@ export enum AIProvider {
 }
 
 // Utility functions for API key encryption/decryption
-export function encryptApiKey(apiKey: string): string {
-  const iv = crypto.randomBytes(16);
-  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
-  let encrypted = cipher.update(apiKey, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return iv.toString("hex") + ":" + encrypted;
-}
-
-export function decryptApiKey(encryptedKey: string): string {
-  const parts = encryptedKey.split(":");
-  if (parts.length !== 2) {
-    throw new Error("Invalid encrypted key format");
-  }
-  const iv = Buffer.from(parts[0]!, "hex");
-  const encryptedText = parts[1]!;
-  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-  let decrypted: string = decipher.update(encryptedText, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
+// Export the new AES-256-GCM encryption functions from the encryption utility
+export {
+  encryptKey as encryptApiKey,
+  decryptKey as decryptApiKey,
+  type EncryptedData,
+};
 
 /**
  * Decrypt client-side encrypted data (using AES-GCM)
  * The client sends base64-encoded data with IV prepended
- * Web Crypto API's AES-GCM output includes the auth tag in the last 16 bytes
+ * Web Crypto API's encrypt() returns ciphertext with auth tag already appended
+ * Format: [IV (12 bytes)][Ciphertext][Auth Tag (16 bytes)]
  */
 export function decryptClientData(encryptedBase64: string): string {
   try {
+    console.log(`🔐 Decrypting client data...`);
+    console.log(
+      `Using CLIENT_ENCRYPTION_KEY: ${CLIENT_ENCRYPTION_KEY.substring(0, 8)}...`
+    );
+
     // Decode from base64
     const combined = Buffer.from(encryptedBase64, "base64");
 
-    // Extract IV (first 12 bytes) and encrypted data with auth tag
+    console.log(`📦 Total encrypted data length: ${combined.length} bytes`);
+
+    if (combined.length < 28) {
+      throw new Error(
+        `Invalid encrypted data: too short (${combined.length} bytes, expected at least 28)`
+      );
+    }
+
+    // Extract IV (first 12 bytes)
     const iv = combined.slice(0, 12);
+
+    // Everything after IV contains ciphertext + auth tag
     const encryptedWithTag = combined.slice(12);
 
-    // In AES-GCM, the auth tag is the last 16 bytes
+    // The last 16 bytes are the auth tag
     const authTag = encryptedWithTag.slice(-16);
     const ciphertext = encryptedWithTag.slice(0, -16);
+
+    console.log(`  IV: ${iv.length} bytes`);
+    console.log(`  Ciphertext: ${ciphertext.length} bytes`);
+    console.log(`  Auth tag: ${authTag.length} bytes`);
 
     // Derive key using PBKDF2 (matching client-side)
     const key = crypto.pbkdf2Sync(
@@ -90,10 +95,14 @@ export function decryptClientData(encryptedBase64: string): string {
     let decrypted = decipher.update(ciphertext);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
 
+    console.log("✅ Decryption successful");
     return decrypted.toString("utf8");
-  } catch (error) {
-    console.error("Client data decryption error:", error);
-    throw new Error("Failed to decrypt client-encrypted data");
+  } catch (error: any) {
+    console.error("❌ Client data decryption error:", error.message);
+    console.error("Stack:", error.stack);
+    throw new Error(
+      `Failed to decrypt client-encrypted data: ${error.message}`
+    );
   }
 }
 
