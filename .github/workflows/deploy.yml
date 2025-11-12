@@ -94,3 +94,4 @@ jobs:
           cache-to: type=gha,mode=max,scope=frontend
           build-args: |
             VITE_API_URL=https://api-nutrichef.afeke.com
+            VITE_ENCRYPTION_KEY=${{ secrets.VITE_ENCRYPTION_KEY }}
