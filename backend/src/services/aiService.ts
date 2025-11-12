@@ -281,14 +281,21 @@ export class BaseAIService {
 
       // Remove markdown code blocks if present
       let cleaned = content.trim();
+
+      // Handle multiple markdown code block formats
       if (cleaned.startsWith("```json")) {
-        cleaned = cleaned.replace(/```json\n?/, "").replace(/\n?```$/, "");
+        cleaned = cleaned
+          .replace(/^```json\s*\n?/, "")
+          .replace(/\n?```\s*$/, "");
       } else if (cleaned.startsWith("```")) {
-        cleaned = cleaned.replace(/```\n?/, "").replace(/\n?```$/, "");
+        cleaned = cleaned.replace(/^```\s*\n?/, "").replace(/\n?```\s*$/, "");
       }
 
+      // Trim again after removing markdown
+      cleaned = cleaned.trim();
+
       // Check if JSON appears to be truncated (doesn't end with } or ])
-      const lastChar = cleaned.trim().slice(-1);
+      const lastChar = cleaned.slice(-1);
       if (lastChar !== "}" && lastChar !== "]") {
         console.warn("JSON appears to be truncated (doesn't end with } or ])");
         console.error("Last 100 chars:", cleaned.slice(-100));
@@ -297,12 +304,17 @@ export class BaseAIService {
         );
       }
 
+      // Additional validation: check for common JSON syntax errors
+      // Fix common issues like trailing commas before closing brackets
+      cleaned = cleaned.replace(/,(\s*[}\]])/g, "$1");
+
       // Log the cleaned content for debugging
       console.log(
         "Parsing AI response (first 200 chars):",
         cleaned.substring(0, 200)
       );
 
+      // Try to parse
       const parsed = JSON.parse(cleaned);
       return parsed;
     } catch (error: any) {
@@ -312,6 +324,60 @@ export class BaseAIService {
         content?.substring(0, 500)
       );
       console.error("Content received (last 200 chars):", content?.slice(-200));
+
+      // Try to extract JSON from the content if it's embedded in text
+      if (error instanceof SyntaxError) {
+        try {
+          console.log("Attempting to extract JSON from malformed content...");
+
+          // Look for the first { or [ and last } or ]
+          let cleaned = content.trim();
+
+          // Remove markdown code blocks
+          cleaned = cleaned
+            .replace(/^```(?:json)?\s*\n?/, "")
+            .replace(/\n?```\s*$/, "");
+
+          const firstBrace = Math.max(cleaned.indexOf("{"), 0);
+          const lastBrace = cleaned.lastIndexOf("}");
+          const firstBracket = cleaned.indexOf("[");
+          const lastBracket = cleaned.lastIndexOf("]");
+
+          let extracted = "";
+
+          // Determine if it's an object or array
+          if (
+            firstBrace >= 0 &&
+            lastBrace > firstBrace &&
+            (firstBracket < 0 || firstBrace < firstBracket)
+          ) {
+            // Object
+            extracted = cleaned.substring(firstBrace, lastBrace + 1);
+          } else if (firstBracket >= 0 && lastBracket > firstBracket) {
+            // Array
+            extracted = cleaned.substring(firstBracket, lastBracket + 1);
+          }
+
+          if (extracted) {
+            // Fix trailing commas
+            extracted = extracted.replace(/,(\s*[}\]])/g, "$1");
+
+            console.log(
+              "Extracted JSON (first 200 chars):",
+              extracted.substring(0, 200)
+            );
+            const parsed = JSON.parse(extracted);
+            console.log("✅ Successfully recovered from malformed JSON");
+            return parsed;
+          }
+        } catch (recoveryError) {
+          console.error(
+            "Failed to recover from malformed JSON:",
+            recoveryError
+          );
+          // Continue to throw original error
+        }
+      }
 
       // Provide helpful error message
       if (error.message?.includes("truncated")) {

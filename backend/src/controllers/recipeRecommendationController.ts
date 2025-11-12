@@ -210,8 +210,9 @@ class RecipeRecommendationService extends BaseAIService {
     model?: string
   ) {
     // Use Gemini as default, or user's configured provider
-    // Use 6000 tokens for recipe generation to avoid truncation
-    super(provider, customApiKey, model, 6000);
+    // Increased to 8000 tokens for recipe generation to avoid truncation
+    // This is especially important for complex recipes with many ingredients
+    super(provider, customApiKey, model, 8000);
   }
 
   async generateRecommendations(
@@ -249,6 +250,15 @@ Exclude any recipe that might contain: ${allergies.join(", ")}.`
 Your recommendations should be realistic, healthy, and delicious.
 ${languageInstructions}
 ${allergiesText}
+
+CRITICAL JSON FORMATTING RULES:
+- Return ONLY valid, properly formatted JSON
+- DO NOT wrap the JSON in markdown code blocks
+- Ensure all strings are properly quoted
+- Do not use trailing commas
+- Make sure the JSON is complete and not truncated
+- Keep instructions concise (max 500 characters per recipe)
+
 Provide recipes in JSON format with the following structure:
 {
   "recommendations": [
@@ -267,7 +277,7 @@ Provide recipes in JSON format with the following structure:
       "missingIngredients": [
         {"name": "ingredient", "quantity": 1, "unit": "cup", "optional": false}
       ],
-      "instructions": "Step by step instructions",
+      "instructions": "Step by step instructions (keep concise)",
       "cuisineType": "Italian"
     }
   ]
@@ -290,7 +300,7 @@ Filter out ALL recipes with: ${allergies.join(", ")}
 4. Calculate match percentage based on the number of required ingredients that are available
 5. Mark additional ingredients as "optional: false" if essential, or "optional: true" if nice-to-have
 6. Include prep time, cook time, calories, and macros
-7. Provide clear, step-by-step instructions
+7. Provide clear, step-by-step instructions (max 3-4 steps, keep each step under 100 characters)
 ${
   allergies.length > 0
     ? `8. EXCLUDE any recipe containing: ${allergies.join(", ")}`
@@ -303,7 +313,7 @@ ${
     : "IMPORTANT: The entire response should be in English!"
 }
 
-Return ONLY valid JSON with no additional text.`;
+CRITICAL: Return ONLY the JSON object, nothing else. Do not wrap in markdown code blocks. Ensure the JSON is complete and valid.`;
 
     try {
       const response = await this.generateContent(prompt, systemMessage);
