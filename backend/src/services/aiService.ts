@@ -59,17 +59,20 @@ export function decryptApiKey(encryptedKey: string): string {
 /**
  * Decrypt client-side encrypted data (using AES-GCM)
  * The client sends base64-encoded data with IV prepended
+ * Web Crypto API's AES-GCM output includes the auth tag in the last 16 bytes
  */
 export function decryptClientData(encryptedBase64: string): string {
   try {
     // Decode from base64
     const combined = Buffer.from(encryptedBase64, "base64");
 
-    // Extract IV (first 12 bytes) and encrypted data
+    // Extract IV (first 12 bytes) and encrypted data with auth tag
     const iv = combined.slice(0, 12);
-    const encryptedData = combined.slice(12);
-    const authTag = encryptedData.slice(-16); // Last 16 bytes are the auth tag
-    const ciphertext = encryptedData.slice(0, -16);
+    const encryptedWithTag = combined.slice(12);
+
+    // In AES-GCM, the auth tag is the last 16 bytes
+    const authTag = encryptedWithTag.slice(-16);
+    const ciphertext = encryptedWithTag.slice(0, -16);
 
     // Derive key using PBKDF2 (matching client-side)
     const key = crypto.pbkdf2Sync(
@@ -84,10 +87,10 @@ export function decryptClientData(encryptedBase64: string): string {
     const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
     decipher.setAuthTag(authTag);
 
-    let decrypted = decipher.update(ciphertext, undefined, "utf8");
-    decrypted += decipher.final("utf8");
+    let decrypted = decipher.update(ciphertext);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
 
-    return decrypted;
+    return decrypted.toString("utf8");
   } catch (error) {
     console.error("Client data decryption error:", error);
     throw new Error("Failed to decrypt client-encrypted data");
