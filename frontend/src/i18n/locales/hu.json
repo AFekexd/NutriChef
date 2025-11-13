@@ -401,7 +401,7 @@
     "apiKeyDeleted": "AI API kulcs sikeresen törölve!",
     "apiKeyDeleteError": "Nem sikerült törölni az AI API kulcsot",
     "apiKeyLabel": "AI API Kulcs",
-    "saveApiKey": "AI API Kulcs Mentése",
+    "saveApiKey": "API Kulcs Mentése",
     "apiKeyHelp": "Hogyan szerezzek AI API kulcsot?",
     "openRouterApiKey": "OpenRouter API Kulcs",
     "openRouterApiKeyDescription": "Használja az OpenRouter API kulcsát a testreszabott AI modellekhez és korlátozások elkerüléséhez",
@@ -416,7 +416,10 @@
     "imageAnalysisHelp": "Válassza ki a kívánt modellt a kép elemzési feladatokhoz, mint például az összetevő felismerés",
     "aiPreferencesTip": "Ezek a beállítások felülírják az alapértelmezett AI konfigurációkat az Ön fiókjához",
     "changeModel": "Modell Váltása",
-    "selectModel": "Modell Kiválasztása"
+    "selectModel": "Modell Kiválasztása",
+    "aiServicePreferences": "AI Szolgáltató Preferenciák",
+    "aiServicePreferencesDescription": "Válassza ki az AI szolgáltatót a különböző AI funkciókhoz, mint például a szöveg generálás és kép elemzés",
+    "openRouterAccess": "OpenRouter Hozzáférés"
   },
   "healthInsights": {
     "title": "Egészség Betekintés",
@@ -707,14 +710,55 @@
       "maintain": "Fenntartás",
       "gain": "Gyarapodás",
       "calculating": "Számítás...",
-      "results": "Személyre Szabott Ajánlásai",
       "bmr": "BMR (Alapanyagcsere)",
       "tdee": "TDEE (Teljes Napi Energiafogyasztás)",
       "recommendedIntake": "Ajánlott Napi Bevitel",
       "cal": "kal",
       "adjustRecommendations": "Ajánlások Módosítása",
       "saveTheseGoals": "Célok Mentése",
-      "saving": "Mentés..."
+      "saving": "Mentés...",
+      "ageLabel": "Életkor",
+      "genderLabel": "Nem",
+      "weightLabel": "Súly",
+      "heightLabel": "Magasság",
+      "activityLevelLabel": "Aktivitási Szint",
+      "goalLabel": "Cél",
+      "switchTo": "Váltás a következő használatára:",
+      "calculateButton": "Kalkuláció",
+      "activityLevels": {
+        "sedentary": "Ülő életmód",
+        "light": "Könnyű",
+        "moderate": "Közepes",
+        "active": "Aktív",
+        "veryActive": "Nagyon Aktív"
+      },
+      "goals": {
+        "lose": "Fogyás",
+        "maintain": "Fenntartás",
+        "gain": "Gyarapodás",
+        "cancel": "Mégse",
+        "saveGoals": "Célok Mentése"
+      },
+      "results": {
+        "metabolicRate": "Anyagcsere Ráta (BMR)",
+        "bmr": "A kalóriák száma",
+        "tdee": "Teljes Napi Energiafogyasztás (TDEE)",
+        "cal": "kal",
+        "basedOn": "az Ön adatai alapján",
+        "dailyTargets": "Ajánlott Napi Célok",
+        "adjustable": "Ezek a célok módosíthatóak",
+        "dailyCalories": "Napi Kalóriák",
+        "protein": "Fehérje (g)",
+        "carbs": "Szénhidrát (g)",
+        "fat": "Zsír (g)",
+        "fiber": "Rost (g)",
+        "macroDistribution": "Makró Eloszlása",
+        "proteinRatio": "Fehérje Arány {{ratio}}%",
+        "carbsRatio": "Szénhidrát Arány {{ratio}}%",
+        "fatRatio": "Zsír Arány {{ratio}}%",
+        "backToForm": "Vissza a Kalkulátorhoz",
+        "saveButton": "Célok Mentése"
+      }
     },
     "actions": {
       "logMeal": "Étkezés Naplózása",
