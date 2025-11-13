@@ -61,6 +61,11 @@ const HealthInsightsPage = lazy(() =>
     default: m.HealthInsightsPage,
   }))
 );
+const ToastDemoPage = lazy(() =>
+  import("./pages/ToastDemoPage").then((m) => ({
+    default: m.ToastDemoPage,
+  }))
+);
 
 // Loading component for lazy-loaded routes
 const PageLoader = () => (
@@ -229,6 +234,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute adminOnly>
               <AdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/toast-demo"
+          element={
+            <ProtectedRoute>
+              <ToastDemoPage />
             </ProtectedRoute>
           }
         />
