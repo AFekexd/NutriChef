@@ -116,7 +116,7 @@ export function AIDetectionReview({
           {items.map((item, index) => (
             <Card
               key={index}
-              className="p-4 border-2 hover:border-blue-500 transition-colors relative"
+              className="p-4 border-2 hover:border-blue-500 transition-colors relative dark:bg-gray-800"
             >
               {/* Remove button */}
               <Button
@@ -146,7 +146,9 @@ export function AIDetectionReview({
                           autoFocus
                         />
                       ) : (
-                        <h3 className="text-lg font-semibold">{item.name}</h3>
+                        <h3 className="text-lg font-semibold dark:text-white">
+                          {item.name}
+                        </h3>
                       )}
                       <Button
                         variant="ghost"

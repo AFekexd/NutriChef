@@ -226,7 +226,19 @@
     "deleteMessage": "Biztosan törölni szeretné ezt a terméket?",
     "confirmDeleteExpired": "Összes lejárt termék törlése?",
     "noExpiredItems": "Nincs lejárt termék",
-    "noItemsToExport": "Nincs exportálandó termék"
+    "noItemsToExport": "Nincs exportálandó termék",
+    "aiDetection": {
+      "confidence": {
+        "low": "Alacsony",
+        "medium": "Közepes",
+        "high": "Magas"
+      },
+      "processedIn": "Feldolgozva:",
+      "itemsDetected": " termék észlelve",
+      "addItemsToInventory": "Termékek hozzáadása a készlethez"
+    },
+    "daysLabel": "nap",
+    "categoryLabel": "Kategória"
   },
   "recipes": {
     "title": "Recept ajánlások",
