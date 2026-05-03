@@ -154,56 +154,63 @@ NutriChef/
 
 - Node.js 18+
 - PostgreSQL 14+
-- npm vagy yarn
+- npm 9+
 - Google Gemini API kulcs (vagy OpenAI API kulcs)
 
-### 1. Repository klónozása
+### Gyorsindítás (lokális fejlesztés)
 
 ```bash
 git clone https://github.com/AFekexd/NutriChef.git
 cd NutriChef
-```
 
-### 2. Backend beállítás
+# 1) Minden dependency telepítése (root + backend + frontend)
+npm run install:all
 
-```bash
+# 2) .env fájlok létrehozása (PowerShell)
+Copy-Item .env.example .env
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
+
+# 3) Adatbázis migráció + seed
 cd backend
-npm install
-
-# Környezeti változók beállítása
-cp .env.example .env
-# Szerkeszd a .env fájlt az alábbi adatokkal:
-# DATABASE_URL="postgresql://user:password@localhost:5432/nutrichef"
-# JWT_SECRET="your-secret-key"
-# GEMINI_API_KEY="your-gemini-api-key"
-# PORT=5000
-
-# Adatbázis létrehozása és migrálás
 npx prisma migrate dev
+npm run seed
+cd ..
 
-# (Opcionális) Adatbázis seed adatokkal
-npx prisma db seed
-
-# Szerver indítása
+# 4) Frontend + backend indítása egy paranccsal
 npm run dev
 ```
 
-### 3. Frontend beállítás
+### Minimálisan szükséges `.env` beállítások fejlesztéshez
 
-```bash
-cd frontend
-npm install
+#### `backend/.env`
 
-# Környezeti változók beállítása
-cp .env.example .env
-# Szerkeszd a .env fájlt:
-# VITE_API_URL=http://localhost:5000/api
-
-# Fejlesztői szerver indítása
-npm run dev
+```dotenv
+DATABASE_URL="postgresql://<user>:<password>@localhost:5432/nutrichef?schema=public"
+PORT=5000
+NODE_ENV=development
+JWT_SECRET="dev-secret"
+JWT_REFRESH_SECRET="dev-refresh-secret"
+GEMINI_API_KEY="your_gemini_key"
+CLIENT_ENCRYPTION_KEY="same-32-char-key-as-frontend"
 ```
 
-### 4. Alkalmazás elérése
+#### `frontend/.env`
+
+```dotenv
+VITE_API_URL=http://localhost:5000/api
+VITE_ENCRYPTION_KEY=same-32-char-key-as-backend
+```
+
+> Fontos: a `CLIENT_ENCRYPTION_KEY` (backend) és a `VITE_ENCRYPTION_KEY` (frontend) értéke egyezzen meg.
+
+### Alternatív parancsok
+
+- Csak backend: `npm run dev:backend`
+- Csak frontend: `npm run dev:frontend`
+- Build ellenőrzés: `npm run build:check`
+
+### Alkalmazás elérése
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000/api
