@@ -77,6 +77,8 @@ export function HealthInsightsPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadedLanguageRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   // GSAP refs
   const headerRef = useRef<HTMLDivElement>(null);
@@ -112,12 +114,24 @@ export function HealthInsightsPage() {
     }
   }, [insightsData]);
 
-  const loadHealthInsights = async () => {
+  const loadHealthInsights = async (force = false): Promise<boolean> => {
+    const currentLanguage = i18n.language;
+
+    if (
+      !force &&
+      (isFetchingRef.current || loadedLanguageRef.current === currentLanguage)
+    ) {
+      return false;
+    }
+
+    isFetchingRef.current = true;
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiService.getHealthInsights(i18n.language);
+      const response = await apiService.getHealthInsights(currentLanguage);
       setInsightsData(response);
+      loadedLanguageRef.current = currentLanguage;
+      return true;
     } catch (err: any) {
       console.error("Error loading health insights:", err);
 
@@ -136,7 +150,9 @@ export function HealthInsightsPage() {
         setError(err.response?.data?.error || t("healthInsights.failedToLoad"));
         toast.error(t("healthInsights.failedToLoad"));
       }
+      return false;
     } finally {
+      isFetchingRef.current = false;
       setIsLoading(false);
     }
   };
@@ -147,10 +163,12 @@ export function HealthInsightsPage() {
     try {
       // Clear cache first
       await apiService.clearHealthInsightsCache(i18n.language);
+      loadedLanguageRef.current = null;
       // Then fetch fresh data
-      const response = await apiService.getHealthInsights(i18n.language);
-      setInsightsData(response);
-      toast.success(t("healthInsights.refreshed") || "Insights refreshed!");
+      const refreshed = await loadHealthInsights(true);
+      if (refreshed) {
+        toast.success(t("healthInsights.refreshed") || "Insights refreshed!");
+      }
     } catch (err: any) {
       console.error("Error refreshing health insights:", err);
 

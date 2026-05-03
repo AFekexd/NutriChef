@@ -19,7 +19,9 @@
     "no": "Nem",
     "somethingWentWrong": "Valami hiba történt",
     "tryAgain": "Próbálja újra",
-    "kcal": "kcal"
+    "kcal": "kcal",
+    "emailRequired": "Az e-mail cím megadása kötelező",
+    "home": "Kezdőlap"
   },
   "nav": {
     "dashboard": "Vezérlőpult",
@@ -88,6 +90,8 @@
     "namePlaceholder": "Teljes Név",
     "emailPlaceholder": "pelda@email.com",
     "passwordPlaceholder": "••••••••",
+    "orContinueWith": "Vagy folytassa ezzel",
+    "legalAgreement": "A folytatással elfogadja a Szolgáltatási feltételeinket és az Adatvédelmi szabályzatunkat",
     "oauth": {
       "completing": "Hitelesítés befejezése...",
       "error": "OAuth hiba",
@@ -146,7 +150,17 @@
     "savedRecipes": "Mentett Receptek",
     "exploreRecipes": "Receptek felfedezése",
     "activeMealPlans": "Aktív Étkezési Tervek",
-    "planMeals": "Étkezések tervezése"
+    "planMeals": "Étkezések tervezése",
+    "shortcuts": {
+      "openingInventory": "Készlet megnyitása...",
+      "openingRecipes": "Receptek megnyitása...",
+      "openingShoppingList": "Bevásárlólista megnyitása...",
+      "openingMealPlanning": "Étkezéstervező megnyitása...",
+      "openingProfile": "Profil megnyitása..."
+    },
+    "errors": {
+      "loadStatsFailed": "Nem sikerült betölteni a vezérlőpult statisztikáit"
+    }
   },
   "inventory": {
     "title": "Készletem",
@@ -206,7 +220,8 @@
       "fridge": "Hűtő",
       "freezer": "Fagyasztó",
       "pantry": "Kamra",
-      "unknown": "Ismeretlen"
+      "unknown": "Ismeretlen",
+      "other": "Egyéb"
     },
     "aiPowered": "AI által vezérelt",
     "automaticDetection": "Automatikus összetevő felismerés a képek alapján",
@@ -224,7 +239,10 @@
     "noExpiry": "Nincs lejárat",
     "confirmDelete": "Termék Törlése?",
     "deleteMessage": "Biztosan törölni szeretné ezt a terméket?",
+    "confirmDeleteMessage": "Ez a művelet nem vonható vissza.",
     "confirmDeleteExpired": "Összes lejárt termék törlése?",
+    "itemDeleted": "Termék sikeresen törölve",
+    "itemUpdated": "Termék sikeresen frissítve",
     "noExpiredItems": "Nincs lejárt termék",
     "noItemsToExport": "Nincs exportálandó termék",
     "aiDetection": {
@@ -235,10 +253,56 @@
       },
       "processedIn": "Feldolgozva:",
       "itemsDetected": " termék észlelve",
-      "addItemsToInventory": "Termékek hozzáadása a készlethez"
+      "addItemsToInventory": "Termékek hozzáadása a készlethez",
+      "addingToInventory": "Termékek hozzáadása a készlethez...",
+      "noItems": "Nem található termék"
     },
     "daysLabel": "nap",
-    "categoryLabel": "Kategória"
+    "categoryLabel": "Kategória",
+    "photoUpload": {
+      "modalSubtitle": "Töltsön fel egy fotót, és az AI felismeri az összetevőket",
+      "dropTitle": "Húzza ide a fotót",
+      "dropSubtitle": "vagy kattintson a tallózáshoz (JPEG, PNG, WebP, max. 10MB)",
+      "chooseFile": "Fájl kiválasztása",
+      "takePhoto": "Fotó készítése",
+      "chooseDifferent": "Másik fotó kiválasztása",
+      "analyze": "Fotó elemzése",
+      "analyzing": "Elemzés...",
+      "tips": {
+        "title": "Tippek a jobb eredményért:",
+        "goodLighting": "Biztosítson jó megvilágítást",
+        "clearItems": "A tételek legyenek jól láthatóak",
+        "avoidGlare": "Kerülje a tükröződést és az árnyékokat",
+        "straightPhoto": "Készítse a fotót szemből"
+      },
+      "errors": {
+        "invalidFileType": "Kérjük, képfájlt válasszon (JPEG, PNG vagy WebP)",
+        "fileTooLarge": "A kép mérete legfeljebb 10MB lehet",
+        "processFailed": "A kép feldolgozása sikertelen"
+      }
+    },
+    "messages": {
+      "inventoryRefreshed": "Készlet frissítve!",
+      "openingManualForm": "Kézi űrlap megnyitása...",
+      "switchedView": "Nézet váltva: {{view}}",
+      "listView": "lista",
+      "gridView": "rács",
+      "loadFailed": "Nem sikerült betölteni a készlet adatokat",
+      "aiImageLimitReached": "Elérte az AI képelemzés napi limitjét. Kérjük, próbálja újra {{hours}} óra múlva.",
+      "analyzeFailed": "Nem sikerült elemezni a képet",
+      "itemsAdded": "Sikeresen hozzáadva {{count}} elem!",
+      "addItemsFailed": "Nem sikerült elemeket hozzáadni",
+      "exportedToCsv": "{{count}} elem exportálva CSV-be",
+      "deleteFailed": "Nem sikerült törölni az elemet",
+      "updateFailed": "Nem sikerült frissíteni az elemet",
+      "deleteAll": "Összes törlése",
+      "deleteExpiredConfirmMessage": "Biztosan törölni szeretné a(z) {{count}} lejárt elemet? Ez a művelet nem vonható vissza.",
+      "deleteExpiredSuccess": "Sikeresen törölve {{deleted}} lejárt elem. Sikertelen: {{failed}}",
+      "deleteExpiredFailedCount": "{{count}} elem törlése sikertelen",
+      "deleteExpiredFailed": "Nem sikerült törölni a lejárt elemeket",
+      "today": "Ma",
+      "daysLeft": "{{days}} nap hátra"
+    }
   },
   "recipes": {
     "title": "Recept ajánlások",
@@ -304,9 +368,16 @@
     "nutritionalInfo": "Táplálkozási Információk",
     "viewDetails": "Részletek Megtekintése",
     "saveRecipe": "Recept Mentése",
+    "recipesRefreshed": "Ajánlások frissítve!",
+    "configureBeforeRefresh": "Először állítsa be a preferenciákat és kérjen ajánlásokat",
+    "loadedFromCache": "Gyorsítótárból betöltve (token megtakarítás) - Korábbi keresés eredményei.",
+    "clearCache": "Gyorsítótár törlése",
+    "cacheCleared": "Recept gyorsítótár sikeresen törölve!",
+    "clearCacheFailed": "Nem sikerült törölni a gyorsítótárat",
     "saved": "Mentve",
     "saving": "Mentés...",
     "addIngredients": "Összetevők Hozzáadása",
+    "openingCreateForm": "Recept létrehozó űrlap megnyitása...",
     "createYourOwnRecipe": "Hozza Létre Saját Receptjét",
     "shareYourMasterpiece": "Ossza meg kulináris remekművét táplálkozási részletekkel",
     "basicInformation": "Alapinformációk",
@@ -418,7 +489,22 @@
     "openRouterApiKey": "OpenRouter API Kulcs",
     "openRouterApiKeyDescription": "Használja az OpenRouter API kulcsát a testreszabott AI modellekhez és korlátozások elkerüléséhez",
     "openRouterKeyConfigured": "OpenRouter API Kulcs Beállítva",
+    "openRouterKeyLabel": "OpenRouter API Kulcs",
+    "openRouterKeyHelp": "Hogyan szerezhetek OpenRouter API kulcsot?",
+    "saveAndValidate": "Mentés és érvényesítés",
+    "deleteOpenRouterKeyConfirm": "OpenRouter API kulcs törlése?",
+    "deleteOpenRouterKeyMessage": "Biztosan el szeretné távolítani az OpenRouter API kulcsot?",
+    "openrouterKeySaved": "OpenRouter API kulcs sikeresen mentve!",
+    "openrouterKeySaveError": "Nem sikerült menteni az OpenRouter API kulcsot",
+    "openrouterKeyDeleted": "OpenRouter API kulcs sikeresen törölve!",
+    "openrouterKeyDeleteError": "Nem sikerült törölni az OpenRouter API kulcsot",
     "usageStatistics": "Használati Statisztikák",
+    "totalRequests": "Összes kérés",
+    "inputTokens": "Bemeneti tokenek",
+    "outputTokens": "Kimeneti tokenek",
+    "remainingBalance": "Fennmaradó egyenleg",
+    "usageRefreshed": "Használati statisztikák frissítve",
+    "usageRefreshError": "Nem sikerült frissíteni a használati statisztikákat",
     "refresh": "Frissítés",
     "lastUpdated": "Utolsó frissítés",
     "selectedModel": "Kiválasztott Modell",
@@ -431,7 +517,22 @@
     "selectModel": "Modell Kiválasztása",
     "aiServicePreferences": "AI Szolgáltató Preferenciák",
     "aiServicePreferencesDescription": "Válassza ki az AI szolgáltatót a különböző AI funkciókhoz, mint például a szöveg generálás és kép elemzés",
-    "openRouterAccess": "OpenRouter Hozzáférés"
+    "openRouterAccess": "OpenRouter Hozzáférés",
+    "preferencesUpdated": "AI beállítások sikeresen frissítve",
+    "preferencesUpdateError": "Nem sikerült frissíteni az AI beállításokat",
+    "modelUpdatedSuccess": "Modell sikeresen frissítve",
+    "changeAvatar": "Profilkép módosítása",
+    "connectedWith": "Kapcsolódva ezzel",
+    "oauthAvatarInfo": "A profilképe az OAuth szolgáltatóból szinkronizált",
+    "invalidAvatarType": "Érvénytelen képformátum. Kérjük, JPG, PNG vagy WebP fájlt töltsön fel.",
+    "avatarTooLarge": "A kép túl nagy. A maximális méret 5 MB.",
+    "avatarUploadSuccess": "Profilkép sikeresen feltöltve",
+    "avatarUploadError": "Nem sikerült feltölteni a profilképet",
+    "deleteAvatarConfirm": "Profilkép törlése?",
+    "deleteAvatarMessage": "Biztosan el szeretné távolítani a profilképét?",
+    "avatarDeleteSuccess": "Profilkép sikeresen törölve",
+    "avatarDeleteError": "Nem sikerült törölni a profilképet",
+    "revokeSessionMessage": "Ez az eszköz kijelentkezik, és újra be kell jelentkezni."
   },
   "healthInsights": {
     "title": "Egészség Betekintés",
@@ -496,7 +597,14 @@
       "search": "Keresés...",
       "allMethods": "Minden Módszer",
       "allCodes": "Minden Kód",
-      "pathFilter": "Útvonal Szűrő"
+      "pathFilter": "Útvonal Szűrő",
+      "filterByAction": "Szűrés művelet szerint",
+      "filterByTargetType": "Szűrés cél típus szerint",
+      "allActions": "Minden művelet",
+      "allTypes": "Minden típus",
+      "searchUserPath": "Felhasználó/útvonal keresés",
+      "httpMethod": "HTTP metódus",
+      "statusCode": "Státuszkód"
     },
     "status": {
       "active": "Aktív",
@@ -513,7 +621,104 @@
       "userDeleted": "Felhasználó sikeresen törölve",
       "actionFailed": "A művelet sikertelen. Kérjük, próbálja újra.",
       "loadingMoreLogs": "További naplók betöltése...",
-      "allLogsLoaded": "Minden napló betöltve"
+      "allLogsLoaded": "Minden napló betöltve",
+      "allLogsLoadedCount": "Minden napló betöltve (összesen: {{count}})",
+      "userTimedOutFor": "Felhasználó időkorlát alá helyezve {{duration}} órára",
+      "userPermanentlyBanned": "Felhasználó véglegesen tiltva",
+      "userBannedFor": "Felhasználó tiltva {{duration}} órára",
+      "userDeletedWithEmail": "Felhasználói fiók sikeresen törölve. Értesítő e-mail elküldve.",
+      "inventoryDeleted": "Készletelem sikeresen törölve",
+      "recipeDeleted": "Recept sikeresen törölve",
+      "noLogsFound": "A jelenlegi szűrőkkel nem található napló.",
+      "noApiLogsFound": "A jelenlegi szűrőkkel nem található API napló."
+    },
+    "errors": {
+      "loadDashboard": "Nem sikerült betölteni az irányítópult adatait",
+      "loadUsers": "Nem sikerült betölteni a felhasználókat",
+      "loadInventory": "Nem sikerült betölteni a készletet",
+      "loadRecipes": "Nem sikerült betölteni a recepteket",
+      "loadUploads": "Nem sikerült betölteni a feltöltéseket",
+      "loadLogs": "Nem sikerült betölteni a naplókat",
+      "loadApiLogs": "Nem sikerült betölteni az API naplókat",
+      "loadModerationHistory": "Nem sikerült betölteni a moderációs előzményeket",
+      "warnUser": "Nem sikerült figyelmeztetést küldeni",
+      "timeoutUser": "Nem sikerült időkorlátot beállítani",
+      "banUser": "Nem sikerült letiltani a felhasználót",
+      "unbanUser": "Nem sikerült feloldani a tiltást",
+      "changeRole": "Nem sikerült frissíteni a szerepkört",
+      "deleteUser": "Nem sikerült törölni a felhasználót",
+      "deleteInventory": "Nem sikerült törölni a készletelemet",
+      "deleteRecipe": "Nem sikerült törölni a receptet",
+      "invalidDuration": "Érvénytelen időtartam. Kérjük, pozitív számot adjon meg."
+    },
+    "prompts": {
+      "warningReason": "Adja meg a figyelmeztetés okát:",
+      "adminNoteOptional": "(Opcionális) Belső admin megjegyzés:",
+      "timeoutDuration": "Adja meg az időkorlátot órában (pl. 24 = 1 nap, 168 = 1 hét):",
+      "timeoutReason": "Adja meg az időkorlát okát:",
+      "permanentBanQuestion": "Végleges tiltás legyen? OK = végleges, Mégse = ideiglenes.",
+      "banDuration": "Adja meg a tiltás időtartamát órában (pl. 720 = 30 nap):",
+      "banReason": "Adja meg a tiltás okát:"
+    },
+    "confirm": {
+      "sendWarningTitle": "Figyelmeztetés küldése?",
+      "sendWarningMessage": "Biztosan figyelmeztetést szeretne küldeni ennek a felhasználónak?",
+      "sendWarning": "Figyelmeztetés küldése",
+      "timeoutUserTitle": "Felhasználó időkorlátozása?",
+      "timeoutUserMessage": "Biztosan időkorlátozni szeretné a felhasználót {{duration}} órára? Ki lesz jelentkeztetve, és a lejáratig nem fér hozzá a fiókjához.",
+      "timeoutUser": "Időkorlát beállítása",
+      "permanentBanTitle": "Felhasználó végleges tiltása?",
+      "banUserTitle": "Felhasználó tiltása?",
+      "permanentBanMessage": "Biztosan VÉGLEGESEN letiltja ezt a felhasználót? Ez súlyos művelet!",
+      "banUserMessage": "Biztosan letiltja a felhasználót {{duration}} órára?",
+      "banUser": "Felhasználó tiltása",
+      "unbanUserTitle": "Tiltás feloldása?",
+      "unbanUserMessage": "Biztosan feloldja a felhasználó tiltását/időkorlátját?",
+      "unbanUser": "Tiltás feloldása",
+      "changeUserRoleTitle": "Szerepkör módosítása?",
+      "changeUserRoleMessage": "Biztosan módosítja a felhasználó szerepkörét erre: {{newRole}}?"
+    },
+    "logActions": {
+      "user_warned": "Felhasználó figyelmeztetve",
+      "user_timeout": "Felhasználó időkorlátozva",
+      "user_banned": "Felhasználó tiltva",
+      "user_unbanned": "Tiltás feloldva",
+      "user_suspended": "Felhasználó felfüggesztve",
+      "user_reactivated": "Felhasználó újraaktiválva",
+      "user_deleted": "Felhasználó törölve",
+      "rate_limit_reset": "Rate limit visszaállítva"
+    },
+    "targetTypes": {
+      "user": "Felhasználó",
+      "recipe": "Recept",
+      "inventory": "Készlet",
+      "upload": "Feltöltés",
+      "system": "Rendszer"
+    },
+    "labels": {
+      "itemsCount": "{{count}} elem",
+      "recipesCount": "{{count}} recept",
+      "sessionsCount": "{{count}} munkamenet",
+      "joined": "Csatlakozott:",
+      "expires": "Lejárat:",
+      "location": "Hely:",
+      "by": "Szerző:",
+      "cal": "kcal",
+      "servings": "adag",
+      "itemsDetected": "{{count}} elem felismerve",
+      "target": "Cél:",
+      "email": "E-mail:",
+      "viewDetails": "Részletek megtekintése",
+      "viewRequestBody": "Kérés törzsének megtekintése",
+      "viewResponseBody": "Válasz törzsének megtekintése",
+      "unauthenticatedRequest": "Hitelesítetlen kérés",
+      "moderationHistory": "Moderációs előzmények",
+      "activeModerationActions": "Aktív moderációs műveletek",
+      "reason": "Indok:",
+      "adminNote": "Admin megjegyzés:",
+      "duration": "Időtartam:",
+      "hours": "óra",
+      "expired": "LEJÁRT"
     },
     "apiStats": {
       "totalRequests": "Összes Kérés",
@@ -566,6 +771,9 @@
       "addMeal": "Étkezés hozzáadása",
       "addMore": "Továbbiak hozzáadása"
     },
+    "labels": {
+      "meal": "Étkezés"
+    },
     "modal": {
       "title": "Hozzáadás az Étkezési Tervhez",
       "selectRecipe": "Recept Kiválasztása",
@@ -575,6 +783,7 @@
       "chooseRecipe": "Válasszon egy receptet...",
       "noRecipes": "Nincsenek elérhető receptek. Kérjük, adjon hozzá recepteket először.",
       "noInventory": "Nincsenek elérhető készlet elemek. Kérjük, adjon hozzá elemeket a készlethez először.",
+      "noInventoryItems": "Nincs elérhető készletelem",
       "itemsSelected": "elem kiválasztva",
       "cancel": "Mégse",
       "addRecipe": "Recept Hozzáadása",
@@ -627,7 +836,8 @@
       "percentOfGoal": "% a célból",
       "fat": "Zsír",
       "fiber": "Rost",
-      "goal": "Cél"
+      "goal": "Cél",
+      "goalReached": "Cél elérve!"
     },
     "todayMeals": "Mai Étkezések",
     "logMeal": "+ Étkezés Naplózása",
@@ -635,14 +845,19 @@
     "clickToStart": "Kattintson az \"Étkezés Naplózása\" gombra a kezdéshez",
     "remove": "Eltávolítás",
     "weeklyInsights": {
-      "title": "Heti Táplálkozási Betekintések",
-      "description": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel. Hamarosan!"
+      "title": "Heti betekintés",
+      "description": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel"
     },
     "weeklyInsightsSubtitle": "Kövesse nyomon előrehaladását részletes elemzésekkel és trendekkel. Hamarosan!",
     "setGoals": "Célok Beállítása",
     "calculateMyGoals": "Céljaim Kiszámítása",
     "calculate": "Számítás",
-    "goals": "Célok",
+    "goals": {
+      "title": "Célok",
+      "setGoals": "Célok beállítása",
+      "saveGoals": "Célok mentése",
+      "cancel": "Mégse"
+    },
     "setNutritionGoals": "Táplálkozási Célok Beállítása",
     "dailyCaloriesGoal": "Napi Kalóriák",
     "proteinGoal": "Fehérje (g)",
@@ -658,6 +873,15 @@
     "mealDeleted": "Étkezés eltávolítva",
     "mealDeleteFailed": "Nem sikerült törölni az étkezést. Kérjük, próbálja újra.",
     "loadedFromLocal": "Célok betöltve a helyi tárolóból",
+    "messages": {
+      "goalsLoadedFromLocal": "Célok betöltve a helyi tárolóból",
+      "goalsUpdateFailed": "Nem sikerült menteni a célokat. Kérjük, próbálja újra.",
+      "goalsUpdated": "Táplálkozási célok frissítve!",
+      "mealLogFailed": "Nem sikerült naplózni az étkezést. Kérjük, próbálja újra.",
+      "mealLogged": "Étkezés sikeresen naplózva!",
+      "mealDeleted": "Étkezés eltávolítva",
+      "mealDeleteFailed": "Nem sikerült törölni az étkezést. Kérjük, próbálja újra."
+    },
     "loading": "Betöltés...",
     "mealTypes": {
       "breakfast": "reggeli",
@@ -746,42 +970,51 @@
       },
       "goals": {
         "lose": "Fogyás",
+        "loseFast": "Gyors fogyás",
+        "loseAggressive": "Agresszív fogyás",
         "maintain": "Fenntartás",
         "gain": "Gyarapodás",
         "cancel": "Mégse",
         "saveGoals": "Célok Mentése"
       },
       "results": {
-        "metabolicRate": "Anyagcsere Ráta (BMR)",
-        "bmr": "A kalóriák száma",
-        "tdee": "Teljes Napi Energiafogyasztás (TDEE)",
+        "metabolicRate": "Anyagcsere ráta",
+        "bmr": "BMR",
+        "tdee": "TDEE",
         "cal": "kal",
-        "basedOn": "az Ön adatai alapján",
-        "dailyTargets": "Ajánlott Napi Célok",
-        "adjustable": "Ezek a célok módosíthatóak",
-        "dailyCalories": "Napi Kalóriák",
-        "protein": "Fehérje (g)",
-        "carbs": "Szénhidrát (g)",
-        "fat": "Zsír (g)",
-        "fiber": "Rost (g)",
-        "macroDistribution": "Makró Eloszlása",
-        "proteinRatio": "Fehérje Arány {{ratio}}%",
-        "carbsRatio": "Szénhidrát Arány {{ratio}}%",
-        "fatRatio": "Zsír Arány {{ratio}}%",
-        "backToForm": "Vissza a Kalkulátorhoz",
-        "saveButton": "Célok Mentése"
+        "basedOn": "Alapján",
+        "dailyTargets": "Napi célok",
+        "adjustable": "Módosítható",
+        "dailyCalories": "Napi kalóriák",
+        "protein": "Fehérje",
+        "carbs": "Szénhidrát",
+        "fat": "Zsír",
+        "fiber": "Rost",
+        "macroDistribution": "Makróeloszlás",
+        "proteinRatio": "Fehérje arány",
+        "carbsRatio": "Szénhidrát arány",
+        "fatRatio": "Zsír arány",
+        "backToForm": "Vissza az űrlaphoz",
+        "saveButton": "Célok mentése",
+        "saving": "Mentés..."
       }
     },
     "actions": {
       "logMeal": "Étkezés Naplózása",
       "setGoals": "Célok Beállítása",
-      "calculateGoals": "Célok Kiszámítása"
+      "calculateGoals": "Célok Kiszámítása",
+      "calculate": "Számítás",
+      "goals": "Célok"
     }
   },
   "shoppingList": {
     "title": "Bevásárlólista",
     "subtitle": "Okos bevásárlólisták adag optimalizálással {{servings}} adaghoz",
-    "servings": "adagok",
+    "servings": {
+      "label": "adagok",
+      "title": "Adagok módosítása",
+      "subtitle": "Állítsa be a kívánt adagszámot"
+    },
     "actions": {
       "optimize": "Adagok Optimalizálása",
       "clearCompleted": "Befejezettek Törlése",
@@ -800,6 +1033,7 @@
       "title": "Hozzáadás a Bevásárlólistához",
       "subtitle": "Adja meg az új elem adatait",
       "namePlaceholder": "Pl. Paradicsom",
+      "quantity": "Mennyiség",
       "cancel": "Mégse",
       "addItem": "Elem Hozzáadása",
       "button": "Hozzáadás"
@@ -831,6 +1065,7 @@
     "smartTips": "Okos Tippek",
     "tips": {
       "optimize": "Adagok optimalizálása szabványos csomagméretekhez",
+      "adjust": "Állítsa az adagokat a mennyiségek skálázásához",
       "inventory": "A készletben lévő elemek kiemelve",
       "servings": "Módosítsa az adagokat a mennyiségek skálázásához",
       "export": "Exportálja a listát megosztáshoz vagy nyomtatáshoz",
@@ -859,8 +1094,11 @@
     "liters": "liter",
     "pieces": "darab",
     "cups": "csésze",
+    "cup": "csésze",
     "tablespoons": "evőkanál",
+    "tablespoon": "evőkanál",
     "teaspoons": "teáskanál",
+    "teaspoon": "teáskanál",
     "ounces": "uncia",
     "pounds": "font"
   },
@@ -919,6 +1157,7 @@
     "rating_plural": "értékelés"
   },
   "breadcrumbs": {
+    "dashboard": "Vezérlőpult",
     "home": "Kezdőlap",
     "inventory": "Készlet",
     "recipes": "Receptek",
@@ -928,6 +1167,7 @@
     "shoppingList": "Bevásárlólista",
     "profile": "Profil",
     "admin": "Admin Panel",
+    "adminPanel": "Admin Panel",
     "nutrition": "Táplálkozás Nyomon Követése",
     "healthInsights": "Egészség Betekintés",
     "nutritionTracking": "Táplálkozás"

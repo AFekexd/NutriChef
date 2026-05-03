@@ -61,6 +61,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     const { name, email, password, preferences } = req.body;
+    console.log('DEBUG: NODE_ENV is', process.env.NODE_ENV);
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -111,10 +112,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // Send welcome email (don't wait for it to complete)
-    sendWelcomeEmail(user.email, user.name).catch((error) => {
-      console.error("Failed to send welcome email:", error);
-      // Don't fail registration if email fails
-    });
+    if (process.env.NODE_ENV !== 'test') {
+      sendWelcomeEmail(user.email, user.name).catch((error) => {
+        console.error("Failed to send welcome email:", error);
+        // Don't fail registration if email fails
+      });
+    }
 
     res.status(201).json({
       message: "User registered successfully",

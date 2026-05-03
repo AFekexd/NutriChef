@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -65,5 +66,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     // Enable source maps for production debugging (optional, remove if not needed)
     sourcemap: false,
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    css: true,
   },
 });

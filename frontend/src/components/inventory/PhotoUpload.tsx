@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { Camera, Upload, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import type { DetectionResult } from "../../types";
+import { useTranslation } from "react-i18next";
 
 interface PhotoUploadProps {
   onUpload?: (file: File) => Promise<void>;
@@ -16,6 +17,7 @@ export function PhotoUpload({
   onUploadSuccess,
   onUploadError,
 }: PhotoUploadProps) {
+  const { t } = useTranslation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -26,13 +28,13 @@ export function PhotoUpload({
     (file: File) => {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        onUploadError?.("Please select an image file (JPEG, PNG, or WebP)");
+        onUploadError?.(t("inventory.photoUpload.errors.invalidFileType"));
         return;
       }
 
       // Validate file size (10MB max)
       if (file.size > 10 * 1024 * 1024) {
-        onUploadError?.("Image size must be less than 10MB");
+        onUploadError?.(t("inventory.photoUpload.errors.fileTooLarge"));
         return;
       }
 
@@ -45,7 +47,7 @@ export function PhotoUpload({
       };
       reader.readAsDataURL(file);
     },
-    [onUploadError]
+    [onUploadError, t]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -90,7 +92,9 @@ export function PhotoUpload({
         onUploadSuccess?.(result);
       }
     } catch (error: any) {
-      onUploadError?.(error.response?.data?.error || "Failed to process image");
+      onUploadError?.(
+        error.response?.data?.error || t("inventory.photoUpload.errors.processFailed")
+      );
     } finally {
       setIsUploading(false);
     }
@@ -119,10 +123,10 @@ export function PhotoUpload({
         >
           <Upload className="h-20 w-20 mx-auto mb-6 text-gray-400" />
           <p className="text-xl font-medium mb-3 text-gray-900 dark:text-gray-100">
-            Drag and drop your photo here
+            {t("inventory.photoUpload.dropTitle")}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
-            or click to browse (JPEG, PNG, WebP, max 10MB)
+            {t("inventory.photoUpload.dropSubtitle")}
           </p>
 
           <div className="flex gap-4 justify-center flex-wrap">
@@ -133,7 +137,7 @@ export function PhotoUpload({
               className="dark:text-white"
             >
               <Upload className="h-5 w-5 mr-2" />
-              Choose File
+              {t("inventory.photoUpload.chooseFile")}
             </Button>
 
             {/* Camera input for mobile */}
@@ -153,7 +157,7 @@ export function PhotoUpload({
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Camera className="h-5 w-5 mr-2" />
-              Take Photo
+              {t("inventory.photoUpload.takePhoto")}
             </Button>
           </div>
 
@@ -190,7 +194,7 @@ export function PhotoUpload({
               className="flex-1"
               disabled={isUploading}
             >
-              Choose Different Photo
+              {t("inventory.photoUpload.chooseDifferent")}
             </Button>
             <Button
               onClick={handleUpload}
@@ -200,12 +204,12 @@ export function PhotoUpload({
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Analyzing...
+                  {t("inventory.photoUpload.analyzing")}
                 </>
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
-                  Analyze Photo
+                  {t("inventory.photoUpload.analyze")}
                 </>
               )}
             </Button>
@@ -214,13 +218,13 @@ export function PhotoUpload({
           {/* Tips */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-sm">
             <p className="font-medium mb-2 text-gray-900 dark:text-gray-100">
-              Tips for best results:
+              {t("inventory.photoUpload.tips.title")}
             </p>
             <ul className="space-y-1 text-gray-700 dark:text-gray-300">
-              <li>• Ensure good lighting</li>
-              <li>• Keep items clearly visible</li>
-              <li>• Avoid glare and shadows</li>
-              <li>• Take photo straight on</li>
+              <li>• {t("inventory.photoUpload.tips.goodLighting")}</li>
+              <li>• {t("inventory.photoUpload.tips.clearItems")}</li>
+              <li>• {t("inventory.photoUpload.tips.avoidGlare")}</li>
+              <li>• {t("inventory.photoUpload.tips.straightPhoto")}</li>
             </ul>
           </div>
         </div>

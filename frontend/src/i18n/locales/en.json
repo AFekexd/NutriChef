@@ -19,7 +19,9 @@
     "no": "No",
     "somethingWentWrong": "Something went wrong",
     "tryAgain": "Try again",
-    "kcal": "kcal"
+    "kcal": "kcal",
+    "emailRequired": "Email is required",
+    "home": "Home"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -88,6 +90,8 @@
     "emailPlaceholder": "john@example.com",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
+    "orContinueWith": "Or continue with",
+    "legalAgreement": "By continuing, you agree to our Terms of Service and Privacy Policy",
     "oauth": {
       "completing": "Completing authentication...",
       "error": "OAuth error",
@@ -102,7 +106,61 @@
     "totalItems": "Total Items",
     "expiringItems": "Expiring Soon",
     "lowStockItems": "Low Stock",
-    "recentActivity": "Recent Activity"
+    "recentActivity": "Recent Activity",
+    "inNext7Days": "In the next 7 days",
+    "noRecentActivity": "No recent activity",
+    "quickStats": "Quick stats",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "welcomeMessage": "Hope you're having a great day!",
+    "keyboardShortcutsHint": "Keyboard shortcuts:",
+    "for": "For",
+    "inventory": "Inventory",
+    "recipes": "Recipes",
+    "shoppingList": "Shopping list",
+    "features": {
+      "smartInventory": {
+        "title": "Smart Inventory Management",
+        "description": "AI-powered item recognition and expiration alerts"
+      },
+      "aiRecipeGenerator": {
+        "title": "AI Recipe Generator",
+        "description": "Personalized recipe recommendations based on your ingredients"
+      },
+      "groceryPlanning": {
+        "title": "Grocery Planning",
+        "description": "Smart shopping lists and portion optimization"
+      },
+      "mealPlanning": {
+        "title": "Meal Planning",
+        "description": "Easily create weekly meal plans"
+      },
+      "nutritionTracking": {
+        "title": "Nutrition Tracking",
+        "description": "Track daily calories and macros"
+      },
+      "healthInsights": {
+        "title": "Health Insights",
+        "description": "AI-powered nutrition coaching and recommendations"
+      }
+    },
+    "quickStatsDescription": "Complete these steps to get the most out of your experience",
+    "addIngredients": "Add ingredients",
+    "savedRecipes": "Saved recipes",
+    "exploreRecipes": "Explore recipes",
+    "activeMealPlans": "Active meal plans",
+    "planMeals": "Plan meals",
+    "shortcuts": {
+      "openingInventory": "Opening Inventory...",
+      "openingRecipes": "Opening Recipes...",
+      "openingShoppingList": "Opening Shopping List...",
+      "openingMealPlanning": "Opening Meal Planning...",
+      "openingProfile": "Opening Profile..."
+    },
+    "errors": {
+      "loadStatsFailed": "Failed to load dashboard stats"
+    }
   },
   "inventory": {
     "title": "My Inventory",
@@ -166,9 +224,85 @@
     "noExpiry": "No expiry",
     "confirmDelete": "Delete Item?",
     "deleteMessage": "Are you sure you want to delete this item?",
+    "confirmDeleteMessage": "This action cannot be undone.",
     "confirmDeleteExpired": "Delete all expired items?",
+    "itemDeleted": "Item deleted successfully",
+    "itemUpdated": "Item updated successfully",
     "noExpiredItems": "No expired items found",
-    "noItemsToExport": "No items to export"
+    "noItemsToExport": "No items to export",
+    "subtitle": "Manage your food inventory efficiently with AI support",
+    "locations": {
+      "fridge": "Fridge",
+      "freezer": "Freezer",
+      "pantry": "Pantry",
+      "unknown": "Unknown",
+      "other": "Other"
+    },
+    "aiPowered": "AI-powered",
+    "automaticDetection": "Automatic ingredient detection from images",
+    "deleteExpired": "Delete expired",
+    "low": "Low",
+    "normal": "Normal",
+    "expiring": "Expiring",
+    "showingResults": "Showing {{count}} results",
+    "aiDetection": {
+      "confidence": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "processedIn": "Processed in",
+      "itemsDetected": "Items detected",
+      "addItemsToInventory": "Add items to inventory",
+      "addingToInventory": "Adding items to inventory...",
+      "noItems": "No items detected"
+    },
+    "daysLabel": "days",
+    "categoryLabel": "Category",
+    "photoUpload": {
+      "modalSubtitle": "Upload a photo and let AI detect your ingredients",
+      "dropTitle": "Drag and drop your photo here",
+      "dropSubtitle": "or click to browse (JPEG, PNG, WebP, max 10MB)",
+      "chooseFile": "Choose File",
+      "takePhoto": "Take Photo",
+      "chooseDifferent": "Choose Different Photo",
+      "analyze": "Analyze Photo",
+      "analyzing": "Analyzing...",
+      "tips": {
+        "title": "Tips for best results:",
+        "goodLighting": "Ensure good lighting",
+        "clearItems": "Keep items clearly visible",
+        "avoidGlare": "Avoid glare and shadows",
+        "straightPhoto": "Take photo straight on"
+      },
+      "errors": {
+        "invalidFileType": "Please select an image file (JPEG, PNG, or WebP)",
+        "fileTooLarge": "Image size must be less than 10MB",
+        "processFailed": "Failed to process image"
+      }
+    },
+    "messages": {
+      "inventoryRefreshed": "Inventory refreshed!",
+      "openingManualForm": "Opening manual form...",
+      "switchedView": "Switched to {{view}} view",
+      "listView": "list",
+      "gridView": "grid",
+      "loadFailed": "Failed to load inventory data",
+      "aiImageLimitReached": "You've reached your daily limit for AI image analysis. Please try again in {{hours}} hours.",
+      "analyzeFailed": "Failed to analyze image",
+      "itemsAdded": "Successfully added {{count}} items!",
+      "addItemsFailed": "Failed to add items",
+      "exportedToCsv": "Exported {{count}} items to CSV",
+      "deleteFailed": "Failed to delete item",
+      "updateFailed": "Failed to update item",
+      "deleteAll": "Delete All",
+      "deleteExpiredConfirmMessage": "Are you sure you want to delete {{count}} expired item(s)? This action cannot be undone.",
+      "deleteExpiredSuccess": "Successfully deleted {{deleted}} expired item(s). Failed: {{failed}}",
+      "deleteExpiredFailedCount": "Failed to delete {{count}} items",
+      "deleteExpiredFailed": "Failed to delete expired items",
+      "today": "Today",
+      "daysLeft": "{{days}}d left"
+    }
   },
   "recipes": {
     "title": "Recipe Recommendations",
@@ -234,9 +368,16 @@
     "nutritionalInfo": "Nutritional Info",
     "viewDetails": "View Details",
     "saveRecipe": "Save Recipe",
+    "recipesRefreshed": "Recommendations refreshed!",
+    "configureBeforeRefresh": "Configure preferences and get recommendations first",
+    "loadedFromCache": "Loaded from cache (saved tokens!) - Results from a previous search.",
+    "clearCache": "Clear Cache",
+    "cacheCleared": "Recipe cache cleared successfully!",
+    "clearCacheFailed": "Failed to clear cache",
     "saved": "Saved",
     "saving": "Saving...",
     "addIngredients": "Add Ingredients",
+    "openingCreateForm": "Opening create recipe form...",
     "createYourOwnRecipe": "Create Your Own Recipe",
     "shareYourMasterpiece": "Share your culinary masterpiece with nutritional details",
     "basicInformation": "Basic Information",
@@ -341,7 +482,57 @@
     "deleteApiKeyConfirm": "Delete API Key?",
     "deleteApiKeyMessage": "Are you sure you want to remove your AI API key? You will be subject to rate limits again.",
     "apiKeyDeleted": "AI API key deleted successfully!",
-    "apiKeyDeleteError": "Failed to delete AI API key"
+    "apiKeyDeleteError": "Failed to delete AI API key",
+    "apiKeyLabel": "AI API Key",
+    "saveApiKey": "Save API Key",
+    "apiKeyHelp": "How can I get an AI API key?",
+    "openRouterApiKey": "OpenRouter API Key",
+    "openRouterApiKeyDescription": "Use your OpenRouter API key for custom AI models and to bypass limits",
+    "openRouterKeyConfigured": "OpenRouter API Key Configured",
+    "openRouterKeyLabel": "OpenRouter API Key",
+    "openRouterKeyHelp": "How can I get an OpenRouter API key?",
+    "saveAndValidate": "Save and Validate",
+    "deleteOpenRouterKeyConfirm": "Delete OpenRouter API Key?",
+    "deleteOpenRouterKeyMessage": "Are you sure you want to remove your OpenRouter API key?",
+    "openrouterKeySaved": "OpenRouter API key saved successfully!",
+    "openrouterKeySaveError": "Failed to save OpenRouter API key",
+    "openrouterKeyDeleted": "OpenRouter API key deleted successfully!",
+    "openrouterKeyDeleteError": "Failed to delete OpenRouter API key",
+    "usageStatistics": "Usage Statistics",
+    "totalRequests": "Total Requests",
+    "inputTokens": "Input Tokens",
+    "outputTokens": "Output Tokens",
+    "remainingBalance": "Remaining Balance",
+    "usageRefreshed": "Usage statistics refreshed",
+    "usageRefreshError": "Failed to refresh usage statistics",
+    "refresh": "Refresh",
+    "lastUpdated": "Last Updated",
+    "selectedModel": "Selected Model",
+    "textGeneration": "Text Generation",
+    "textGenerationHelp": "Choose your preferred model for text tasks such as recipe suggestions and health insights",
+    "imageAnalysis": "Image Analysis",
+    "imageAnalysisHelp": "Choose your preferred model for image analysis tasks such as ingredient recognition",
+    "aiPreferencesTip": "These settings override the default AI configuration for your account",
+    "changeModel": "Change Model",
+    "selectModel": "Select Model",
+    "aiServicePreferences": "AI Service Preferences",
+    "aiServicePreferencesDescription": "Choose the AI provider for different features such as text generation and image analysis",
+    "openRouterAccess": "OpenRouter Access",
+    "preferencesUpdated": "AI preferences updated successfully",
+    "preferencesUpdateError": "Failed to update AI preferences",
+    "modelUpdatedSuccess": "Model updated successfully",
+    "changeAvatar": "Change Avatar",
+    "connectedWith": "Connected with",
+    "oauthAvatarInfo": "Your avatar is synced from your OAuth provider",
+    "invalidAvatarType": "Invalid image format. Please upload JPG, PNG, or WebP.",
+    "avatarTooLarge": "Image is too large. Maximum size is 5MB.",
+    "avatarUploadSuccess": "Avatar uploaded successfully",
+    "avatarUploadError": "Failed to upload avatar",
+    "deleteAvatarConfirm": "Delete avatar?",
+    "deleteAvatarMessage": "Are you sure you want to remove your avatar?",
+    "avatarDeleteSuccess": "Avatar deleted successfully",
+    "avatarDeleteError": "Failed to delete avatar",
+    "revokeSessionMessage": "This device will be signed out and require login again."
   },
   "healthInsights": {
     "title": "Health Insights",
@@ -406,7 +597,14 @@
       "search": "Search...",
       "allMethods": "All Methods",
       "allCodes": "All Codes",
-      "pathFilter": "Path Filter"
+      "pathFilter": "Path Filter",
+      "filterByAction": "Filter by Action",
+      "filterByTargetType": "Filter by Target Type",
+      "allActions": "All Actions",
+      "allTypes": "All Types",
+      "searchUserPath": "Search User/Path",
+      "httpMethod": "HTTP Method",
+      "statusCode": "Status Code"
     },
     "status": {
       "active": "Active",
@@ -423,13 +621,110 @@
       "userDeleted": "User deleted successfully",
       "actionFailed": "Action failed. Please try again.",
       "loadingMoreLogs": "Loading more logs...",
-      "allLogsLoaded": "All logs loaded"
+      "allLogsLoaded": "All logs loaded",
+      "allLogsLoadedCount": "All logs loaded ({{count}} total)",
+      "userTimedOutFor": "User timed out for {{duration}} hours",
+      "userPermanentlyBanned": "User permanently banned",
+      "userBannedFor": "User banned for {{duration}} hours",
+      "userDeletedWithEmail": "User account deleted successfully. Notification email sent.",
+      "inventoryDeleted": "Inventory item deleted successfully",
+      "recipeDeleted": "Recipe deleted successfully",
+      "noLogsFound": "No logs found matching the current filters.",
+      "noApiLogsFound": "No API logs found matching the current filters."
+    },
+    "errors": {
+      "loadDashboard": "Failed to load dashboard data",
+      "loadUsers": "Failed to load users",
+      "loadInventory": "Failed to load inventory",
+      "loadRecipes": "Failed to load recipes",
+      "loadUploads": "Failed to load uploads",
+      "loadLogs": "Failed to load logs",
+      "loadApiLogs": "Failed to load API logs",
+      "loadModerationHistory": "Failed to load moderation history",
+      "warnUser": "Failed to send warning",
+      "timeoutUser": "Failed to timeout user",
+      "banUser": "Failed to ban user",
+      "unbanUser": "Failed to unban user",
+      "changeRole": "Failed to update user role",
+      "deleteUser": "Failed to delete user",
+      "deleteInventory": "Failed to delete inventory item",
+      "deleteRecipe": "Failed to delete recipe",
+      "invalidDuration": "Invalid duration. Please enter a positive number."
+    },
+    "prompts": {
+      "warningReason": "Enter a reason for the warning:",
+      "adminNoteOptional": "(Optional) Internal admin note:",
+      "timeoutDuration": "Enter timeout duration in hours (e.g., 24 for 1 day, 168 for 1 week):",
+      "timeoutReason": "Enter a reason for the timeout:",
+      "permanentBanQuestion": "Should this be a permanent ban? Click OK for permanent, Cancel for temporary.",
+      "banDuration": "Enter ban duration in hours (e.g., 720 for 30 days):",
+      "banReason": "Enter a reason for the ban:"
+    },
+    "confirm": {
+      "sendWarningTitle": "Send Warning?",
+      "sendWarningMessage": "Are you sure you want to send a warning to this user?",
+      "sendWarning": "Send Warning",
+      "timeoutUserTitle": "Timeout User?",
+      "timeoutUserMessage": "Are you sure you want to timeout this user for {{duration}} hours? They will be logged out and unable to access their account until the timeout expires.",
+      "timeoutUser": "Timeout User",
+      "permanentBanTitle": "Permanently Ban User?",
+      "banUserTitle": "Ban User?",
+      "permanentBanMessage": "Are you sure you want to PERMANENTLY ban this user? This is a serious action!",
+      "banUserMessage": "Are you sure you want to ban this user for {{duration}} hours?",
+      "banUser": "Ban User",
+      "unbanUserTitle": "Unban User?",
+      "unbanUserMessage": "Are you sure you want to remove the ban/timeout from this user?",
+      "unbanUser": "Unban User",
+      "changeUserRoleTitle": "Change User Role?",
+      "changeUserRoleMessage": "Are you sure you want to change this user's role to {{newRole}}?"
     },
     "apiStats": {
       "totalRequests": "Total Requests",
       "successRate": "Success Rate",
       "avgResponse": "Avg Response",
       "failedRequests": "Failed Requests"
+    },
+    "logActions": {
+      "user_warned": "User Warned",
+      "user_timeout": "User Timeout",
+      "user_banned": "User Banned",
+      "user_unbanned": "User Unbanned",
+      "user_suspended": "User Suspended",
+      "user_reactivated": "User Reactivated",
+      "user_deleted": "User Deleted",
+      "rate_limit_reset": "Rate Limit Reset"
+    },
+    "targetTypes": {
+      "user": "User",
+      "recipe": "Recipe",
+      "inventory": "Inventory",
+      "upload": "Upload",
+      "system": "System"
+    },
+    "labels": {
+      "itemsCount": "{{count}} items",
+      "recipesCount": "{{count}} recipes",
+      "sessionsCount": "{{count}} sessions",
+      "joined": "Joined",
+      "expires": "Expires:",
+      "location": "Location:",
+      "by": "by",
+      "cal": "cal",
+      "servings": "servings",
+      "itemsDetected": "{{count}} items detected",
+      "target": "Target:",
+      "email": "Email:",
+      "viewDetails": "View Details",
+      "viewRequestBody": "View Request Body",
+      "viewResponseBody": "View Response Body",
+      "unauthenticatedRequest": "Unauthenticated request",
+      "moderationHistory": "Moderation History",
+      "activeModerationActions": "Active Moderation Actions",
+      "reason": "Reason:",
+      "adminNote": "Admin Note:",
+      "duration": "Duration:",
+      "hours": "hours",
+      "expired": "EXPIRED"
     },
     "loading": "Loading...",
     "noDataAvailable": "No data available",
@@ -462,7 +757,8 @@
       "avgPerDay": "Avg/Day",
       "protein": "Protein",
       "carbs": "Carbs",
-      "fat": "Fat"
+      "fat": "Fat",
+      "avgCalories": "Avg calories"
     },
     "mealTypes": {
       "breakfast": "Breakfast",
@@ -475,6 +771,9 @@
       "addMeal": "Add meal",
       "addMore": "Add more"
     },
+    "labels": {
+      "meal": "Meal"
+    },
     "modal": {
       "title": "Add to Meal Plan",
       "selectRecipe": "Select Recipe",
@@ -482,12 +781,15 @@
       "chooseRecipe": "Choose a recipe...",
       "noRecipes": "No recipes available. Please add some recipes first.",
       "noInventory": "No inventory items available. Please add items to your inventory first.",
+      "noInventoryItems": "No inventory items available",
       "itemsSelected": "item(s) selected",
       "cancel": "Cancel",
       "addRecipe": "Add Recipe",
       "addIngredients": "Add Ingredients",
       "recipe": "Recipe",
-      "ingredients": "Ingredients"
+      "ingredients": "Ingredients",
+      "recipeMode": "Recipe mode",
+      "ingredientsMode": "Ingredients mode"
     },
     "messages": {
       "mealAdded": "Meal added to plan successfully!",
@@ -522,19 +824,33 @@
       "protein": "Protein",
       "carbs": "Carbs",
       "fat": "Fat",
-      "fiber": "Fiber"
+      "fiber": "Fiber",
+      "dailyCalories": "Daily calories",
+      "remaining": "Remaining",
+      "of": "Of",
+      "percentOfGoal": "Percent of goal",
+      "goal": "Goal",
+      "goalReached": "Goal reached!"
     },
     "todayMeals": "Today's Meals",
     "logMeal": "+ Log Meal",
     "noMealsLogged": "No meals logged yet today",
     "clickToStart": "Click \"Log Meal\" to get started",
     "remove": "Remove",
-    "weeklyInsights": "Weekly Insights",
+    "weeklyInsights": {
+      "title": "Weekly insights",
+      "description": "Track your progress with detailed analytics and trends"
+    },
     "weeklyInsightsSubtitle": "Track your progress over time with detailed analytics and trends. Coming soon!",
     "setGoals": "Set Goals",
     "calculateMyGoals": "Calculate My Goals",
     "calculate": "Calculate",
-    "goals": "Goals",
+    "goals": {
+      "title": "Goals",
+      "setGoals": "Set Goals",
+      "saveGoals": "Save Goals",
+      "cancel": "Cancel"
+    },
     "setNutritionGoals": "Set Nutrition Goals",
     "dailyCaloriesGoal": "Daily Calories",
     "proteinGoal": "Protein (g)",
@@ -550,6 +866,15 @@
     "mealDeleted": "Meal removed",
     "mealDeleteFailed": "Failed to delete meal. Please try again.",
     "loadedFromLocal": "Loaded goals from local storage",
+    "messages": {
+      "goalsLoadedFromLocal": "Loaded goals from local storage",
+      "goalsUpdateFailed": "Failed to save goals. Please try again.",
+      "goalsUpdated": "Nutrition goals updated!",
+      "mealLogFailed": "Failed to log meal. Please try again.",
+      "mealLogged": "Meal logged successfully!",
+      "mealDeleted": "Meal removed",
+      "mealDeleteFailed": "Failed to delete meal. Please try again."
+    },
     "loading": "Loading...",
     "mealTypes": {
       "breakfast": "breakfast",
@@ -614,14 +939,72 @@
       "maintain": "Maintain Weight",
       "gain": "Gain Weight",
       "calculating": "Calculating...",
-      "results": "Your Personalized Recommendations",
+      "results": {
+        "metabolicRate": "Metabolic rate",
+        "bmr": "BMR",
+        "tdee": "TDEE",
+        "cal": "Cal",
+        "basedOn": "Based on",
+        "dailyTargets": "Daily targets",
+        "adjustable": "Adjustable",
+        "dailyCalories": "Daily calories",
+        "protein": "Protein",
+        "carbs": "Carbs",
+        "fat": "Fat",
+        "fiber": "Fiber",
+        "macroDistribution": "Macro distribution",
+        "proteinRatio": "Protein ratio",
+        "carbsRatio": "Carbs ratio",
+        "fatRatio": "Fat ratio",
+        "backToForm": "Back to form",
+        "saveButton": "Save button",
+        "saving": "Saving..."
+      },
       "bmr": "BMR (Basal Metabolic Rate)",
       "tdee": "TDEE (Total Daily Energy Expenditure)",
       "recommendedIntake": "Recommended Daily Intake",
       "cal": "cal",
       "adjustRecommendations": "Adjust Recommendations",
       "saveTheseGoals": "Save These Goals",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "ageLabel": "Age",
+      "genderLabel": "Gender",
+      "weightLabel": "Weight",
+      "heightLabel": "Height",
+      "activityLevelLabel": "Activity Level",
+      "goalLabel": "Goal",
+      "switchTo": "Switch to:",
+      "calculateButton": "Calculate",
+      "activityLevels": {
+        "sedentary": "Sedentary",
+        "light": "Light",
+        "moderate": "Moderate",
+        "active": "Active",
+        "veryActive": "Very active"
+      },
+      "goals": {
+        "lose": "Lose",
+        "loseFast": "Lose fast",
+        "loseAggressive": "Lose aggressively",
+        "maintain": "Maintain",
+        "gain": "Gain",
+        "cancel": "Cancel",
+        "saveGoals": "Save goals"
+      }
+    },
+    "meal": {
+      "logMeal": "Log Meal",
+      "title": "Log and manage meals",
+      "noMealsLogged": "No meals logged yet",
+      "logMealPrompt": "Click \"Log Meal\" to get started",
+      "remove": "Remove"
+    },
+    "actions": {
+      "logMeal": "Log meal",
+      "setGoals": "Set goals",
+      "calculateGoals": "Calculate goals",
+      "calculate": "Calculate",
+      "goals": "Goals"
     }
   },
   "shoppingList": {
@@ -634,7 +1017,8 @@
       "groupByCategory": "Group by Category",
       "ungroup": "Ungroup",
       "clearChecked": "Clear Checked",
-      "addToList": "Add to List"
+      "addToList": "Add to List",
+      "optimize": "Optimize"
     },
     "stats": {
       "totalItems": "Total Items",
@@ -656,13 +1040,19 @@
     "itemName": "Item name (Ctrl+A)",
     "quantity": "Quantity",
     "adjustServings": "Adjust Servings",
-    "servings": "servings",
+    "servings": {
+      "label": "servings",
+      "title": "Adjust servings",
+      "subtitle": "Set your desired number of servings"
+    },
     "smartTips": "Smart Tips",
     "tips": {
       "optimize": "Optimize portions for standard package sizes",
+      "adjust": "Adjust servings to scale quantities",
       "inventory": "Items in your inventory are highlighted",
       "servings": "Adjust servings to scale quantities",
-      "export": "Export your list to share or print"
+      "export": "Export your list to share or print",
+      "title": "How do I use the smart shopping list?"
     },
     "emptyState": {
       "title": "Your shopping list is empty",
@@ -677,7 +1067,24 @@
     },
     "ingredients": "ingredients",
     "inStockLabel": "In Stock",
-    "inStockQty": "In Stock: {{qty}} {{unit}}"
+    "inStockQty": "In Stock: {{qty}} {{unit}}",
+    "empty": {
+      "title": "Your shopping list is empty",
+      "description": "Start adding items to build your smart shopping list"
+    },
+    "add": {
+      "title": "Add to Shopping List",
+      "subtitle": "Enter the details of the new item",
+      "namePlaceholder": "e.g., Tomatoes",
+      "quantity": "Quantity",
+      "cancel": "Cancel",
+      "addItem": "Add item",
+      "button": "Add"
+    },
+    "adjustServingsModal": {
+      "title": "Adjust Number of Servings",
+      "subtitle": "Set your desired number of servings to scale quantities"
+    }
   },
   "publicRecipes": {
     "title": "Discover Recipes",
@@ -744,5 +1151,93 @@
     "clickToViewDetails": "Click to view details",
     "configureOwnKey": "Configure your own API key in Profile settings to bypass these limits",
     "noLimits": "No rate limits when using your own API key"
+  },
+  "units": {
+    "unit": "Unit",
+    "grams": "Grams",
+    "kilograms": "Kilograms",
+    "milliliters": "Milliliters",
+    "liters": "Liters",
+    "pieces": "Pieces",
+    "cups": "Cups",
+    "cup": "Cup",
+    "tablespoons": "Tablespoons",
+    "tablespoon": "Tablespoon",
+    "teaspoons": "Teaspoons",
+    "teaspoon": "Teaspoon",
+    "ounces": "Ounces",
+    "pounds": "Pounds"
+  },
+  "breadcrumbs": {
+    "dashboard": "Dashboard",
+    "home": "Home",
+    "inventory": "Inventory",
+    "recipes": "Recipes",
+    "recipeRecommendations": "Recipe recommendations",
+    "myRecipes": "My recipes",
+    "mealPlanning": "Meal planning",
+    "shoppingList": "Shopping list",
+    "profile": "Profile",
+    "admin": "Admin",
+    "adminPanel": "Admin Panel",
+    "nutrition": "Nutrition",
+    "healthInsights": "Health insights",
+    "nutritionTracking": "Nutrition tracking"
+  },
+  "myRecipes": {
+    "title": "My Recipes",
+    "subtitle": "View and manage your saved recipes",
+    "createNew": "Create New Recipe",
+    "openingRecommendations": "Opening recipe recommendations...",
+    "recipesRefreshed": "Recipes refreshed!",
+    "filters": {
+      "all": "All",
+      "favorites": "Favorites",
+      "recent": "Recent"
+    },
+    "sort": {
+      "sortBy": "Sort by",
+      "name": "Name",
+      "calories": "Calories"
+    },
+    "emptyState": {
+      "title": "No Recipes Yet",
+      "description": "Start creating your own recipes or save AI-generated recommendations to your personal cookbook!",
+      "createFirst": "Create Your First Recipe"
+    },
+    "actions": {
+      "viewRecipe": "View recipe",
+      "addToShoppingList": "Add to shopping list",
+      "delete": "Delete",
+      "makePublic": "Make public",
+      "makePrivate": "Make private"
+    },
+    "details": {
+      "author": "Author",
+      "unknown": "Unknown",
+      "createdAt": "Created at",
+      "rating": "Rating",
+      "public": "Public",
+      "private": "Private",
+      "ingredients": "Ingredients",
+      "instructions": "Instructions",
+      "nutrition": "Nutrition",
+      "close": "Close"
+    },
+    "messages": {
+      "deleteConfirm": "Delete Recipe?",
+      "deleteMessage": "Are you sure you want to delete this recipe? This action cannot be undone.",
+      "confirmDelete": "Delete",
+      "cancel": "Cancel",
+      "deleteSuccess": "Recipe deleted successfully",
+      "deleteFailed": "Failed to delete recipe",
+      "visibilityPublic": "Recipe is now public",
+      "visibilityPrivate": "Recipe is now private",
+      "visibilityFailed": "Failed to update recipe visibility",
+      "addedToShoppingList": "\"{{name}}\" added to shopping list as a reminder!",
+      "addedWithIngredients": "\"{{name}}\" added to shopping list with {{count}} ingredients!",
+      "addedWithStock": "\"{{name}}\" added to shopping list! {{inStock}} of {{total}} ingredients already in stock ✓",
+      "loadFailed": "Failed to load recipes. Please try again."
+    }
   }
 }

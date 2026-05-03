@@ -81,7 +81,7 @@ export function InventoryPage() {
   const { isRefreshing, pullDistance } = usePullToRefresh({
     onRefresh: async () => {
       await loadInventoryData();
-      toast.success("Inventory refreshed!");
+      toast.success(t("inventory.messages.inventoryRefreshed"));
     },
     threshold: 80,
   });
@@ -109,13 +109,18 @@ export function InventoryPage() {
           case "n":
             e.preventDefault();
             setShowManualForm(true);
-            toast.info("Opening manual form...");
+            toast.info(t("inventory.messages.openingManualForm"));
             break;
           case "g":
             e.preventDefault();
             setViewMode((prev) => (prev === "grid" ? "list" : "grid"));
             toast.info(
-              `Switched to ${viewMode === "grid" ? "list" : "grid"} view`
+              t("inventory.messages.switchedView", {
+                view:
+                  viewMode === "grid"
+                    ? t("inventory.messages.listView")
+                    : t("inventory.messages.gridView"),
+              })
             );
             break;
         }
@@ -219,7 +224,7 @@ export function InventoryPage() {
       const allItemsData = await apiService.getAllInventoryItems();
       setAllItems(allItemsData);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load inventory data");
+      setError(err.response?.data?.error || t("inventory.messages.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -236,11 +241,13 @@ export function InventoryPage() {
       if (err.response?.status === 429) {
         const errorData = err.response?.data;
         const resetInHours = errorData?.resetInHours || "24";
-        const errorMessage = `You've reached your daily limit for AI image analysis. Please try again in ${resetInHours} hours.`;
+        const errorMessage = t("inventory.messages.aiImageLimitReached", {
+          hours: resetInHours,
+        });
         setError(errorMessage);
         toast.error(errorMessage, { duration: 5000 });
       } else {
-        setError(err.response?.data?.error || "Failed to analyze image");
+        setError(err.response?.data?.error || t("inventory.messages.analyzeFailed"));
       }
     }
   };
@@ -252,12 +259,14 @@ export function InventoryPage() {
     setError(null);
     try {
       await apiService.confirmDetectedItems(uploadId, selectedItems);
-      setSuccessMessage(`Successfully added ${selectedItems.length} items!`);
+      setSuccessMessage(
+        t("inventory.messages.itemsAdded", { count: selectedItems.length })
+      );
       setDetectionResult(null);
       await loadInventoryData();
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to add items");
+      setError(err.response?.data?.error || t("inventory.messages.addItemsFailed"));
     }
   };
 
@@ -287,9 +296,7 @@ export function InventoryPage() {
         });
       }
       setSuccessMessage(
-        `Successfully added ${items.length} ${
-          items.length === 1 ? "item" : "items"
-        }!`
+        t("inventory.messages.itemsAdded", { count: items.length })
       );
       setShowManualForm(false);
       await loadInventoryData();
@@ -301,7 +308,7 @@ export function InventoryPage() {
 
   const handleExportCSV = () => {
     if (filteredItems.length === 0) {
-      toast.error("No items to export");
+      toast.error(t("inventory.noItemsToExport"));
       return;
     }
 
@@ -342,7 +349,7 @@ export function InventoryPage() {
     link.click();
     document.body.removeChild(link);
 
-    toast.success(`Exported ${filteredItems.length} items to CSV`);
+    toast.success(t("inventory.messages.exportedToCsv", { count: filteredItems.length }));
   };
 
   const handleDeleteItem = async (itemId: string) => {
@@ -378,8 +385,8 @@ export function InventoryPage() {
             t("inventory.itemDeleted") || "Item deleted successfully!"
           );
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to delete item");
-          toast.error(err.response?.data?.error || "Failed to delete item");
+          setError(err.response?.data?.error || t("inventory.messages.deleteFailed"));
+          toast.error(err.response?.data?.error || t("inventory.messages.deleteFailed"));
         }
       },
     });
@@ -393,19 +400,17 @@ export function InventoryPage() {
     });
 
     if (expiredItems.length === 0) {
-      toast.info("No expired items found");
+      toast.info(t("inventory.noExpiredItems"));
       return;
     }
 
     confirmDialog({
-      title: "Delete Expired Items?",
-      message: `Are you sure you want to delete ${
-        expiredItems.length
-      } expired ${
-        expiredItems.length === 1 ? "item" : "items"
-      }? This action cannot be undone.`,
-      confirmText: "Delete All",
-      cancelText: "Cancel",
+      title: t("inventory.confirmDeleteExpired"),
+      message: t("inventory.messages.deleteExpiredConfirmMessage", {
+        count: expiredItems.length,
+      }),
+      confirmText: t("inventory.messages.deleteAll"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         setError(null);
         let deletedCount = 0;
@@ -449,20 +454,21 @@ export function InventoryPage() {
 
           if (deletedCount > 0) {
             toast.success(
-              `Successfully deleted ${deletedCount} expired ${
-                deletedCount === 1 ? "item" : "items"
-              }${failedCount > 0 ? ` (${failedCount} failed)` : ""}`
+              t("inventory.messages.deleteExpiredSuccess", {
+                deleted: deletedCount,
+                failed: failedCount,
+              })
             );
           }
           if (failedCount > 0 && deletedCount === 0) {
-            toast.error(`Failed to delete ${failedCount} items`);
+            toast.error(t("inventory.messages.deleteExpiredFailedCount", { count: failedCount }));
           }
         } catch (err: any) {
           setError(
-            err.response?.data?.error || "Failed to delete expired items"
+            err.response?.data?.error || t("inventory.messages.deleteExpiredFailed")
           );
           toast.error(
-            err.response?.data?.error || "Failed to delete expired items"
+            err.response?.data?.error || t("inventory.messages.deleteExpiredFailed")
           );
         }
       },
@@ -496,7 +502,7 @@ export function InventoryPage() {
       await loadInventoryData();
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update item");
+      setError(err.response?.data?.error || t("inventory.messages.updateFailed"));
     }
   };
 
@@ -528,20 +534,20 @@ export function InventoryPage() {
 
   const getExpiryStatus = (expiryDate: string | null) => {
     if (!expiryDate)
-      return { text: "No expiry", color: "bg-gray-100 text-gray-600" };
+      return { text: t("inventory.noExpiry"), color: "bg-gray-100 text-gray-600" };
 
     const days = Math.floor(
       (new Date(expiryDate).getTime() - new Date().getTime()) /
         (1000 * 60 * 60 * 24)
     );
 
-    if (days < 0) return { text: "Expired", color: "bg-red-100 text-red-700" };
-    if (days === 0) return { text: "Today", color: "bg-red-100 text-red-700" };
+    if (days < 0) return { text: t("inventory.expired"), color: "bg-red-100 text-red-700" };
+    if (days === 0) return { text: t("inventory.messages.today"), color: "bg-red-100 text-red-700" };
     if (days <= 3)
-      return { text: `${days}d left`, color: "bg-orange-100 text-orange-700" };
+      return { text: t("inventory.messages.daysLeft", { days }), color: "bg-orange-100 text-orange-700" };
     if (days <= 7)
-      return { text: `${days}d left`, color: "bg-yellow-100 text-yellow-700" };
-    return { text: `${days}d left`, color: "bg-green-100 text-green-700" };
+      return { text: t("inventory.messages.daysLeft", { days }), color: "bg-yellow-100 text-yellow-700" };
+    return { text: t("inventory.messages.daysLeft", { days }), color: "bg-green-100 text-green-700" };
   };
 
   const filteredItems = allItems.filter((item) => {
@@ -1158,7 +1164,7 @@ export function InventoryPage() {
                 {t("inventory.scanPhoto")}
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Upload a photo and let AI detect your ingredients
+                {t("inventory.photoUpload.modalSubtitle")}
               </p>
 
               <button

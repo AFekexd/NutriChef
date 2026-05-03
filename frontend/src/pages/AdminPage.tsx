@@ -24,6 +24,7 @@ import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { apiService } from "../services/api";
 import { confirmDialog } from "../utils/confirmDialog";
+import { useTranslation } from "react-i18next";
 
 interface AdminStats {
   totalUsers: number;
@@ -34,6 +35,7 @@ interface AdminStats {
 }
 
 export function AdminPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<
     | "dashboard"
     | "users"
@@ -195,7 +197,7 @@ export function AdminPage() {
       const data = await apiService.getAdminStats();
       setStats(data.stats);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load dashboard data");
+      setError(err.response?.data?.error || t("admin.errors.loadDashboard"));
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +214,7 @@ export function AdminPage() {
       setUsers(data.users);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load users");
+      setError(err.response?.data?.error || t("admin.errors.loadUsers"));
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +231,7 @@ export function AdminPage() {
       setInventoryItems(data.items);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load inventory");
+      setError(err.response?.data?.error || t("admin.errors.loadInventory"));
     } finally {
       setIsLoading(false);
     }
@@ -246,7 +248,7 @@ export function AdminPage() {
       setRecipes(data.recipes);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load recipes");
+      setError(err.response?.data?.error || t("admin.errors.loadRecipes"));
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +264,7 @@ export function AdminPage() {
       setUploads(data.uploads);
       setTotalPages(data.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load uploads");
+      setError(err.response?.data?.error || t("admin.errors.loadUploads"));
     } finally {
       setIsLoading(false);
     }
@@ -297,7 +299,7 @@ export function AdminPage() {
       setTotalPages(data.pagination.totalPages);
       setHasMoreLogs(pageToLoad < data.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load logs");
+      setError(err.response?.data?.error || t("admin.errors.loadLogs"));
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -345,7 +347,7 @@ export function AdminPage() {
       setTotalPages(logsData.pagination.totalPages);
       setHasMoreApiLogs(pageToLoad < logsData.pagination.totalPages);
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to load API logs");
+      setError(err.response?.data?.error || t("admin.errors.loadApiLogs"));
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -360,22 +362,22 @@ export function AdminPage() {
       setShowModerationModal(true);
     } catch (err: any) {
       setError(
-        err.response?.data?.error || "Failed to load moderation history"
+        err.response?.data?.error || t("admin.errors.loadModerationHistory")
       );
     }
   };
 
   const handleWarnUser = async (userId: string) => {
-    const reason = window.prompt("Enter a reason for the warning:");
+    const reason = window.prompt(t("admin.prompts.warningReason"));
     if (reason === null) return;
 
-    const adminNote = window.prompt("(Optional) Internal admin note:");
+    const adminNote = window.prompt(t("admin.prompts.adminNoteOptional"));
 
     confirmDialog({
-      title: "Send Warning?",
-      message: "Are you sure you want to send a warning to this user?",
-      confirmText: "Send Warning",
-      cancelText: "Cancel",
+      title: t("admin.confirm.sendWarningTitle"),
+      message: t("admin.confirm.sendWarningMessage"),
+      confirmText: t("admin.confirm.sendWarning"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.sendWarningToUser(
@@ -383,11 +385,11 @@ export function AdminPage() {
             reason.trim() || undefined,
             adminNote?.trim() || undefined
           );
-          setSuccess("Warning sent successfully!");
+          setSuccess(t("admin.messages.userWarned"));
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to send warning");
+          setError(err.response?.data?.error || t("admin.errors.warnUser"));
         }
       },
     });
@@ -395,26 +397,26 @@ export function AdminPage() {
 
   const handleTimeoutUser = async (userId: string) => {
     const durationStr = window.prompt(
-      "Enter timeout duration in hours (e.g., 24 for 1 day, 168 for 1 week):"
+      t("admin.prompts.timeoutDuration")
     );
     if (durationStr === null) return;
 
     const duration = parseInt(durationStr);
     if (isNaN(duration) || duration <= 0) {
-      setError("Invalid duration. Please enter a positive number.");
+      setError(t("admin.errors.invalidDuration"));
       return;
     }
 
-    const reason = window.prompt("Enter a reason for the timeout:");
+    const reason = window.prompt(t("admin.prompts.timeoutReason"));
     if (reason === null) return;
 
-    const adminNote = window.prompt("(Optional) Internal admin note:");
+    const adminNote = window.prompt(t("admin.prompts.adminNoteOptional"));
 
     confirmDialog({
-      title: "Timeout User?",
-      message: `Are you sure you want to timeout this user for ${duration} hours? They will be logged out and unable to access their account until the timeout expires.`,
-      confirmText: "Timeout User",
-      cancelText: "Cancel",
+      title: t("admin.confirm.timeoutUserTitle"),
+      message: t("admin.confirm.timeoutUserMessage", { duration }),
+      confirmText: t("admin.confirm.timeoutUser"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.timeoutUser(
@@ -423,11 +425,11 @@ export function AdminPage() {
             reason.trim() || undefined,
             adminNote?.trim() || undefined
           );
-          setSuccess(`User timed out for ${duration} hours!`);
+          setSuccess(t("admin.messages.userTimedOutFor", { duration }));
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to timeout user");
+          setError(err.response?.data?.error || t("admin.errors.timeoutUser"));
         }
       },
     });
@@ -435,35 +437,37 @@ export function AdminPage() {
 
   const handleBanUser = async (userId: string) => {
     const isPermanent = window.confirm(
-      "Should this be a permanent ban? Click OK for permanent, Cancel for temporary."
+      t("admin.prompts.permanentBanQuestion")
     );
 
     let duration: number | undefined;
     if (!isPermanent) {
       const durationStr = window.prompt(
-        "Enter ban duration in hours (e.g., 720 for 30 days):"
+        t("admin.prompts.banDuration")
       );
       if (durationStr === null) return;
 
       duration = parseInt(durationStr);
       if (isNaN(duration) || duration <= 0) {
-        setError("Invalid duration. Please enter a positive number.");
+        setError(t("admin.errors.invalidDuration"));
         return;
       }
     }
 
-    const reason = window.prompt("Enter a reason for the ban:");
+    const reason = window.prompt(t("admin.prompts.banReason"));
     if (reason === null) return;
 
-    const adminNote = window.prompt("(Optional) Internal admin note:");
+    const adminNote = window.prompt(t("admin.prompts.adminNoteOptional"));
 
     confirmDialog({
-      title: isPermanent ? "Permanently Ban User?" : "Ban User?",
+      title: isPermanent
+        ? t("admin.confirm.permanentBanTitle")
+        : t("admin.confirm.banUserTitle"),
       message: isPermanent
-        ? "Are you sure you want to PERMANENTLY ban this user? This is a serious action!"
-        : `Are you sure you want to ban this user for ${duration} hours?`,
-      confirmText: "Ban User",
-      cancelText: "Cancel",
+        ? t("admin.confirm.permanentBanMessage")
+        : t("admin.confirm.banUserMessage", { duration }),
+      confirmText: t("admin.confirm.banUser"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.banUser(
@@ -474,13 +478,13 @@ export function AdminPage() {
           );
           setSuccess(
             isPermanent
-              ? "User permanently banned!"
-              : `User banned for ${duration} hours!`
+              ? t("admin.messages.userPermanentlyBanned")
+              : t("admin.messages.userBannedFor", { duration })
           );
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to ban user");
+          setError(err.response?.data?.error || t("admin.errors.banUser"));
         }
       },
     });
@@ -488,19 +492,18 @@ export function AdminPage() {
 
   const handleUnbanUser = async (userId: string) => {
     confirmDialog({
-      title: "Unban User?",
-      message:
-        "Are you sure you want to remove the ban/timeout from this user?",
-      confirmText: "Unban User",
-      cancelText: "Cancel",
+      title: t("admin.confirm.unbanUserTitle"),
+      message: t("admin.confirm.unbanUserMessage"),
+      confirmText: t("admin.confirm.unbanUser"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.unbanUser(userId);
-          setSuccess("User unbanned successfully!");
+          setSuccess(t("admin.messages.userUnbanned"));
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to unban user");
+          setError(err.response?.data?.error || t("admin.errors.unbanUser"));
         }
       },
     });
@@ -509,18 +512,18 @@ export function AdminPage() {
   const handleToggleUserRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "admin" ? "user" : "admin";
     confirmDialog({
-      title: "Change User Role?",
-      message: `Are you sure you want to change this user's role to ${newRole}?`,
-      confirmText: "Change Role",
-      cancelText: "Cancel",
+      title: t("admin.confirm.changeUserRoleTitle"),
+      message: t("admin.confirm.changeUserRoleMessage", { newRole }),
+      confirmText: t("admin.actions.changeRole"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.updateUserRole(userId, newRole);
-          setSuccess("User role updated successfully!");
+          setSuccess(t("admin.messages.roleChanged"));
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to update user role");
+          setError(err.response?.data?.error || t("admin.errors.changeRole"));
         }
       },
     });
@@ -528,21 +531,18 @@ export function AdminPage() {
 
   const handleDeleteUser = async (userId: string) => {
     confirmDialog({
-      title: "Delete User Account?",
-      message:
-        "Are you sure you want to permanently delete this user and all their data? This action cannot be undone! A notification email will be sent to the user.",
-      confirmText: "Delete Permanently",
-      cancelText: "Cancel",
+      title: t("admin.deleteUserConfirm"),
+      message: t("admin.deleteUserMessage"),
+      confirmText: t("admin.deleteUserButton"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.deleteUser(userId);
-          setSuccess(
-            "User account deleted successfully! Notification email sent."
-          );
+          setSuccess(t("admin.messages.userDeletedWithEmail"));
           loadUsers();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to delete user");
+          setError(err.response?.data?.error || t("admin.errors.deleteUser"));
         }
       },
     });
@@ -550,20 +550,19 @@ export function AdminPage() {
 
   const handleDeleteInventoryItem = async (itemId: string) => {
     confirmDialog({
-      title: "Delete Inventory Item?",
-      message:
-        "Are you sure you want to delete this inventory item? This action cannot be undone.",
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      title: t("admin.deleteInventoryConfirm"),
+      message: t("admin.deleteInventoryMessage"),
+      confirmText: t("common.delete"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.deleteAdminInventoryItem(itemId);
-          setSuccess("Inventory item deleted successfully!");
+          setSuccess(t("admin.messages.inventoryDeleted"));
           loadInventory();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
           setError(
-            err.response?.data?.error || "Failed to delete inventory item"
+            err.response?.data?.error || t("admin.errors.deleteInventory")
           );
         }
       },
@@ -572,19 +571,18 @@ export function AdminPage() {
 
   const handleDeleteRecipe = async (recipeId: string) => {
     confirmDialog({
-      title: "Delete Recipe?",
-      message:
-        "Are you sure you want to delete this recipe? This action cannot be undone.",
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      title: t("admin.deleteRecipeConfirm"),
+      message: t("admin.deleteRecipeMessage"),
+      confirmText: t("common.delete"),
+      cancelText: t("common.cancel"),
       onConfirm: async () => {
         try {
           await apiService.deleteAdminRecipe(recipeId);
-          setSuccess("Recipe deleted successfully!");
+          setSuccess(t("admin.messages.recipeDeleted"));
           loadRecipes();
           setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
-          setError(err.response?.data?.error || "Failed to delete recipe");
+          setError(err.response?.data?.error || t("admin.errors.deleteRecipe"));
         }
       },
     });
@@ -606,11 +604,11 @@ export function AdminPage() {
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600 dark:text-orange-400" />
             <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent">
-              Admin Dashboard
+              {t("admin.title")}
             </h1>
           </div>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-            Manage users, inventory, recipes, and system data
+            {t("admin.subtitle")}
           </p>
         </div>
 
@@ -646,13 +644,13 @@ export function AdminPage() {
         {/* Navigation Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {[
-            { key: "dashboard", icon: BarChart3, label: "Dashboard" },
-            { key: "users", icon: Users, label: "Users" },
-            { key: "inventory", icon: ShoppingBag, label: "Inventory" },
-            { key: "recipes", icon: ChefHat, label: "Recipes" },
-            { key: "uploads", icon: Image, label: "Uploads" },
-            { key: "logs", icon: AlertCircle, label: "Admin Logs" },
-            { key: "api-logs", icon: History, label: "API Logs" },
+            { key: "dashboard", icon: BarChart3, label: t("admin.tabs.dashboard") },
+            { key: "users", icon: Users, label: t("admin.tabs.users") },
+            { key: "inventory", icon: ShoppingBag, label: t("admin.tabs.inventory") },
+            { key: "recipes", icon: ChefHat, label: t("admin.tabs.recipes") },
+            { key: "uploads", icon: Image, label: t("admin.tabs.uploads") },
+            { key: "logs", icon: AlertCircle, label: t("admin.tabs.adminLogs") },
+            { key: "api-logs", icon: History, label: t("admin.tabs.apiLogs") },
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -687,31 +685,31 @@ export function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  label: "Total Users",
+                  label: t("admin.stats.totalUsers"),
                   value: stats.totalUsers,
                   icon: Users,
                   color: "blue",
                 },
                 {
-                  label: "Active Users",
+                  label: t("admin.stats.activeUsers"),
                   value: stats.activeUsers,
                   icon: CheckCircle,
                   color: "green",
                 },
                 {
-                  label: "Inventory Items",
+                  label: t("admin.stats.inventoryItems"),
                   value: stats.totalInventoryItems,
                   icon: ShoppingBag,
                   color: "orange",
                 },
                 {
-                  label: "Recipes",
+                  label: t("admin.stats.recipes"),
                   value: stats.totalRecipes,
                   icon: ChefHat,
                   color: "orange",
                 },
                 {
-                  label: "Total Uploads",
+                  label: t("admin.stats.totalUploads"),
                   value: stats.totalUploads,
                   icon: Image,
                   color: "pink",
@@ -780,7 +778,7 @@ export function AdminPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <Input
                   type="text"
-                  placeholder="Search users by name or email..."
+                  placeholder={t("admin.searchUsers")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -806,16 +804,16 @@ export function AdminPage() {
                           {user.role === "admin" && (
                             <Badge className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300">
                               <Shield className="w-3 h-3 mr-1" />
-                              Admin
+                              {t("admin.status.admin")}
                             </Badge>
                           )}
                           {user.isActive ? (
                             <Badge className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                              Active
+                              {t("admin.status.active")}
                             </Badge>
                           ) : (
                             <Badge className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                              Inactive
+                              {t("admin.status.inactive")}
                             </Badge>
                           )}
                         </div>
@@ -823,11 +821,11 @@ export function AdminPage() {
                           {user.email}
                         </p>
                         <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                          <span>{user._count.inventoryItems} items</span>
-                          <span>{user._count.recipes} recipes</span>
-                          <span>{user._count.sessions} sessions</span>
+                          <span>{t("admin.labels.itemsCount", { count: user._count.inventoryItems })}</span>
+                          <span>{t("admin.labels.recipesCount", { count: user._count.recipes })}</span>
+                          <span>{t("admin.labels.sessionsCount", { count: user._count.sessions })}</span>
                           <span>
-                            Joined{" "}
+                            {t("admin.labels.joined")} {" "}
                             {new Date(user.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -840,7 +838,7 @@ export function AdminPage() {
                             handleToggleUserRole(user.userId, user.role)
                           }
                           className="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
-                          title="Change role"
+                          title={t("admin.actions.changeRole")}
                         >
                           <UserCog className="w-4 h-4" />
                         </Button>
@@ -849,7 +847,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleWarnUser(user.userId)}
                           className="text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-                          title="Send warning"
+                          title={t("admin.actions.warn")}
                         >
                           <AlertTriangle className="w-4 h-4" />
                         </Button>
@@ -858,7 +856,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleTimeoutUser(user.userId)}
                           className="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950"
-                          title="Timeout user"
+                          title={t("admin.actions.timeout")}
                         >
                           <Clock className="w-4 h-4" />
                         </Button>
@@ -867,7 +865,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleBanUser(user.userId)}
                           className="text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                          title="Ban user"
+                          title={t("admin.actions.ban")}
                         >
                           <Ban className="w-4 h-4" />
                         </Button>
@@ -876,7 +874,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleViewUserModeration(user)}
                           className="text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
-                          title="View moderation history"
+                          title={t("admin.actions.viewHistory")}
                         >
                           <History className="w-4 h-4" />
                         </Button>
@@ -885,7 +883,7 @@ export function AdminPage() {
                           size="sm"
                           onClick={() => handleDeleteUser(user.userId)}
                           className="text-red-800 hover:bg-red-100 dark:hover:bg-red-950"
-                          title="Delete account permanently (will send email)"
+                          title={t("admin.deleteAccountPermanently")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -925,7 +923,7 @@ export function AdminPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Search inventory items..."
+                  placeholder={t("admin.searchInventory")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -963,10 +961,10 @@ export function AdminPage() {
                         {item.quantity} {item.unit}
                       </p>
                       <p>
-                        Expires:{" "}
+                        {t("admin.labels.expires")} {" "}
                         {new Date(item.expiryDate).toLocaleDateString()}
                       </p>
-                      {item.location && <p>Location: {item.location}</p>}
+                      {item.location && <p>{t("admin.labels.location")} {item.location}</p>}
                     </div>
                   </Card>
                 ))}
@@ -981,7 +979,7 @@ export function AdminPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Search recipes..."
+                  placeholder={t("admin.searchRecipes")}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -1001,15 +999,15 @@ export function AdminPage() {
                         </h3>
                         {recipe.user && (
                           <p className="text-sm text-gray-600 dark:text-gray-300">
-                            by {recipe.user.name}
+                            {t("admin.labels.by")} {recipe.user.name}
                           </p>
                         )}
                         <div className="flex gap-2 mt-2">
                           <span className="text-xs text-gray-500">
-                            {recipe.calories} cal
+                            {recipe.calories} {t("admin.labels.cal")}
                           </span>
                           <span className="text-xs text-gray-500">
-                            {recipe.servings} servings
+                            {recipe.servings} {t("admin.labels.servings")}
                           </span>
                           {recipe.isAIGenerated && (
                             <Badge className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-xs">
@@ -1044,8 +1042,7 @@ export function AdminPage() {
                     className="w-full h-48 object-cover rounded-lg mb-3"
                   />
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                    {upload.aiService} • {upload.detectedItems.length} items
-                    detected
+                    {upload.aiService} • {t("admin.labels.itemsDetected", { count: upload.detectedItems.length })}
                   </p>
                   <p className="text-xs text-gray-500">
                     {new Date(upload.createdAt).toLocaleDateString()}
@@ -1061,30 +1058,30 @@ export function AdminPage() {
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Filter by Action
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.filterByAction")}
                   </label>
                   <select
                     value={logFilters.action}
                     onChange={(e) =>
                       setLogFilters({ ...logFilters, action: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   >
-                    <option value="">All Actions</option>
-                    <option value="user_warned">User Warned</option>
-                    <option value="user_timeout">User Timeout</option>
-                    <option value="user_banned">User Banned</option>
-                    <option value="user_unbanned">User Unbanned</option>
-                    <option value="user_suspended">User Suspended</option>
-                    <option value="user_reactivated">User Reactivated</option>
-                    <option value="user_deleted">User Deleted</option>
-                    <option value="rate_limit_reset">Rate Limit Reset</option>
+                    <option value="">{t("admin.filters.allActions")}</option>
+                    <option value="user_warned">{t("admin.logActions.user_warned")}</option>
+                    <option value="user_timeout">{t("admin.logActions.user_timeout")}</option>
+                    <option value="user_banned">{t("admin.logActions.user_banned")}</option>
+                    <option value="user_unbanned">{t("admin.logActions.user_unbanned")}</option>
+                    <option value="user_suspended">{t("admin.logActions.user_suspended")}</option>
+                    <option value="user_reactivated">{t("admin.logActions.user_reactivated")}</option>
+                    <option value="user_deleted">{t("admin.logActions.user_deleted")}</option>
+                    <option value="rate_limit_reset">{t("admin.logActions.rate_limit_reset")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Filter by Target Type
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.filterByTargetType")}
                   </label>
                   <select
                     value={logFilters.targetType}
@@ -1094,14 +1091,14 @@ export function AdminPage() {
                         targetType: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   >
-                    <option value="">All Types</option>
-                    <option value="user">User</option>
-                    <option value="recipe">Recipe</option>
-                    <option value="inventory">Inventory</option>
-                    <option value="upload">Upload</option>
-                    <option value="system">System</option>
+                    <option value="">{t("admin.filters.allTypes")}</option>
+                    <option value="user">{t("admin.targetTypes.user")}</option>
+                    <option value="recipe">{t("admin.targetTypes.recipe")}</option>
+                    <option value="inventory">{t("admin.targetTypes.inventory")}</option>
+                    <option value="upload">{t("admin.targetTypes.upload")}</option>
+                    <option value="system">{t("admin.targetTypes.system")}</option>
                   </select>
                 </div>
               </div>
@@ -1133,25 +1130,25 @@ export function AdminPage() {
                             {log.action.replace(/_/g, " ").toUpperCase()}
                           </Badge>
                           <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                            {log.targetType}
+                            {t(`admin.targetTypes.${log.targetType}`, { defaultValue: log.targetType })}
                           </Badge>
                         </div>
                         <div className="text-sm space-y-1">
                           {log.targetName && (
                             <p className="font-medium text-gray-900 dark:text-gray-100">
-                              Target: {log.targetName}
+                              {t("admin.labels.target")} {log.targetName}
                             </p>
                           )}
                           {log.targetEmail && (
                             <p className="text-gray-600 dark:text-gray-300">
-                              Email: {log.targetEmail}
+                              {t("admin.labels.email")} {log.targetEmail}
                             </p>
                           )}
                           {log.details &&
                             Object.keys(log.details).length > 0 && (
                               <details className="text-gray-600 dark:text-gray-300">
                                 <summary className="cursor-pointer hover:text-orange-600">
-                                  View Details
+                                  {t("admin.labels.viewDetails")}
                                 </summary>
                                 <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
                                   {JSON.stringify(log.details, null, 2)}
@@ -1169,7 +1166,7 @@ export function AdminPage() {
                 ))}
                 {logs.length === 0 && !isLoading && (
                   <div className="text-center py-12 text-gray-500">
-                    No logs found matching the current filters.
+                    {t("admin.messages.noLogsFound")}
                   </div>
                 )}
 
@@ -1180,7 +1177,7 @@ export function AdminPage() {
                       onClick={() => loadLogs(true)}
                       className="bg-orange-600 hover:bg-orange-700"
                     >
-                      Load More Logs
+                      {t("admin.actions.loadMore")}
                     </Button>
                   </div>
                 )}
@@ -1193,7 +1190,7 @@ export function AdminPage() {
                   <div className="text-center py-4">
                     <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                     <p className="text-sm text-gray-500 mt-2">
-                      Loading more logs...
+                      {t("admin.messages.loadingMoreLogs")}
                     </p>
                   </div>
                 )}
@@ -1201,7 +1198,7 @@ export function AdminPage() {
                 {/* End of results indicator */}
                 {!hasMoreLogs && logs.length > 0 && (
                   <div className="text-center py-4 text-gray-500 text-sm">
-                    ✓ All logs loaded ({logs.length} total)
+                    ✓ {t("admin.messages.allLogsLoadedCount", { count: logs.length })}
                   </div>
                 )}
               </div>
@@ -1238,7 +1235,7 @@ export function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      Total Requests
+                      {t("admin.apiStats.totalRequests")}
                     </div>
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {apiStats.totalRequests.toLocaleString()}
@@ -1246,7 +1243,7 @@ export function AdminPage() {
                   </Card>
                   <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      Success Rate
+                      {t("admin.apiStats.successRate")}
                     </div>
                     <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {apiStats.successRate}%
@@ -1254,7 +1251,7 @@ export function AdminPage() {
                   </Card>
                   <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      Avg Response
+                      {t("admin.apiStats.avgResponse")}
                     </div>
                     <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                       {apiStats.avgResponseTime}ms
@@ -1262,7 +1259,7 @@ export function AdminPage() {
                   </Card>
                   <Card className="p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                      Failed Requests
+                      {t("admin.apiStats.failedRequests")}
                     </div>
                     <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                       {apiStats.failedRequests.toLocaleString()}
@@ -1274,22 +1271,23 @@ export function AdminPage() {
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Search User/Path
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.searchUserPath")}
                   </label>
                   <Input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t("admin.searchLogs")}
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
                       setCurrentPage(1);
                     }}
+                    className="bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    HTTP Method
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.httpMethod")}
                   </label>
                   <select
                     value={apiLogFilters.method}
@@ -1299,9 +1297,9 @@ export function AdminPage() {
                         method: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   >
-                    <option value="">All Methods</option>
+                    <option value="">{t("admin.filters.allMethods")}</option>
                     <option value="GET">GET</option>
                     <option value="POST">POST</option>
                     <option value="PUT">PUT</option>
@@ -1310,8 +1308,8 @@ export function AdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Status Code
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.statusCode")}
                   </label>
                   <select
                     value={apiLogFilters.statusCode}
@@ -1321,9 +1319,9 @@ export function AdminPage() {
                         statusCode: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   >
-                    <option value="">All Codes</option>
+                    <option value="">{t("admin.filters.allCodes")}</option>
                     <option value="200">200 OK</option>
                     <option value="201">201 Created</option>
                     <option value="400">400 Bad Request</option>
@@ -1334,12 +1332,12 @@ export function AdminPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Path Filter
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-200">
+                    {t("admin.filters.pathFilter")}
                   </label>
                   <Input
                     type="text"
-                    placeholder="e.g., /api/recipes"
+                    placeholder={t("admin.pathFilterPlaceholder")}
                     value={apiLogFilters.path}
                     onChange={(e) =>
                       setApiLogFilters({
@@ -1347,6 +1345,7 @@ export function AdminPage() {
                         path: e.target.value,
                       })
                     }
+                    className="bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700"
                   />
                 </div>
               </div>
@@ -1399,24 +1398,24 @@ export function AdminPage() {
                           </p>
                           {log.userName && (
                             <p className="text-gray-600 dark:text-gray-300">
-                              User: {log.userName} ({log.userEmail})
+                              {t("admin.status.user")}: {log.userName} ({log.userEmail})
                             </p>
                           )}
                           {!log.userName && (
                             <p className="text-gray-500 dark:text-gray-500 italic">
-                              Unauthenticated request
+                              {t("admin.labels.unauthenticatedRequest")}
                             </p>
                           )}
                           {log.errorMessage && (
                             <p className="text-red-600 dark:text-red-400">
-                              Error: {log.errorMessage}
+                              {t("common.error")}: {log.errorMessage}
                             </p>
                           )}
                           {log.requestBody &&
                             Object.keys(log.requestBody).length > 0 && (
                               <details className="text-gray-600 dark:text-gray-300">
                                 <summary className="cursor-pointer hover:text-orange-600">
-                                  View Request Body
+                                  {t("admin.labels.viewRequestBody")}
                                 </summary>
                                 <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
                                   {JSON.stringify(log.requestBody, null, 2)}
@@ -1427,7 +1426,7 @@ export function AdminPage() {
                             Object.keys(log.responseBody).length > 0 && (
                               <details className="text-gray-600 dark:text-gray-300">
                                 <summary className="cursor-pointer hover:text-orange-600">
-                                  View Response Body
+                                  {t("admin.labels.viewResponseBody")}
                                 </summary>
                                 <pre className="mt-2 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded overflow-x-auto">
                                   {JSON.stringify(log.responseBody, null, 2)}
@@ -1447,7 +1446,7 @@ export function AdminPage() {
                 ))}
                 {apiLogs.length === 0 && !isLoading && (
                   <div className="text-center py-12 text-gray-500">
-                    No API logs found matching the current filters.
+                    {t("admin.messages.noApiLogsFound")}
                   </div>
                 )}
 
@@ -1458,7 +1457,7 @@ export function AdminPage() {
                       onClick={() => loadApiLogs(true)}
                       className="bg-orange-600 hover:bg-orange-700"
                     >
-                      Load More Logs
+                      {t("admin.actions.loadMore")}
                     </Button>
                   </div>
                 )}
@@ -1471,7 +1470,7 @@ export function AdminPage() {
                   <div className="text-center py-4">
                     <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
                     <p className="text-sm text-gray-500 mt-2">
-                      Loading more logs...
+                      {t("admin.messages.loadingMoreLogs")}
                     </p>
                   </div>
                 )}
@@ -1479,7 +1478,7 @@ export function AdminPage() {
                 {/* End of results indicator */}
                 {!hasMoreApiLogs && apiLogs.length > 0 && (
                   <div className="text-center py-4 text-gray-500 text-sm">
-                    ✓ All logs loaded ({apiLogs.length} total)
+                    ✓ {t("admin.messages.allLogsLoadedCount", { count: apiLogs.length })}
                   </div>
                 )}
               </div>
@@ -1514,7 +1513,7 @@ export function AdminPage() {
               <Card className="max-w-3xl w-full max-h-[80vh] overflow-y-auto p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-2xl font-bold">
-                    Moderation History: {selectedUser.name}
+                    {t("admin.labels.moderationHistory")}: {selectedUser.name}
                   </h3>
                   <Button
                     variant="outline"
@@ -1525,7 +1524,7 @@ export function AdminPage() {
                       setModerationHistory(null);
                     }}
                   >
-                    Close
+                    {t("common.close")}
                   </Button>
                 </div>
 
@@ -1533,7 +1532,7 @@ export function AdminPage() {
                 {moderationHistory.activeActions.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-lg font-semibold mb-3 text-orange-600">
-                      Active Moderation Actions
+                      {t("admin.labels.activeModerationActions")}
                     </h4>
                     <div className="space-y-2">
                       {moderationHistory.activeActions.map((action: any) => (
@@ -1548,12 +1547,12 @@ export function AdminPage() {
                               </Badge>
                               {action.reason && (
                                 <p className="text-sm mb-1">
-                                  <strong>Reason:</strong> {action.reason}
+                                  <strong>{t("admin.labels.reason")}</strong> {action.reason}
                                 </p>
                               )}
                               {action.expiresAt && (
                                 <p className="text-sm text-gray-600">
-                                  <strong>Expires:</strong>{" "}
+                                  <strong>{t("admin.labels.expires")}</strong>{" "}
                                   {new Date(action.expiresAt).toLocaleString()}
                                 </p>
                               )}
@@ -1569,7 +1568,7 @@ export function AdminPage() {
                               }
                               className="text-green-600"
                             >
-                              Remove
+                              {t("admin.actions.unban")}
                             </Button>
                           </div>
                         </div>
@@ -1580,7 +1579,7 @@ export function AdminPage() {
 
                 {/* History */}
                 <div>
-                  <h4 className="text-lg font-semibold mb-3">Full History</h4>
+                  <h4 className="text-lg font-semibold mb-3">{t("admin.fullHistory")}</h4>
                   <div className="space-y-2">
                     {moderationHistory.history.map((action: any) => (
                       <div
@@ -1601,21 +1600,21 @@ export function AdminPage() {
                           }`}
                         >
                           {action.actionType.toUpperCase()}
-                          {!action.isActive && " (EXPIRED)"}
+                          {!action.isActive && ` (${t("admin.labels.expired")})`}
                         </Badge>
                         {action.reason && (
                           <p className="text-sm mb-1">
-                            <strong>Reason:</strong> {action.reason}
+                            <strong>{t("admin.labels.reason")}</strong> {action.reason}
                           </p>
                         )}
                         {action.adminNote && (
                           <p className="text-sm mb-1 text-gray-600">
-                            <strong>Admin Note:</strong> {action.adminNote}
+                            <strong>{t("admin.labels.adminNote")}</strong> {action.adminNote}
                           </p>
                         )}
                         {action.duration && (
                           <p className="text-sm text-gray-600">
-                            <strong>Duration:</strong> {action.duration} hours
+                            <strong>{t("admin.labels.duration")}</strong> {action.duration} {t("admin.labels.hours")}
                           </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">

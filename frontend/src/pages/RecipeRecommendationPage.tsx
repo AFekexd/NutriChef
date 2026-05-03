@@ -117,9 +117,9 @@ export function RecipeRecommendationPage() {
     onRefresh: async () => {
       if (recommendations.length > 0) {
         await handleGetRecommendations();
-        toast.success("Recommendations refreshed!");
+        toast.success(t("recipes.recipesRefreshed"));
       } else {
-        toast.info("Configure preferences and get recommendations first");
+        toast.info(t("recipes.configureBeforeRefresh"));
       }
     },
     threshold: 80,
@@ -154,14 +154,14 @@ export function RecipeRecommendationPage() {
             e.preventDefault();
             if (!isLoading && servings > 0) {
               handleGetRecommendations();
-              toast.info("Generating recommendations...");
+              toast.info(t("recipes.generatingRecommendations"));
             }
             break;
           case "n":
             e.preventDefault();
             resetCreateForm();
             setShowCreateModal(true);
-            toast.info("Opening create recipe form...");
+            toast.info(t("recipes.openingCreateForm"));
             break;
         }
       } else if (e.key === "Escape") {
@@ -192,11 +192,11 @@ export function RecipeRecommendationPage() {
   useEffect(() => {
     if (showCacheNotice) {
       toast.info(
-        "Loaded from cache (saved tokens!) - Results from a previous search.",
+        t("recipes.loadedFromCache"),
         {
           duration: 5000,
           action: {
-            label: "Clear Cache",
+            label: t("recipes.clearCache"),
             onClick: clearCache,
           },
         }
@@ -357,10 +357,10 @@ export function RecipeRecommendationPage() {
         }
       });
       setShowCacheNotice(false);
-      toast.success("Recipe cache cleared successfully!");
+      toast.success(t("recipes.cacheCleared"));
     } catch (error) {
       console.error("Error clearing cache:", error);
-      toast.error("Failed to clear cache");
+      toast.error(t("recipes.clearCacheFailed"));
     }
   };
 
@@ -845,12 +845,12 @@ export function RecipeRecommendationPage() {
                     }
                     className="px-4 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
                   >
-                    <option value="unit">unit</option>
+                    <option value="unit">{t("units.unit")}</option>
                     <option value="g">g</option>
                     <option value="kg">kg</option>
                     <option value="ml">ml</option>
                     <option value="l">l</option>
-                    <option value="cup">cup</option>
+                    <option value="cup">{t("units.cup")}</option>
                     <option value="tbsp">tbsp</option>
                     <option value="tsp">tsp</option>
                   </select>
@@ -1052,15 +1052,15 @@ export function RecipeRecommendationPage() {
               <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 dark:text-gray-500">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span>AI-Powered Suggestions</span>
+                  <span>{t("recipes.aiPoweredSuggestions")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span>Personalized Match %</span>
+                  <span>{t("recipes.personalizedMatch")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span>Nutritional Info</span>
+                  <span>{t("recipes.nutritionalInfo")}</span>
                 </div>
               </div>
             </div>
@@ -1072,7 +1072,7 @@ export function RecipeRecommendationPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
               <Loader2 className="w-6 h-6 text-orange-600 dark:text-orange-400 animate-spin" />
-              Generating recommendations...
+              {t("recipes.generatingRecommendations")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -1604,9 +1604,9 @@ export function RecipeRecommendationPage() {
                         }
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
                       >
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
+                        <option value="easy">{t("recipes.easy")}</option>
+                        <option value="medium">{t("recipes.medium")}</option>
+                        <option value="hard">{t("recipes.hard")}</option>
                       </select>
                     </div>
 
@@ -1614,7 +1614,7 @@ export function RecipeRecommendationPage() {
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                         <Users className="w-4 h-4" />
-                        Servings <span className="text-red-500">*</span>
+                        {t("recipes.servingsCount")} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"

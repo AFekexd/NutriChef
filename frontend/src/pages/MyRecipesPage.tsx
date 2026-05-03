@@ -375,7 +375,6 @@ export function MyRecipesPage() {
                 {/* Recipe Image */}
                 {recipe.imageURL && (
                   <div className="mb-4 -mx-6 -mt-6 rounded-t-lg overflow-hidden">
-                    asd
                     <img
                       src={recipe.imageURL}
                       alt={recipe.title}

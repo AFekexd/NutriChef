@@ -26,6 +26,7 @@ import { Input } from "../components/ui/input";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { OpenRouterModelSelector } from "../components/OpenRouterModelSelector";
+import { UserAvatar } from "../components/UserAvatar";
 import { apiService } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { confirmDialog } from "../utils/confirmDialog";
@@ -759,22 +760,12 @@ export function ProfilePage() {
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative group">
                   <div className="p-3 bg-green-100 dark:bg-green-950/50 rounded-lg overflow-hidden">
-                    {_user?.oauthAvatar ? (
-                      <img
-                        src={
-                          _user.oauthAvatar.startsWith("http")
-                            ? _user.oauthAvatar
-                            : `${
-                                import.meta.env.VITE_API_BASE_URL ||
-                                "http://localhost:5000"
-                              }${_user.oauthAvatar}`
-                        }
-                        alt={_user.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-green-200 dark:border-green-700"
-                      />
-                    ) : (
-                      <User className="w-16 h-16 text-green-600 dark:text-green-400" />
-                    )}
+                    <UserAvatar
+                      name={_user?.name}
+                      avatar={_user?.oauthAvatar}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-green-200 dark:border-green-700"
+                      iconClassName="w-6 h-6"
+                    />
                   </div>
                   {!_user?.oauthProvider && (
                     <button
@@ -1983,7 +1974,7 @@ export function ProfilePage() {
         currentModelId={selectedModelId}
         onModelSelected={(modelId) => {
           setSelectedModelId(modelId);
-          toast.success("Model updated successfully");
+          toast.success(t("profile.modelUpdatedSuccess"));
         }}
       />
     </div>

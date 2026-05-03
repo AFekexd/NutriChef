@@ -28,8 +28,10 @@ import { apiService } from "../services/api";
 import { shoppingListService } from "../services/shoppingListService";
 import type { Recipe, InventoryItem } from "../types";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function PublicRecipesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
@@ -50,7 +52,7 @@ export function PublicRecipesPage() {
   const { isRefreshing, pullDistance } = usePullToRefresh({
     onRefresh: async () => {
       await loadRecipes();
-      toast.success("Recipes refreshed!");
+      toast.success(t("publicRecipes.messages.recipesRefreshed"));
     },
     threshold: 80,
   });
@@ -82,7 +84,7 @@ export function PublicRecipesPage() {
       setRecipes(publicRecipes);
     } catch (err: any) {
       console.error("Error loading recipes:", err);
-      toast.error("Failed to load recipes");
+      toast.error(t("publicRecipes.messages.loadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +136,21 @@ export function PublicRecipesPage() {
     setFilteredRecipes(filtered);
   };
 
+  const getDifficultyLabel = (difficulty?: string | null) => {
+    if (!difficulty) return "";
+
+    switch (difficulty.toLowerCase()) {
+      case "easy":
+        return t("publicRecipes.filters.easy");
+      case "medium":
+        return t("publicRecipes.filters.medium");
+      case "hard":
+        return t("publicRecipes.filters.hard");
+      default:
+        return difficulty;
+    }
+  };
+
   const handleAddRecipeToShoppingList = (recipe: Recipe) => {
     if (!recipe.recipeIngredients || recipe.recipeIngredients.length === 0) {
       shoppingListService.addItem({
@@ -143,7 +160,7 @@ export function PublicRecipesPage() {
         category: "recipes",
         priority: "medium",
       });
-      toast.success(`"${recipe.title}" added to shopping list as a reminder!`);
+      toast.success(t("publicRecipes.messages.recipeAdded", { name: recipe.title }));
       return;
     }
 
@@ -172,8 +189,15 @@ export function PublicRecipesPage() {
 
     const message =
       inStockCount > 0
-        ? `Added "${recipe.title}" to shopping list! ${inStockCount} of ${ingredientsToAdd.length} ingredients already in stock ✓`
-        : `Added "${recipe.title}" with ${ingredientsToAdd.length} ingredients to shopping list!`;
+        ? t("publicRecipes.messages.recipeAddedPartial", {
+            name: recipe.title,
+            inStock: inStockCount,
+            total: ingredientsToAdd.length,
+          })
+        : t("publicRecipes.messages.recipeAddedFull", {
+            name: recipe.title,
+            count: ingredientsToAdd.length,
+          });
 
     toast.success(message);
   };
@@ -181,7 +205,7 @@ export function PublicRecipesPage() {
   const handleRateRecipe = async (recipeId: string, rating: number) => {
     try {
       const response = await apiService.rateRecipe(recipeId, rating);
-      toast.success("Recipe rated successfully!");
+      toast.success(t("publicRecipes.messages.recipeRated"));
 
       // Update the recipes state locally instead of reloading
       setRecipes((prevRecipes) =>
@@ -207,16 +231,20 @@ export function PublicRecipesPage() {
     } catch (err: any) {
       console.error("Error rating recipe:", err);
       toast.error(
-        err.response?.data?.error || "Failed to rate recipe. Please try again."
+        err.response?.data?.error || t("publicRecipes.messages.ratingFailed")
       );
     }
   };
 
   const categories = [
-    { value: "all", label: "All Recipes", icon: Globe },
-    { value: "easy", label: "Easy", icon: Users },
-    { value: "medium", label: "Medium", icon: ChefHat },
-    { value: "hard", label: "Hard", icon: TrendingUp },
+    { value: "all", label: t("publicRecipes.filters.all"), icon: Globe },
+    { value: "easy", label: t("publicRecipes.filters.easy"), icon: Users },
+    {
+      value: "medium",
+      label: t("publicRecipes.filters.medium"),
+      icon: ChefHat,
+    },
+    { value: "hard", label: t("publicRecipes.filters.hard"), icon: TrendingUp },
   ];
 
   return (
@@ -238,12 +266,16 @@ export function PublicRecipesPage() {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-500 dark:from-blue-400 dark:to-green-600 bg-clip-text text-transparent">
-                  Discover Recipes
+                  {t("publicRecipes.title")}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {filteredRecipes.length} public{" "}
-                  {filteredRecipes.length === 1 ? "recipe" : "recipes"}{" "}
-                  available
+                  {filteredRecipes.length === 1
+                    ? t("publicRecipes.subtitle", {
+                        count: filteredRecipes.length,
+                      })
+                    : t("publicRecipes.subtitle_plural", {
+                        count: filteredRecipes.length,
+                      })}
                 </p>
               </div>
             </div>
@@ -253,7 +285,7 @@ export function PublicRecipesPage() {
               className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 w-full sm:w-auto"
             >
               <BookOpen className="w-5 h-5 mr-2" />
-              My Recipes
+              {t("publicRecipes.myRecipes")}
             </Button>
           </div>
         </div>
@@ -265,7 +297,7 @@ export function PublicRecipesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search recipes by name, cuisine, author..."
+              placeholder={t("publicRecipes.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-10 h-12 text-base bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
@@ -309,7 +341,9 @@ export function PublicRecipesPage() {
               className="flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
-              {showFilters ? "Hide Filters" : "Show Filters"}
+              {showFilters
+                ? t("publicRecipes.filters.hideFilters")
+                : t("publicRecipes.filters.showFilters")}
             </Button>
 
             {/* Sort Dropdown */}
@@ -322,10 +356,10 @@ export function PublicRecipesPage() {
               }
               className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="recent">🕐 Most Recent</option>
-              <option value="rating">⭐ Highest Rated</option>
-              <option value="calories">🔥 Lowest Calories</option>
-              <option value="name">📝 Name (A-Z)</option>
+              <option value="recent">{t("publicRecipes.filters.mostRecent")}</option>
+              <option value="rating">{t("publicRecipes.filters.highestRated")}</option>
+              <option value="calories">{t("publicRecipes.filters.lowestCalories")}</option>
+              <option value="name">{t("publicRecipes.filters.nameAZ")}</option>
             </select>
           </div>
 
@@ -334,7 +368,7 @@ export function PublicRecipesPage() {
             <Card className="p-4 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Max Calories: {maxCalories}
+                  {t("publicRecipes.filters.maxCalories", { value: maxCalories })}
                 </label>
                 <input
                   type="range"
@@ -370,13 +404,13 @@ export function PublicRecipesPage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 {searchQuery || selectedCategory !== "all"
-                  ? "No Recipes Found"
-                  : "No Public Recipes Yet"}
+                  ? t("publicRecipes.emptyState.noRecipesFound")
+                  : t("publicRecipes.emptyState.noPublicRecipes")}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
                 {searchQuery || selectedCategory !== "all"
-                  ? "Try adjusting your search or filters to find more recipes."
-                  : "Be the first to share a recipe with the community!"}
+                  ? t("publicRecipes.emptyState.tryAdjusting")
+                  : t("publicRecipes.emptyState.beTheFirst")}
               </p>
               {(searchQuery || selectedCategory !== "all") && (
                 <Button
@@ -388,7 +422,7 @@ export function PublicRecipesPage() {
                   variant="outline"
                   className="border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400"
                 >
-                  Clear Filters
+                  {t("publicRecipes.filters.clearFilters")}
                 </Button>
               )}
             </div>
@@ -413,7 +447,9 @@ export function PublicRecipesPage() {
                     />
                     <div className="absolute top-2 right-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                       <Flame className="w-3 h-3 text-orange-500" />
-                      <span>{recipe.calories} cal</span>
+                      <span>
+                        {recipe.calories} {t("publicRecipes.recipeDetails.calories")}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -446,7 +482,7 @@ export function PublicRecipesPage() {
                         </div>
                       )}
                       <span className="font-medium">
-                        {recipe.user?.name || "Unknown"}
+                        {recipe.user?.name || t("myRecipes.details.unknown")}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -479,7 +515,9 @@ export function PublicRecipesPage() {
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       ({recipe.ratingCount || 0}{" "}
-                      {recipe.ratingCount === 1 ? "rating" : "ratings"})
+                      {t("publicRecipes.rating", {
+                        count: recipe.ratingCount || 0,
+                      })})
                     </span>
                   </div>
 
@@ -487,7 +525,7 @@ export function PublicRecipesPage() {
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-center">
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Protein
+                        {t("publicRecipes.recipeDetails.protein")}
                       </p>
                       <p className="font-bold text-blue-600 dark:text-blue-400">
                         {recipe.macros.protein}g
@@ -495,7 +533,7 @@ export function PublicRecipesPage() {
                     </div>
                     <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded-lg text-center">
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Carbs
+                        {t("publicRecipes.recipeDetails.carbs")}
                       </p>
                       <p className="font-bold text-green-600 dark:text-green-400">
                         {recipe.macros.carbs}g
@@ -503,7 +541,7 @@ export function PublicRecipesPage() {
                     </div>
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg text-center">
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Fat
+                        {t("publicRecipes.recipeDetails.fat")}
                       </p>
                       <p className="font-bold text-yellow-600 dark:text-yellow-400">
                         {recipe.macros.fat}g
@@ -515,7 +553,7 @@ export function PublicRecipesPage() {
                   <div className="flex flex-wrap gap-2 mb-4">
                     {recipe.difficulty && (
                       <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded-full">
-                        {recipe.difficulty}
+                        {getDifficultyLabel(recipe.difficulty)}
                       </span>
                     )}
                     {recipe.cuisineType && (
@@ -538,7 +576,7 @@ export function PublicRecipesPage() {
                       className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white"
                     >
                       <Utensils className="w-4 h-4 mr-2" />
-                      View Recipe
+                      {t("publicRecipes.actions.viewRecipe")}
                     </Button>
                     <Button
                       onClick={() => handleAddRecipeToShoppingList(recipe)}
@@ -546,7 +584,7 @@ export function PublicRecipesPage() {
                       className="w-full border-green-600 dark:border-green-500 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Shopping List
+                      {t("publicRecipes.actions.addToShoppingList")}
                     </Button>
                   </div>
                 </div>
@@ -592,7 +630,10 @@ export function PublicRecipesPage() {
                         ) : (
                           <UserIcon className="w-4 h-4" />
                         )}
-                        <span>{selectedRecipe.user?.name || "Unknown"}</span>
+                        <span>
+                          {selectedRecipe.user?.name ||
+                            t("myRecipes.details.unknown")}
+                        </span>
                       </div>
                       <span>•</span>
                       <div className="flex items-center gap-1">
@@ -618,7 +659,7 @@ export function PublicRecipesPage() {
                 <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 dark:from-gray-800 dark:to-blue-900/20 p-6 rounded-lg">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
                     <Flame className="w-5 h-5 text-orange-500" />
-                    Nutrition Information
+                    {t("publicRecipes.recipeDetails.nutrition")}
                   </h3>
                   <div className="grid grid-cols-4 gap-4">
                     <div className="text-center">
@@ -626,7 +667,7 @@ export function PublicRecipesPage() {
                         {selectedRecipe.calories}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Calories
+                        {t("publicRecipes.recipeDetails.calories")}
                       </p>
                     </div>
                     <div className="text-center">
@@ -634,7 +675,7 @@ export function PublicRecipesPage() {
                         {selectedRecipe.macros.protein}g
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Protein
+                        {t("publicRecipes.recipeDetails.protein")}
                       </p>
                     </div>
                     <div className="text-center">
@@ -642,7 +683,7 @@ export function PublicRecipesPage() {
                         {selectedRecipe.macros.carbs}g
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Carbs
+                        {t("publicRecipes.recipeDetails.carbs")}
                       </p>
                     </div>
                     <div className="text-center">
@@ -650,7 +691,7 @@ export function PublicRecipesPage() {
                         {selectedRecipe.macros.fat}g
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Fat
+                        {t("publicRecipes.recipeDetails.fat")}
                       </p>
                     </div>
                   </div>
@@ -661,7 +702,7 @@ export function PublicRecipesPage() {
                   selectedRecipe.recipeIngredients.length > 0 && (
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 text-lg">
-                        Ingredients
+                        {t("publicRecipes.recipeDetails.ingredients")}
                       </h3>
                       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
                         {selectedRecipe.recipeIngredients.map((ri) => (
@@ -684,7 +725,7 @@ export function PublicRecipesPage() {
                 {/* Instructions */}
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 text-lg">
-                    Instructions
+                    {t("publicRecipes.recipeDetails.instructions")}
                   </h3>
                   <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300 whitespace-pre-line bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                     {selectedRecipe.instructions}
@@ -694,7 +735,7 @@ export function PublicRecipesPage() {
                 {/* Rate Recipe */}
                 <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                    Rate This Recipe
+                    {t("publicRecipes.actions.rateRecipe")}
                   </h3>
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -727,14 +768,14 @@ export function PublicRecipesPage() {
                     className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Shopping List
+                    {t("publicRecipes.actions.addToShoppingList")}
                   </Button>
                   <Button
                     onClick={() => setSelectedRecipe(null)}
                     variant="outline"
                     className="dark:border-gray-700"
                   >
-                    Close
+                    {t("publicRecipes.actions.close")}
                   </Button>
                 </div>
               </div>

@@ -16,7 +16,7 @@ coverage/
 inventory*.jpg
 
 # Keep deployment documentation
-*.md
+
 !README.md
 !DEPLOYMENT.md
 !DEPLOYMENT_QUICK.md

@@ -71,27 +71,27 @@ export default function DashboardPage() {
           case "i":
             e.preventDefault();
             navigate("/inventory");
-            toast.info("Opening Inventory...");
+            toast.info(t("dashboard.shortcuts.openingInventory"));
             break;
           case "r":
             e.preventDefault();
             navigate("/recipes");
-            toast.info("Opening Recipes...");
+            toast.info(t("dashboard.shortcuts.openingRecipes"));
             break;
           case "s":
             e.preventDefault();
             navigate("/shopping-list");
-            toast.info("Opening Shopping List...");
+            toast.info(t("dashboard.shortcuts.openingShoppingList"));
             break;
           case "m":
             e.preventDefault();
             navigate("/meal-planning");
-            toast.info("Opening Meal Planning...");
+            toast.info(t("dashboard.shortcuts.openingMealPlanning"));
             break;
           case "p":
             e.preventDefault();
             navigate("/profile");
-            toast.info("Opening Profile...");
+            toast.info(t("dashboard.shortcuts.openingProfile"));
             break;
         }
       }
@@ -126,7 +126,7 @@ export default function DashboardPage() {
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
         if (isMountedRef.current) {
-          toast.error("Failed to load dashboard stats");
+          toast.error(t("dashboard.errors.loadStatsFailed"));
         }
       } finally {
         if (isMountedRef.current) {

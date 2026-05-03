@@ -47,7 +47,7 @@ export default function LoginPage() {
       gsap.fromTo(
         containerRef.current,
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
       );
     }
   }, []);
@@ -62,7 +62,7 @@ export default function LoginPage() {
           rotate: 0,
           duration: 0.8,
           ease: "back.out(1.5)",
-        }
+        },
       );
     }
   }, []);
@@ -86,17 +86,22 @@ export default function LoginPage() {
 
       navigate("/dashboard");
     } catch (err: any) {
-      const error = err.response?.data.toLowerCase();
+      const errorData = err.response?.data;
+      const errorStr =
+        typeof errorData === "string"
+          ? errorData
+          : errorData?.error || errorData?.message || "login failed";
+      const error = errorStr.toLowerCase();
       console.log(error);
 
       setError(
         error.includes("email")
           ? t("auth.invalidEmail")
           : error.includes("password")
-          ? t("auth.invalidPassword")
-          : error.includes("too many")
-          ? t("auth.tooManyAttempts")
-          : t("auth.loginFailed")
+            ? t("auth.invalidPassword")
+            : error.includes("too many")
+              ? t("auth.tooManyAttempts")
+              : t("auth.loginFailed"),
       );
     } finally {
       setIsLoading(false);
@@ -149,8 +154,13 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert
+                  variant="destructive"
+                  className="border-red-300/60 dark:border-red-700/60 bg-red-50/80 dark:bg-red-950/30"
+                >
+                  <AlertDescription className="text-red-700 dark:text-red-300">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -256,7 +266,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                    Or continue with
+                    {t("auth.orContinueWith")}
                   </span>
                 </div>
               </div>
@@ -329,7 +339,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-8">
-          By continuing, you agree to our Terms of Service and Privacy Policy
+          {t("auth.legalAgreement")}
         </p>
       </div>
     </div>
