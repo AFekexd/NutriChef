@@ -159,6 +159,14 @@ NutriChef/
 
 ### Gyorsindítás (lokális fejlesztés)
 
+Leggyorsabb opcio (mindent intez egy parancs):
+
+```bash
+npm run dev:easy
+```
+
+Ez telepiti a csomagokat, lefuttatja a migraciot + seedet, majd elinditja a frontendet es a backendet.
+
 ```bash
 git clone https://github.com/AFekexd/NutriChef.git
 cd NutriChef
@@ -259,6 +267,47 @@ http://localhost:5000/api-docs
 
 ## 🎨 Képernyőképek
 
+## 🧩 Esetdiagram (Use Case)
+
+Az alabbi Mermaid diagram egy gyakorlati esetdiagram a NutriChef fo felhasznaloi es admin folyamataihoz.
+
+```mermaid
+flowchart LR
+    user[Felhasznalo]
+    admin[Admin]
+    ai[AI szolgaltatas]
+
+    subgraph NutriChef rendszer
+      uc1((Regisztracio / Bejelentkezes))
+      uc2((Profil es celok beallitasa))
+      uc3((Keszlet kezeles))
+      uc4((AI kepfelismeres huto kepbol))
+      uc5((Recept ajanlas generalas))
+      uc6((Bevasarlolista kezeles))
+      uc7((Etkezes naplozas))
+      uc8((Tapanyag es dashboard megtekintes))
+      uc9((Felhasznalok kezelese))
+      uc10((Rendszerallapot / API monitorozas))
+    end
+
+    user --> uc1
+    user --> uc2
+    user --> uc3
+    user --> uc4
+    user --> uc5
+    user --> uc6
+    user --> uc7
+    user --> uc8
+
+    admin --> uc9
+    admin --> uc10
+
+    uc4 -. kulso AI hivasa .-> ai
+    uc5 -. kulso AI hivasa .-> ai
+```
+
+Tipp: ha klasszikus UML stilusban kell beadni, ezt a logikat at tudod vinni Draw.io vagy StarUML diagramra ugyanilyen actor + use case kapcsolatokkal.
+
 ### Főbb Képernyők
 
 1. **Irányítópult**: Napi áttekintés és gyors műveletek
@@ -275,8 +324,8 @@ http://localhost:5000/api-docs
 - **Rate Limiting**: API visszaélés védelem
 - **Input Validálás**: Minden felhasználói input validálva
 - **CORS Konfiguráció**: Engedélyezett originek
-- **Dual-Layer Encryption**:
-  - **Client-Side**: AES-256-GCM titkosítás átvitel közben (CLIENT_ENCRYPTION_KEY)
+- **Kétrétegű védelem API kulcsokhoz**:
+  - **Client-Side**: HTTPS + kliensoldali titkosítás/obfuszkáció (a frontendbe épített kulcs nem tekinthető teljes értékű titoknak)
   - **Server-Side**: AES-256-GCM titkosítás adatbázisban (ENCRYPTION_MASTER_KEY)
 - **Environment Variables**: Érzékeny adatok védve
 
@@ -290,6 +339,28 @@ Az alkalmazás két nyelvet támogat:
 - 🇬🇧 **Angol**
 
 A nyelvek között a felhasználói beállításokban lehet váltani.
+
+## 📎 Elektronikus mellékletek és alátámasztó dokumentumok
+
+A szakdolgozati bírálathoz szükséges alátámasztó anyagok listája és státusza a következő fájlban található:
+
+- [docs/thesis/README.md](docs/thesis/README.md)
+
+Javasolt leadási csomag elemek:
+
+- Teljes forráskód + futtatási útmutató
+- MVP brief
+- Piaci/kapcsolódó rendszerek elemzése
+- Követelményjegyzék (funkcionális + nem-funkcionális)
+- Use case lista
+- GUI/UX képernyőspecifikáció (reszponzív nézetekkel)
+- Architektúra + ADR
+- Adatmodell + ER diagram
+- API/modul interfészek
+- Biztonsági minimum
+- Tesztelési terv + validációs jegyzőkönyv
+- MI-használati nyilatkozat + napló
+- Reprodukciós README
 
 ## 🤝 Közreműködés
 

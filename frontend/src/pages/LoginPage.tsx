@@ -116,11 +116,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen w-full overflow-x-hidden flex items-center justify-center p-3 sm:p-4">
       <div className="absolute top-4 right-4">
         <SettingsMenu />
       </div>
-      <div ref={containerRef} className="w-full max-w-md">
+      <div ref={containerRef} className="w-full max-w-md min-w-0">
         <div className="text-center mb-8">
           <div
             ref={logoRef}
@@ -139,7 +139,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card className="bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800">
+        <Card className="w-full min-w-0 bg-white dark:bg-gray-900 shadow-xl border border-gray-200 dark:border-gray-800">
           <CardHeader className="space-y-1">
             <CardTitle
               className="text-2xl text-center text-[#4A4A4A] dark:text-gray-100"
@@ -217,8 +217,8 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center min-w-0">
                     <input
                       id="remember-me"
                       type="checkbox"
@@ -244,9 +244,9 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <Button
+                <Button
                 type="submit"
-                className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white font-semibold"
+                  className="w-full bg-[#4CAF50] hover:bg-[#45a049] text-white font-semibold"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -272,11 +272,11 @@ export default function LoginPage() {
               </div>
 
               {/* OAuth Buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-700"
+                  className="w-full min-w-0 border-gray-300 dark:border-gray-700"
                   onClick={() => {
                     window.location.href = `${
                       import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -306,7 +306,7 @@ export default function LoginPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-700"
+                  className="w-full min-w-0 border-gray-300 dark:border-gray-700"
                   onClick={() => {
                     window.location.href = `${
                       import.meta.env.VITE_API_URL || "http://localhost:5000"

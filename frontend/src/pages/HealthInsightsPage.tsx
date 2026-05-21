@@ -275,7 +275,7 @@ export function HealthInsightsPage() {
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6">
               {error || t("healthInsights.tryAgainLater")}
             </p>
-            <Button onClick={loadHealthInsights}>
+            <Button onClick={() => void loadHealthInsights(true)}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t("healthInsights.retry")}
             </Button>
